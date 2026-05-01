@@ -312,58 +312,38 @@
             const heroSection = document.getElementById('heroSection');
             const container = document.getElementById('heroCarouselContainer');
             const basePath = './assets/hero/';
-            let mediaFiles = [];
-
+            
             try {
-                // Attempt to fetch directory listing (works on most local dev servers like Live Server)
-                const response = await fetch(basePath);
-                
-                if (response.ok) {
-                    const text = await response.text();
-                    
-                    // Parse HTML directory listing
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(text, 'text/html');
-                    const links = Array.from(doc.querySelectorAll('a'));
-                    
-                    links.forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (!href) return;
-                        
-                        // Extract filename to prevent pulling parent directory links
-                        const filename = href.split('/').pop().split('?')[0];
-                        if (!filename) return;
+                // جلب قائمة الملفات من hero.json
+                const response = await fetch('./hero.json');
+                if (!response.ok) throw new Error('hero.json not found');
+                const heroFiles = await response.json();
 
-                        const lowerName = filename.toLowerCase();
-                        
-                        if (lowerName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-                            mediaFiles.push({ type: 'image', src: basePath + filename });
-                        } else if (lowerName.match(/\.(mp4|webm|ogg)$/)) {
-                            mediaFiles.push({ type: 'video', src: basePath + filename });
-                        }
-                    });
+                let mediaFiles = heroFiles.map(filename => {
+                    const lowerName = filename.toLowerCase();
+                    if (lowerName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+                        return { type: 'image', src: basePath + filename };
+                    } else if (lowerName.match(/\.(mp4|webm|ogg)$/)) {
+                        return { type: 'video', src: basePath + filename };
+                    }
+                }).filter(Boolean);
+
+                if (mediaFiles.length === 0) {
+                    heroSection.classList.add('hidden');
+                } else {
+                    heroSection.classList.remove('hidden');
+                    container.innerHTML = mediaFiles.map((media) => `
+                        <div class="w-[90%] shrink-0 snap-center bg-gray-100 rounded-[2.5rem] relative overflow-hidden h-[420px] shadow-lg">
+                            ${media.type === 'video' 
+                                ? `<video src="${media.src}" class="absolute inset-0 w-full h-full object-cover" autoplay loop muted playsinline></video>`
+                                : `<img src="${media.src}" class="absolute inset-0 w-full h-full object-cover" alt="Hero Promo">`
+                            }
+                        </div>
+                    `).join('');
                 }
-            } catch (e) {
-                console.log("Could not auto-fetch hero directory listing. Falling back to hiding hero section.", e);
-            }
-
-            // Remove potential duplicates in case the server lists things twice
-            mediaFiles = [...new Map(mediaFiles.map(item => [item.src, item])).values()];
-
-            if (mediaFiles.length === 0) {
-                // Hide if no assets found
+            } catch(e) {
+                console.log("لم يتم إعداد الهيرو حتى الآن. (No hero files configured)");
                 heroSection.classList.add('hidden');
-            } else {
-                // Show and render assets
-                heroSection.classList.remove('hidden');
-                container.innerHTML = mediaFiles.map((media) => `
-                    <div class="w-[90%] shrink-0 snap-center bg-gray-100 rounded-[2.5rem] relative overflow-hidden h-[420px] shadow-lg">
-                        ${media.type === 'video' 
-                            ? `<video src="${media.src}" class="absolute inset-0 w-full h-full object-cover" autoplay loop muted playsinline></video>`
-                            : `<img src="${media.src}" class="absolute inset-0 w-full h-full object-cover" alt="Hero Promo">`
-                        }
-                    </div>
-                `).join('');
             }
         }
 

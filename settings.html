@@ -78,11 +78,12 @@
                     <i data-lucide="settings" class="w-4 h-4"></i>
                     إعدادات الربط
                 </button>
-                <button onclick="document.getElementById('csvFileInput').click()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-xl transition-colors">
+                <button onclick="document.getElementById('csvFileInput').click()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-xl transition-colors hidden sm:flex">
                     <i data-lucide="upload" class="w-4 h-4"></i>
-                    رفع ملف يدوياً
+                    رفع ملف (CSV)
                 </button>
                 <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleFileUpload(event)">
+                <input type="file" id="productImageInput" accept="image/*" class="hidden" onchange="handleProductImage(event)">
                 
                 <button onclick="saveToGitHub()" id="saveBtn" class="flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand-accent text-white font-bold rounded-xl transition-colors shadow-md hover:shadow-lg">
                     <i data-lucide="github" class="w-4 h-4"></i>
@@ -91,12 +92,22 @@
             </div>
         </header>
 
+        <!-- Hero Settings Block -->
+        <div class="px-8 py-5 bg-white border-b border-gray-200">
+            <div class="flex items-center gap-2 mb-1">
+                <i data-lucide="image" class="w-5 h-5 text-brand"></i>
+                <h2 class="text-lg font-bold text-dark">إعدادات صور وفيديوهات قسم (Hero)</h2>
+            </div>
+            <p class="text-sm text-gray-500 mb-3">اكتب أسماء الملفات الموجودة في مجلد <code class="bg-gray-100 px-1 rounded text-xs">assets/hero/</code> (كل ملف في سطر).</p>
+            <textarea id="heroFilesInput" rows="2" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg p-3 text-left font-mono text-sm" dir="ltr" placeholder="promo1.jpg&#10;video1.mp4"></textarea>
+        </div>
+
         <!-- Toolbar -->
-        <div class="px-8 py-4 bg-gray-50 flex justify-between items-center border-b border-gray-200">
+        <div class="px-8 py-3 bg-gray-50 flex justify-between items-center border-b border-gray-200">
             <div class="flex items-center gap-2">
                 <button onclick="addRow()" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 hover:border-brand hover:text-brand text-gray-700 font-semibold rounded-lg transition-colors text-sm shadow-sm">
                     <i data-lucide="plus" class="w-4 h-4"></i>
-                    إضافة عنصر جديد
+                    إضافة منتج جديد
                 </button>
             </div>
             <div id="statusMessage" class="text-sm font-semibold text-brand">جاري تحميل البيانات...</div>
@@ -157,6 +168,7 @@
     <script>
         let menuData = [];
         let headers = [];
+        let uploadingRowIndex = -1;
 
         // --- تهيئة بيانات GitHub المحفوظة مسبقاً ---
         let ghConfig = {
@@ -168,6 +180,7 @@
 
         // Try fetching initial data
         window.onload = async () => {
+            // Fetch CSV
             try {
                 const response = await fetch('./menu.csv');
                 if (!response.ok) throw new Error("File not found");
@@ -177,17 +190,29 @@
                 document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
             } catch (error) {
                 console.warn(error);
-                document.getElementById('statusMessage').innerText = "لم يتم العثور على menu.csv. يرجى رفع الملف يدوياً.";
+                document.getElementById('statusMessage').innerText = "لم يتم العثور على menu.csv. سيتم إنشاء ملف جديد عند الحفظ.";
                 document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
-                // Default headers if no file
                 headers = ["name", "category", "price", "oldPrice", "description", "image", "tag", "isTopSeller", "isSpecialOffer"];
                 renderTable();
             }
+
+            // Fetch Hero config
+            try {
+                const heroRes = await fetch('./hero.json');
+                if (heroRes.ok) {
+                    const heroFiles = await heroRes.json();
+                    if(Array.isArray(heroFiles)) {
+                        document.getElementById('heroFilesInput').value = heroFiles.join('\n');
+                    }
+                }
+            } catch(e) {
+                console.warn('No hero.json found, starting fresh.');
+            }
+
             lucide.createIcons();
 
-            // فحص هل إعدادات جيت هاب فارغة؟ للتنبيه
             if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
-                document.getElementById('statusMessage').innerText = "يرجى 'إعدادات الربط' لتفعيل الحفظ في جيت هاب.";
+                document.getElementById('statusMessage').innerText = "يرجى إكمال 'إعدادات الربط' لتفعيل الميزات.";
                 document.getElementById('statusMessage').className = "text-sm font-semibold text-orange-500";
             }
         };
@@ -223,26 +248,13 @@
             }
         }
 
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                processCSV(e.target.result);
-                document.getElementById('statusMessage').innerText = "تم رفع الملف بنجاح";
-                document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
-                lucide.createIcons();
-            };
-            reader.readAsText(file);
-        }
-
         function renderTable() {
             const thead = document.getElementById('tableHeaders');
             const tbody = document.getElementById('tableBody');
             
             // Render Headers
             let headersHTML = headers.map(h => `<th class="py-4 px-4 font-bold uppercase tracking-wider">${h}</th>`).join('');
-            headersHTML += `<th class="py-4 px-4 w-16 text-center">إجراءات</th>`;
+            headersHTML += `<th class="py-4 px-4 min-w-[100px] text-center">إجراءات</th>`;
             thead.innerHTML = headersHTML;
 
             // Render Body
@@ -250,7 +262,6 @@
                 let tr = `<tr class="hover:bg-gray-50 group">`;
                 headers.forEach(h => {
                     let val = row[h] || '';
-                    // Some fields are better as LTR (like URLs, prices) and others RTL (names, descriptions)
                     let isRTL = ['name', 'description', 'category', 'tag'].includes(h);
                     tr += `
                         <td class="px-2 py-2 border-r border-gray-100 first:border-r-0">
@@ -263,9 +274,14 @@
                 });
                 tr += `
                     <td class="px-4 py-2 text-center border-r border-gray-100">
-                        <button onclick="deleteRow(${rowIndex})" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" title="حذف">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                        </button>
+                        <div class="flex justify-center items-center gap-1">
+                            <button onclick="triggerImageUpload(${rowIndex})" class="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-full hover:bg-blue-50" title="رفع صورة لهذا المنتج">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                            </button>
+                            <button onclick="deleteRow(${rowIndex})" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" title="حذف">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
                 return tr;
@@ -279,7 +295,6 @@
         function addRow() {
             let newRow = {};
             headers.forEach(h => newRow[h] = '');
-            // Some smart defaults
             if(headers.includes('isTopSeller')) newRow['isTopSeller'] = 'FALSE';
             if(headers.includes('isSpecialOffer')) newRow['isSpecialOffer'] = 'FALSE';
             
@@ -323,11 +338,103 @@
             alert('تم حفظ إعدادات GitHub بنجاح!');
         }
 
-        // دالة ترميز Base64 آمنة تدعم اللغة العربية (Unicode)
+        // دالة ترميز Base64 آمنة
         function utf8_to_b64(str) {
             return window.btoa(unescape(encodeURIComponent(str)));
         }
 
+        // دالة رفع أي ملف إلى GitHub (للصور، الـ CSV، والـ JSON)
+        async function pushFileToGitHub(filePath, base64Content, commitMessage) {
+            const apiUrl = `https://api.github.com/repos/${ghConfig.username}/${ghConfig.repo}/contents/${filePath}`;
+            
+            let currentSha = null;
+            try {
+                const getRes = await fetch(`${apiUrl}?ref=${ghConfig.branch}`, {
+                    headers: { 'Authorization': `Bearer ${ghConfig.token}`, 'Accept': 'application/vnd.github+json' }
+                });
+                if (getRes.ok) {
+                    const fileData = await getRes.json();
+                    currentSha = fileData.sha;
+                }
+            } catch(e) {}
+
+            const putRes = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${ghConfig.token}`,
+                    'Accept': 'application/vnd.github+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: commitMessage,
+                    content: base64Content,
+                    sha: currentSha,
+                    branch: ghConfig.branch
+                })
+            });
+
+            if (!putRes.ok) {
+                const errObj = await putRes.json();
+                throw new Error(errObj.message || 'فشل في الرفع');
+            }
+        }
+
+        // --- وظيفة رفع صور المنتجات ---
+        function triggerImageUpload(index) {
+            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
+                alert("يرجى إدخال إعدادات الربط مع GitHub أولاً.");
+                openGitHubModal();
+                return;
+            }
+            uploadingRowIndex = index;
+            document.getElementById('productImageInput').click();
+        }
+
+        function handleProductImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const row = menuData[uploadingRowIndex];
+            
+            // استخراج اسم مناسب للصورة (نستخدم الاسم في حقل image إن وجد، وإلا نستخدم name ونستبدل المسافات)
+            let baseName = row['image'] ? row['image'].replace(/\.[^/.]+$/, "") : row['name'].trim().replace(/\s+/g, '_');
+            
+            if(!baseName) {
+                alert("يرجى كتابة اسم المنتج أولاً قبل رفع الصورة.");
+                return;
+            }
+
+            const ext = file.name.split('.').pop();
+            const fileName = `${baseName}.${ext}`;
+            const filePath = `assets/menu/${fileName}`;
+
+            document.getElementById('statusMessage').innerText = `جاري رفع صورة ${fileName}...`;
+            document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    // استخراج محتوى Base64 الفعلي (إزالة الترويسة data:image/...)
+                    const base64Content = e.target.result.split(',')[1];
+                    await pushFileToGitHub(filePath, base64Content, `رفع صورة المنتج: ${fileName}`);
+                    
+                    // تحديث الجدول باسم الصورة الجديد
+                    menuData[uploadingRowIndex]['image'] = fileName;
+                    renderTable();
+                    
+                    document.getElementById('statusMessage').innerText = `تم رفع صورة ${fileName} بنجاح! لا تنسَ الضغط على "حفظ في GitHub".`;
+                    document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
+                } catch (error) {
+                    console.error(error);
+                    alert("حدث خطأ أثناء رفع الصورة: " + error.message);
+                    document.getElementById('statusMessage').innerText = "فشل رفع الصورة.";
+                    document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- وظيفة الحفظ النهائية (Menu + Hero) ---
         async function saveToGitHub() {
             if (menuData.length === 0) {
                 alert("لا يوجد بيانات لتصديرها.");
@@ -348,60 +455,25 @@
             document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
             lucide.createIcons();
 
-            // 1. إنشاء نص الـ CSV
-            let csvStr = headers.join(',') + '\n';
-            menuData.forEach(row => {
-                let rowValues = headers.map(h => {
-                    let val = String(row[h] || '');
-                    if (val.includes(',') || val.includes('"') || val.includes('\n')) {
-                        val = `"${val.replace(/"/g, '""')}"`;
-                    }
-                    return val;
-                });
-                csvStr += rowValues.join(',') + '\n';
-            });
-
-            // مسار الملف داخل المستودع (يجب أن يكون بجانب index.html)
-            const filePath = 'menu.csv'; 
-            const apiUrl = `https://api.github.com/repos/${ghConfig.username}/${ghConfig.repo}/contents/${filePath}`;
-            
             try {
-                // 2. جلب SHA الخاص بالملف القديم (مطلوب من GitHub لتحديث ملف موجود)
-                let currentSha = null;
-                const getRes = await fetch(`${apiUrl}?ref=${ghConfig.branch}`, {
-                    headers: {
-                        'Authorization': `Bearer ${ghConfig.token}`,
-                        'Accept': 'application/vnd.github+json'
-                    }
+                // 1. تحضير ورفع ملف CSV
+                let csvStr = headers.join(',') + '\n';
+                menuData.forEach(row => {
+                    let rowValues = headers.map(h => {
+                        let val = String(row[h] || '');
+                        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                            val = `"${val.replace(/"/g, '""')}"`;
+                        }
+                        return val;
+                    });
+                    csvStr += rowValues.join(',') + '\n';
                 });
+                await pushFileToGitHub('menu.csv', utf8_to_b64(csvStr), "تحديث قائمة الطعام (menu.csv)");
 
-                if (getRes.ok) {
-                    const fileData = await getRes.json();
-                    currentSha = fileData.sha;
-                } else if (getRes.status !== 404) {
-                    throw new Error('فشل في العثور على الملف الحالي. تأكد من صحة اسم المستخدم واسم المستودع.');
-                }
-
-                // 3. تحديث الملف عن طريق رفع المحتوى الجديد (بصيغة Base64)
-                const putRes = await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${ghConfig.token}`,
-                        'Accept': 'application/vnd.github+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: "تحديث قائمة الطعام عبر واجهة الإعدادات",
-                        content: utf8_to_b64(csvStr),
-                        sha: currentSha,
-                        branch: ghConfig.branch
-                    })
-                });
-
-                if (!putRes.ok) {
-                    const errObj = await putRes.json();
-                    throw new Error(errObj.message || 'فشل في رفع الملف');
-                }
+                // 2. تحضير ورفع ملف hero.json الخاص بالصور والفيديوهات
+                const heroLines = document.getElementById('heroFilesInput').value.split('\n').map(l => l.trim()).filter(l => l);
+                const heroJsonStr = JSON.stringify(heroLines, null, 2);
+                await pushFileToGitHub('hero.json', utf8_to_b64(heroJsonStr), "تحديث صور وفيديوهات الهيرو (hero.json)");
 
                 document.getElementById('statusMessage').innerText = "تم الحفظ بنجاح! قد تستغرق التعديلات دقيقة لتظهر على موقعك.";
                 document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
