@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات قائمة Groove</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="./tailwindcss.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="./lucide_icons.js"></script>
+    
+    <!-- Google Fonts: Cairo for Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#7b937e',
+                            light: '#eef2ef',
+                            accent: '#5f7561'
+                        },
+                        dark: '#111111',
+                        surface: '#faf9f6'
+                    },
+                    fontFamily: {
+                        'sans': ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #faf9f6; }
+        .table-input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-align: right;
+            direction: ltr; /* Keeping LTR for data like images/prices but RTL for text */
+        }
+        .table-input:hover { border-color: #e2e8f0; }
+        .table-input:focus {
+            background: white;
+            border-color: #7b937e;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(123, 147, 126, 0.2);
+        }
+        .arabic-text { direction: rtl; }
+    </style>
+</head>
+<body class="font-sans text-dark antialiased min-h-screen flex flex-col p-6">
+
+    <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+        
+        <!-- Header -->
+        <header class="bg-surface px-8 py-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <img src="./assets/logo.png" alt="Groove Logo" class="h-10 object-contain" onerror="this.src='https://via.placeholder.com/40?text=G'">
+                <div>
+                    <h1 class="text-2xl font-bold text-dark">إدارة قائمة الطعام</h1>
+                    <p class="text-sm text-gray-500">قم بتعديل، إضافة، أو حذف العناصر، ثم قم بتنزيل الملف المحدث.</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="openGitHubModal()" class="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-xl transition-colors">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    إعدادات الربط
+                </button>
+                <button onclick="document.getElementById('csvFileInput').click()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-xl transition-colors">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    رفع ملف يدوياً
+                </button>
+                <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleFileUpload(event)">
+                
+                <button onclick="saveToGitHub()" id="saveBtn" class="flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand-accent text-white font-bold rounded-xl transition-colors shadow-md hover:shadow-lg">
+                    <i data-lucide="github" class="w-4 h-4"></i>
+                    حفظ في GitHub
+                </button>
+            </div>
+        </header>
+
+        <!-- Toolbar -->
+        <div class="px-8 py-4 bg-gray-50 flex justify-between items-center border-b border-gray-200">
+            <div class="flex items-center gap-2">
+                <button onclick="addRow()" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 hover:border-brand hover:text-brand text-gray-700 font-semibold rounded-lg transition-colors text-sm shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    إضافة عنصر جديد
+                </button>
+            </div>
+            <div id="statusMessage" class="text-sm font-semibold text-brand">جاري تحميل البيانات...</div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="flex-1 overflow-auto">
+            <table class="w-full text-right border-collapse whitespace-nowrap">
+                <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
+                    <tr id="tableHeaders" class="text-gray-600 text-sm">
+                        <!-- Headers injected here -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-gray-100">
+                    <!-- Rows injected here -->
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+
+    <!-- نافذة إعدادات GitHub المنبثقة -->
+    <div id="githubModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-right">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="closeGitHubModal()" class="text-gray-400 hover:text-red-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <h2 class="text-xl font-bold text-dark">إعدادات الربط مع GitHub</h2>
+            </div>
+            <p class="text-sm text-gray-500 mb-6">أدخل بيانات مستودعك ليتمكن الموقع من تحديث الملف تلقائياً. (يتم حفظ هذه البيانات في متصفحك محلياً فقط لأمانك).</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">اسم المستخدم (Username)</label>
+                    <input type="text" id="ghUsername" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" placeholder="مثال: AhmedAli">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">اسم المستودع (Repository)</label>
+                    <input type="text" id="ghRepo" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" placeholder="مثال: groove-menu">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">الفرع (Branch)</label>
+                    <input type="text" id="ghBranch" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" value="main">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">رمز المرور (Personal Access Token)</label>
+                    <input type="password" id="ghToken" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                    <p class="text-xs text-gray-500 mt-1">يجب أن يمتلك الرمز صلاحيات <strong>repo</strong> كاملة.</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button onclick="closeGitHubModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-lg transition-colors">إلغاء</button>
+                <button onclick="saveGitHubSettings()" class="px-4 py-2 bg-brand hover:bg-brand-accent text-white font-bold rounded-lg transition-colors">حفظ البيانات</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let menuData = [];
+        let headers = [];
+
+        // --- تهيئة بيانات GitHub المحفوظة مسبقاً ---
+        let ghConfig = {
+            username: localStorage.getItem('ghUsername') || '',
+            repo: localStorage.getItem('ghRepo') || '',
+            branch: localStorage.getItem('ghBranch') || 'main',
+            token: localStorage.getItem('ghToken') || ''
+        };
+
+        // Try fetching initial data
+        window.onload = async () => {
+            try {
+                const response = await fetch('./menu.csv');
+                if (!response.ok) throw new Error("File not found");
+                const text = await response.text();
+                processCSV(text);
+                document.getElementById('statusMessage').innerText = "تم تحميل البيانات بنجاح";
+                document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
+            } catch (error) {
+                console.warn(error);
+                document.getElementById('statusMessage').innerText = "لم يتم العثور على menu.csv. يرجى رفع الملف يدوياً.";
+                document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
+                // Default headers if no file
+                headers = ["name", "category", "price", "oldPrice", "description", "image", "tag", "isTopSeller", "isSpecialOffer"];
+                renderTable();
+            }
+            lucide.createIcons();
+
+            // فحص هل إعدادات جيت هاب فارغة؟ للتنبيه
+            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
+                document.getElementById('statusMessage').innerText = "يرجى 'إعدادات الربط' لتفعيل الحفظ في جيت هاب.";
+                document.getElementById('statusMessage').className = "text-sm font-semibold text-orange-500";
+            }
+        };
+
+        function parseCSV(str) {
+            const arr = [];
+            let quote = false;
+            for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                arr[row] = arr[row] || [];
+                arr[row][col] = arr[row][col] || '';
+                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+                if (cc == '"') { quote = !quote; continue; }
+                if (cc == ',' && !quote) { ++col; continue; }
+                if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+                if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+                if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+                arr[row][col] += cc;
+            }
+            return arr;
+        }
+
+        function processCSV(text) {
+            const rows = parseCSV(text);
+            if(rows.length > 0) {
+                headers = rows[0].map(h => h.trim());
+                menuData = rows.slice(1).filter(r => r.length === headers.length && r[0].trim() !== '').map(row => {
+                    let obj = {};
+                    headers.forEach((h, i) => { obj[h] = row[i] ? row[i].trim() : ''; });
+                    return obj;
+                });
+                renderTable();
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                processCSV(e.target.result);
+                document.getElementById('statusMessage').innerText = "تم رفع الملف بنجاح";
+                document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
+                lucide.createIcons();
+            };
+            reader.readAsText(file);
+        }
+
+        function renderTable() {
+            const thead = document.getElementById('tableHeaders');
+            const tbody = document.getElementById('tableBody');
+            
+            // Render Headers
+            let headersHTML = headers.map(h => `<th class="py-4 px-4 font-bold uppercase tracking-wider">${h}</th>`).join('');
+            headersHTML += `<th class="py-4 px-4 w-16 text-center">إجراءات</th>`;
+            thead.innerHTML = headersHTML;
+
+            // Render Body
+            tbody.innerHTML = menuData.map((row, rowIndex) => {
+                let tr = `<tr class="hover:bg-gray-50 group">`;
+                headers.forEach(h => {
+                    let val = row[h] || '';
+                    // Some fields are better as LTR (like URLs, prices) and others RTL (names, descriptions)
+                    let isRTL = ['name', 'description', 'category', 'tag'].includes(h);
+                    tr += `
+                        <td class="px-2 py-2 border-r border-gray-100 first:border-r-0">
+                            <input type="text" 
+                                class="table-input ${isRTL ? 'arabic-text' : 'text-left'}" 
+                                value="${val.replace(/"/g, '&quot;')}" 
+                                onchange="updateCell(${rowIndex}, '${h}', this.value)">
+                        </td>
+                    `;
+                });
+                tr += `
+                    <td class="px-4 py-2 text-center border-r border-gray-100">
+                        <button onclick="deleteRow(${rowIndex})" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" title="حذف">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                    </td>
+                </tr>`;
+                return tr;
+            }).join('');
+        }
+
+        function updateCell(rowIndex, header, value) {
+            menuData[rowIndex][header] = value;
+        }
+
+        function addRow() {
+            let newRow = {};
+            headers.forEach(h => newRow[h] = '');
+            // Some smart defaults
+            if(headers.includes('isTopSeller')) newRow['isTopSeller'] = 'FALSE';
+            if(headers.includes('isSpecialOffer')) newRow['isSpecialOffer'] = 'FALSE';
+            
+            menuData.unshift(newRow); // Add to top
+            renderTable();
+        }
+
+        function deleteRow(index) {
+            if(confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+                menuData.splice(index, 1);
+                renderTable();
+            }
+        }
+
+        // --- وظائف الربط مع GitHub ---
+
+        function openGitHubModal() {
+            document.getElementById('ghUsername').value = ghConfig.username;
+            document.getElementById('ghRepo').value = ghConfig.repo;
+            document.getElementById('ghBranch').value = ghConfig.branch;
+            document.getElementById('ghToken').value = ghConfig.token;
+            document.getElementById('githubModal').classList.remove('hidden');
+        }
+
+        function closeGitHubModal() {
+            document.getElementById('githubModal').classList.add('hidden');
+        }
+
+        function saveGitHubSettings() {
+            ghConfig.username = document.getElementById('ghUsername').value.trim();
+            ghConfig.repo = document.getElementById('ghRepo').value.trim();
+            ghConfig.branch = document.getElementById('ghBranch').value.trim() || 'main';
+            ghConfig.token = document.getElementById('ghToken').value.trim();
+
+            localStorage.setItem('ghUsername', ghConfig.username);
+            localStorage.setItem('ghRepo', ghConfig.repo);
+            localStorage.setItem('ghBranch', ghConfig.branch);
+            localStorage.setItem('ghToken', ghConfig.token);
+
+            closeGitHubModal();
+            alert('تم حفظ إعدادات GitHub بنجاح!');
+        }
+
+        // دالة ترميز Base64 آمنة تدعم اللغة العربية (Unicode)
+        function utf8_to_b64(str) {
+            return window.btoa(unescape(encodeURIComponent(str)));
+        }
+
+        async function saveToGitHub() {
+            if (menuData.length === 0) {
+                alert("لا يوجد بيانات لتصديرها.");
+                return;
+            }
+
+            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
+                alert("يرجى إدخال إعدادات الربط مع GitHub أولاً.");
+                openGitHubModal();
+                return;
+            }
+
+            const btn = document.getElementById('saveBtn');
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> جاري الحفظ...`;
+            btn.disabled = true;
+            document.getElementById('statusMessage').innerText = "جاري الاتصال بـ GitHub لرفع التعديلات...";
+            document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
+            lucide.createIcons();
+
+            // 1. إنشاء نص الـ CSV
+            let csvStr = headers.join(',') + '\n';
+            menuData.forEach(row => {
+                let rowValues = headers.map(h => {
+                    let val = String(row[h] || '');
+                    if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+                        val = `"${val.replace(/"/g, '""')}"`;
+                    }
+                    return val;
+                });
+                csvStr += rowValues.join(',') + '\n';
+            });
+
+            // مسار الملف داخل المستودع (يجب أن يكون بجانب index.html)
+            const filePath = 'menu.csv'; 
+            const apiUrl = `https://api.github.com/repos/${ghConfig.username}/${ghConfig.repo}/contents/${filePath}`;
+            
+            try {
+                // 2. جلب SHA الخاص بالملف القديم (مطلوب من GitHub لتحديث ملف موجود)
+                let currentSha = null;
+                const getRes = await fetch(`${apiUrl}?ref=${ghConfig.branch}`, {
+                    headers: {
+                        'Authorization': `Bearer ${ghConfig.token}`,
+                        'Accept': 'application/vnd.github+json'
+                    }
+                });
+
+                if (getRes.ok) {
+                    const fileData = await getRes.json();
+                    currentSha = fileData.sha;
+                } else if (getRes.status !== 404) {
+                    throw new Error('فشل في العثور على الملف الحالي. تأكد من صحة اسم المستخدم واسم المستودع.');
+                }
+
+                // 3. تحديث الملف عن طريق رفع المحتوى الجديد (بصيغة Base64)
+                const putRes = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${ghConfig.token}`,
+                        'Accept': 'application/vnd.github+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: "تحديث قائمة الطعام عبر واجهة الإعدادات",
+                        content: utf8_to_b64(csvStr),
+                        sha: currentSha,
+                        branch: ghConfig.branch
+                    })
+                });
+
+                if (!putRes.ok) {
+                    const errObj = await putRes.json();
+                    throw new Error(errObj.message || 'فشل في رفع الملف');
+                }
+
+                document.getElementById('statusMessage').innerText = "تم الحفظ بنجاح! قد تستغرق التعديلات دقيقة لتظهر على موقعك.";
+                document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
+                
+            } catch (error) {
+                console.error(error);
+                alert('حدث خطأ: ' + error.message);
+                document.getElementById('statusMessage').innerText = "فشل الحفظ في GitHub.";
+                document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
+            } finally {
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+</html>

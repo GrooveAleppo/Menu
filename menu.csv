@@ -1,0 +1,30 @@
+id,name,description,price,oldPrice,category,isTopSeller,isSpecialOffer,specialOfferTag
+1,Espresso,Single origin espresso shot,3.00,5.00,Hot Drinks,true,false,33% OFF
+2,Americano,Classic espresso with hot water,3.50,,Hot Drinks,false,false,
+3,Velvet Cortado,Double shot with silky micro-foam,4.50,,Hot Drinks,false,false,
+4,Classic Flat White,Smooth micro-foam over double espresso,4.50,,Hot Drinks,false,false,NEW
+5,Cappuccino,Rich espresso topped with deep layer of foam,4.00,,Hot Drinks,false,false,
+6,Oat Milk Latte,Creamy plant-based classic,5.25,,Hot Drinks,false,false,
+7,Vanilla Bean Latte,Latte with real vanilla bean syrup,5.50,,Hot Drinks,false,false,
+8,Spanish Latte,Sweet and creamy condensed milk latte,5.75,,Hot Drinks,false,false,POPULAR
+9,Mocha,Espresso with rich dark chocolate,5.50,,Hot Drinks,false,false,
+10,Midnight Cold Brew,Slow-steeped for 18 hours,5.25,,Cold Drinks,false,false,
+11,Iced Americano,Chilled espresso over water and ice,4.00,,Cold Drinks,false,false,
+12,Iced Oat Latte,Our classic oat latte served cold,5.50,,Cold Drinks,false,false,
+13,Cloud Macchiato,Extra foam with double caramel drizzle,4.80,5.65,Cold Drinks,false,true,15% OFF
+14,Iced Matcha,Ceremonial grade organic matcha,6.00,,Cold Drinks,false,false,HEALTHY
+15,Peach Iced Tea,House-brewed black tea with peach syrup,4.50,,Cold Drinks,false,false,
+16,Passionfruit Mojito,Refreshing mint and passionfruit mocktail,5.00,6.50,Cold Drinks,false,true,SUMMER
+17,Morning Bundle,Classic Croissant + Large Coffee,7.50,9.00,Bakery,false,true,BUNDLE
+18,Butter Croissant,Freshly baked flaky butter croissant,3.50,,Bakery,true,false,
+19,Almond Croissant,Topped with toasted almonds and powdered sugar,4.50,,Bakery,false,false,
+20,Pain au Chocolat,Classic French chocolate pastry,4.00,,Bakery,false,false,
+21,Banana Bread,Warm slice of homemade banana bread,4.50,,Bakery,false,false,VEGAN
+22,Cinnamon Roll,Soft roll topped with cream cheese frosting,5.00,,Bakery,false,false,
+23,Blueberry Muffin,Loaded with fresh blueberries,3.75,,Bakery,false,false,
+24,Honey Cake,Russian honey cake layers,6.50,,Desserts,false,false,SIGNATURE
+25,San Sebastian Cheesecake,Burnt basque cheesecake with a creamy center,7.00,,Desserts,false,false,
+26,Dark Chocolate Brownie,Fudgy brownie with sea salt flakes,4.50,,Desserts,false,false,
+27,Lemon Tart,Zesty lemon curd in a buttery pastry shell,5.50,,Desserts,false,false,
+28,Avocado Toast,Mashed avocado on sourdough with chili flakes,8.50,,Food,false,false,
+29,Acai Bowl,Blended acai topped with granola and berries,9.00,,Food,false,false,

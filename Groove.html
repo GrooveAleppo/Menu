@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Groove Menu</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="./tailwindcss.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="./lucide_icons.js"></script>
+    
+    <!-- Google Fonts: Inter (Sans Serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#7b937e', // Logo color (Sage Green)
+                            light: '#eef2ef',
+                            accent: '#5f7561'
+                        },
+                        dark: '#111111',
+                        surface: '#faf9f6' // Off-white background
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 30px rgba(0,0,0,0.04)',
+                        'floating': '0 10px 40px rgba(0,0,0,0.1)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #faf9f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Animations */
+        .slide-up {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .slide-up.active {
+            transform: translateY(0);
+        }
+        
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-item {
+            animation: fade-in-up 0.5s ease-out forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="font-sans text-dark antialiased bg-surface">
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-surface z-[60] flex items-center justify-center">
+        <img src="./assets/logo.png" alt="Groove Logo" class="h-20 object-contain animate-pulse">
+    </div>
+
+    <!-- Main App Container -->
+    <div class="max-w-md mx-auto relative bg-surface min-h-screen shadow-2xl overflow-hidden flex flex-col">
+
+        <!-- ================= HOME SCREEN ================= -->
+        <div id="homeScreen" class="pb-32 bg-surface min-h-screen overflow-y-auto">
+            
+            <!-- Restored Top App Bar -->
+            <header class="py-5 px-6 flex justify-between items-center bg-surface sticky top-0 z-30">
+                <button onclick="toggleSidebar(true)" class="p-2 -ml-2 text-dark w-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                </button>
+                <img src="./assets/logo.png" alt="Groove Logo" class="h-8 object-contain">
+                <div class="w-10"></div> <!-- Placeholder to balance center alignment -->
+            </header>
+
+            <!-- Hero Carousel Section (Hidden by default, shown dynamically if files exist) -->
+            <section id="heroSection" class="mb-10 mt-2 hidden">
+                <div id="heroCarouselContainer" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 px-5 pb-4">
+                    <!-- Hero Slides will be dynamically injected here -->
+                </div>
+            </section>
+
+            <!-- Top Sellers -->
+            <section id="topSellersSection" class="mb-10 px-5 hidden">
+                <div class="flex justify-between items-end mb-5">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-brand-accent">Popular Now</span>
+                        <h2 class="text-3xl font-bold tracking-tight mt-1">Top Sellers</h2>
+                    </div>
+                    <button class="text-brand-accent text-sm font-bold mb-1">See All</button>
+                </div>
+                <div id="topSellersContainer" class="flex overflow-x-auto hide-scrollbar gap-4 -mx-5 px-5 pb-4">
+                    <!-- Top Sellers will be injected here -->
+                </div>
+            </section>
+
+            <!-- Special Offers -->
+            <section id="specialOffersSection" class="px-5 mb-10 hidden">
+                <div class="mb-5">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-brand-accent">Handpicked For You</span>
+                    <h2 class="text-3xl font-bold tracking-tight mt-1">Special Offers</h2>
+                </div>
+                <div id="specialOffersContainer" class="flex flex-col gap-4">
+                    <!-- Special Offers will be injected here -->
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Floating Full Menu Button -->
+        <div class="fixed bottom-8 left-0 right-0 flex justify-center z-40 max-w-md mx-auto pointer-events-none">
+            <button 
+                onclick="toggleMenu(true)"
+                class="bg-dark text-white px-8 py-4 rounded-full font-bold tracking-wide shadow-floating flex items-center gap-2 pointer-events-auto transition-transform active:scale-95"
+            >
+                FULL MENU
+            </button>
+        </div>
+
+        <!-- ================= FULL MENU OVERLAY ================= -->
+        <div id="menuOverlay" class="fixed inset-0 bg-surface z-50 flex flex-col slide-up max-w-md mx-auto shadow-2xl">
+            
+            <!-- Menu Header -->
+            <div class="flex justify-between items-center px-6 pt-10 pb-6 bg-surface shrink-0">
+                <h2 class="text-4xl font-black tracking-tight text-dark">Menu</h2>
+                <button onclick="toggleMenu(false)" class="p-2.5 bg-gray-100 rounded-full text-dark hover:bg-gray-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Categories Tabs -->
+            <div id="categoriesContainer" class="flex overflow-x-auto hide-scrollbar px-6 bg-surface shrink-0 gap-8 border-b border-gray-200">
+                <!-- Categories will be injected here -->
+            </div>
+
+            <!-- Menu Items List -->
+            <div class="flex-1 overflow-y-auto px-6 py-8 bg-surface">
+                <div id="menuItemsContainer" class="grid grid-cols-2 gap-x-4 gap-y-8">
+                    <!-- Items will be injected here -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= SIDEBAR MENU ================= -->
+        <div id="sidebarMenu" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/50 z-[70] opacity-0 pointer-events-none transition-opacity duration-300">
+            <div id="sidebarContent" onclick="event.stopPropagation()" class="absolute top-0 left-0 w-[80%] max-w-[320px] h-full bg-surface shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <img src="./assets/logo.jpeg" alt="Groove Logo" class="h-8 object-contain">
+                    <button onclick="toggleSidebar(false)" class="p-2 bg-gray-100 rounded-full text-dark hover:bg-gray-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto py-6 flex flex-col gap-2 px-4">
+                    <button onclick="navigateTo('home')" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
+                        <i data-lucide="home" class="w-5 h-5 text-gray-500"></i> Home
+                    </button>
+                    <button onclick="navigateTo('menu')" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
+                        <i data-lucide="coffee" class="w-5 h-5 text-gray-500"></i> Full Menu
+                    </button>
+                    <div class="h-px bg-gray-200 my-2 mx-4"></div>
+                    <button onclick="navigateTo('about')" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
+                        <i data-lucide="info" class="w-5 h-5 text-gray-500"></i> About Us
+                    </button>
+                    <button onclick="navigateTo('location')" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
+                        <i data-lucide="map-pin" class="w-5 h-5 text-gray-500"></i> Location
+                    </button>
+                    <button onclick="navigateTo('contact')" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
+                        <i data-lucide="phone" class="w-5 h-5 text-gray-500"></i> Contact
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= GENERIC PAGE OVERLAY ================= -->
+        <div id="pageOverlay" class="fixed inset-0 bg-surface z-[60] flex flex-col slide-up max-w-md mx-auto shadow-2xl">
+            <div class="flex justify-between items-center px-6 pt-10 pb-6 bg-surface shrink-0">
+                <h2 id="pageTitle" class="text-4xl font-black tracking-tight text-dark">Page</h2>
+                <button onclick="closePage()" class="p-2.5 bg-gray-100 rounded-full text-dark hover:bg-gray-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div id="pageContent" class="flex-1 overflow-y-auto px-6 py-4 bg-surface text-gray-600 leading-relaxed font-sans text-[15px]">
+                <!-- Content injected here -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Data & State ---
+        let itemsData = [];
+        let categoriesData = [];
+        let activeCategory = '';
+
+        // --- Helper Function for Dynamic Menu Images ---
+        function getImgProps(item) {
+            // Use item.image if provided, otherwise fallback to item.name
+            let baseName = item.image ? item.image : item.name;
+            // Remove any existing extension so we can control it
+            baseName = baseName.replace(/\.[^/.]+$/, "");
+            
+            const jpgUrl = `./assets/menu/${baseName}.jpg`;
+            // Escape quotes just in case the name contains an apostrophe
+            const pngUrl = `./assets/menu/${baseName}.png`.replace(/'/g, "\\'");
+            
+            // Try JPG first. If it fails, try PNG. If PNG fails, use placeholder.
+            return `src="${jpgUrl}" onerror="if(!this.dataset.triedPng){ this.dataset.triedPng='true'; this.src='${pngUrl}'; } else { this.onerror=null; this.src='https://via.placeholder.com/400?text=No+Image'; }"`;
+        }
+
+        // --- Simple CSV Parser ---
+        function parseCSV(str) {
+            const arr = [];
+            let quote = false;
+            for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+                let cc = str[c], nc = str[c+1];
+                arr[row] = arr[row] || [];
+                arr[row][col] = arr[row][col] || '';
+                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+                if (cc == '"') { quote = !quote; continue; }
+                if (cc == ',' && !quote) { ++col; continue; }
+                if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+                if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+                if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+                arr[row][col] += cc;
+            }
+            return arr;
+        }
+
+        // --- Fetch Data ---
+        async function fetchData() {
+            try {
+                // Fetch CSV Data
+                const response = await fetch('./menu.csv');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load menu.csv (Status: ${response.status})`);
+                }
+                
+                const csvText = await response.text();
+                const rows = parseCSV(csvText);
+                const headers = rows[0].map(h => h.trim());
+                
+                // Convert CSV rows to array of objects
+                itemsData = rows.slice(1).filter(row => row.length === headers.length && row[0].trim() !== '').map(row => {
+                    let obj = {};
+                    headers.forEach((header, i) => {
+                        let val = row[i] ? row[i].trim() : '';
+                        
+                        // Handle boolean flags if they are written as 'true'/'false' in CSV
+                        if (val.toLowerCase() === 'true') val = true;
+                        else if (val.toLowerCase() === 'false') val = false;
+                        
+                        obj[header] = val;
+                    });
+                    return obj;
+                });
+
+                categoriesData = [...new Set(itemsData.map(item => item.category))];
+                activeCategory = categoriesData.length > 0 ? categoriesData[0] : '';
+
+                // Render all sections
+                await loadHeroAssets(); // Dynamically load hero assets
+                renderTopSellers();
+                renderSpecialOffers();
+                renderCategories();
+                renderMenuItems();
+
+                // Hide loading screen
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    lucide.createIcons();
+                }, 500);
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="px-6 text-center flex flex-col items-center gap-4">
+                        <img src="./assets/logo.jpeg" alt="Groove Logo" class="h-16 object-contain opacity-50 grayscale">
+                        <p class="text-red-500 font-bold">Error loading menu data.</p>
+                        <p class="text-sm text-gray-500">Ensure <code class="bg-gray-100 px-1 rounded">./menu.csv</code> exists and the site is running on a local web server (e.g. Live Server), not just opened as a file.</p>
+                    </div>`;
+            }
+        }
+
+        // --- Render Functions ---
+
+        async function loadHeroAssets() {
+            const heroSection = document.getElementById('heroSection');
+            const container = document.getElementById('heroCarouselContainer');
+            const basePath = './assets/hero/';
+            let mediaFiles = [];
+
+            try {
+                // Attempt to fetch directory listing (works on most local dev servers like Live Server)
+                const response = await fetch(basePath);
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    
+                    // Parse HTML directory listing
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const links = Array.from(doc.querySelectorAll('a'));
+                    
+                    links.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (!href) return;
+                        
+                        // Extract filename to prevent pulling parent directory links
+                        const filename = href.split('/').pop().split('?')[0];
+                        if (!filename) return;
+
+                        const lowerName = filename.toLowerCase();
+                        
+                        if (lowerName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+                            mediaFiles.push({ type: 'image', src: basePath + filename });
+                        } else if (lowerName.match(/\.(mp4|webm|ogg)$/)) {
+                            mediaFiles.push({ type: 'video', src: basePath + filename });
+                        }
+                    });
+                }
+            } catch (e) {
+                console.log("Could not auto-fetch hero directory listing. Falling back to hiding hero section.", e);
+            }
+
+            // Remove potential duplicates in case the server lists things twice
+            mediaFiles = [...new Map(mediaFiles.map(item => [item.src, item])).values()];
+
+            if (mediaFiles.length === 0) {
+                // Hide if no assets found
+                heroSection.classList.add('hidden');
+            } else {
+                // Show and render assets
+                heroSection.classList.remove('hidden');
+                container.innerHTML = mediaFiles.map((media) => `
+                    <div class="w-[90%] shrink-0 snap-center bg-gray-100 rounded-[2.5rem] relative overflow-hidden h-[420px] shadow-lg">
+                        ${media.type === 'video' 
+                            ? `<video src="${media.src}" class="absolute inset-0 w-full h-full object-cover" autoplay loop muted playsinline></video>`
+                            : `<img src="${media.src}" class="absolute inset-0 w-full h-full object-cover" alt="Hero Promo">`
+                        }
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderTopSellers() {
+            const topSellers = itemsData.filter(item => item.isTopSeller);
+            if (topSellers.length === 0) return;
+
+            document.getElementById('topSellersSection').classList.remove('hidden');
+            const container = document.getElementById('topSellersContainer');
+            
+            container.innerHTML = topSellers.map((item, index) => `
+                <div class="w-44 shrink-0 flex flex-col bg-white rounded-3xl p-3 shadow-soft animate-item" style="animation-delay: ${index * 150}ms">
+                    <div class="w-full h-40 rounded-[1.25rem] overflow-hidden bg-gray-50 mb-3">
+                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover" />
+                    </div>
+                    <div class="px-1">
+                        <h3 class="font-bold text-lg leading-tight text-dark mb-1">${item.name}</h3>
+                        <div class="font-sans text-sm text-gray-600 font-medium">$${item.price}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSpecialOffers() {
+            const specialOffers = itemsData.filter(item => item.isSpecialOffer);
+            if (specialOffers.length === 0) return;
+
+            document.getElementById('specialOffersSection').classList.remove('hidden');
+            const container = document.getElementById('specialOffersContainer');
+
+            container.innerHTML = specialOffers.map((item, index) => `
+                <div class="flex items-center gap-4 bg-white rounded-3xl p-3 shadow-soft relative animate-item" style="animation-delay: ${index * 200}ms">
+                    <div class="w-20 h-20 rounded-2xl overflow-hidden bg-gray-50 shrink-0">
+                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover" />
+                    </div>
+                    <div class="flex flex-col flex-1 py-1 pr-16">
+                        <h3 class="text-lg font-bold leading-none mb-1.5 text-dark">${item.name}</h3>
+                        <p class="text-xs text-gray-500 leading-tight mb-2 line-clamp-1">${item.description}</p>
+                        <div class="flex items-center gap-2">
+                            <span class="font-sans font-bold text-brand-accent">$${item.price}</span>
+                            ${item.oldPrice ? `<span class="font-sans text-xs font-medium text-gray-400 line-through">$${item.oldPrice}</span>` : ''}
+                        </div>
+                    </div>
+                    ${item.tag ? `
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 bg-brand-light text-brand-accent text-[10px] font-bold px-2 py-1.5 rounded-full uppercase tracking-wide text-center leading-tight">
+                            ${item.tag.replace(' ', '<br>')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = categoriesData.map(category => `
+                <button
+                    onclick="changeCategory('${category}')"
+                    class="whitespace-nowrap flex items-center gap-2 pb-4 text-[15px] font-sans transition-colors relative ${
+                        activeCategory === category
+                            ? 'text-brand font-bold'
+                            : 'text-gray-400 font-medium hover:text-gray-600'
+                    }"
+                >
+                    ${category}
+                    ${activeCategory === category ? '<div class="absolute bottom-0 left-0 w-full h-[2px] bg-brand rounded-t-full"></div>' : ''}
+                </button>
+            `).join('');
+        }
+
+        function renderMenuItems() {
+            const container = document.getElementById('menuItemsContainer');
+            const filteredItems = itemsData.filter(item => item.category === activeCategory);
+
+            if (filteredItems.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center text-gray-400 py-10 font-sans">No items found.</div>';
+                return;
+            }
+
+            container.innerHTML = filteredItems.map((item, index) => `
+                <div class="flex flex-col gap-2 group cursor-pointer animate-item" style="animation-delay: ${index * 60}ms">
+                    <div class="w-full aspect-square bg-gray-100 rounded-[1.5rem] relative overflow-hidden mb-1 shadow-sm">
+                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        ${item.tag ? `
+                            <span class="absolute top-3 right-3 bg-white/90 backdrop-blur text-brand-accent text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                ${item.tag}
+                            </span>
+                        ` : ''}
+                    </div>
+                    <div class="flex flex-col px-1">
+                        <h3 class="text-lg font-bold leading-tight text-dark">${item.name}</h3>
+                        ${item.description ? `<p class="text-sm text-gray-500 mt-1 line-clamp-2 leading-snug">${item.description}</p>` : ''}
+                        <div class="text-base font-sans font-bold text-brand-accent mt-2">
+                            $${item.price}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- Interactivity ---
+
+        function changeCategory(category) {
+            activeCategory = category;
+            renderCategories(); 
+            renderMenuItems();  
+        }
+
+        function toggleMenu(isOpen) {
+            const menu = document.getElementById('menuOverlay');
+            
+            if (isOpen) {
+                menu.classList.add('active');
+                document.body.style.overflow = 'hidden'; 
+            } else {
+                menu.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // --- Navigation & Pages ---
+        
+        function toggleSidebar(isOpen) {
+            const sidebar = document.getElementById('sidebarMenu');
+            const content = document.getElementById('sidebarContent');
+            if(isOpen) {
+                sidebar.classList.remove('opacity-0', 'pointer-events-none');
+                content.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('opacity-0', 'pointer-events-none');
+                content.classList.add('-translate-x-full');
+            }
+        }
+
+        const pagesData = {
+            about: {
+                title: "About Us",
+                content: `<p class="mb-4">Welcome to <img src="./assets/logo.jpeg" alt="Groove" class="h-4 inline-block align-middle object-contain">. We are a community-driven coffee shop dedicated to bringing you the finest seasonal blends and freshly baked pastries.</p>
+                          <p class="mb-4">Founded in 2026, our mission is simple: <em class="text-dark font-medium">Made by friends for friends</em>. We believe that a great cup of coffee is the perfect catalyst for connection.</p>
+                          <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=800" class="rounded-[1.5rem] mt-6 w-full object-cover h-48 shadow-soft">`
+            },
+            location: {
+                title: "Location",
+                content: `<p class="mb-4">Visit us at our flagship store. We're open 7 days a week.</p>
+                          <div class="bg-white shadow-soft p-5 rounded-[1.5rem] mb-4 border border-gray-100">
+                            <strong class="text-dark block mb-2">Address:</strong>
+                            123 Groove Street<br>
+                            Amsterdam, NH 1011 AB
+                          </div>
+                          <div class="bg-white shadow-soft p-5 rounded-[1.5rem] border border-gray-100">
+                            <strong class="text-dark block mb-2">Hours:</strong>
+                            Mon-Fri: 7:00 AM - 8:00 PM<br>
+                            Sat-Sun: 8:00 AM - 9:00 PM
+                          </div>`
+            },
+            contact: {
+                title: "Contact",
+                content: `<p class="mb-6">We'd love to hear from you! Reach out for reservations, catering, or just to say hi.</p>
+                          <div class="bg-white shadow-soft p-5 rounded-[1.5rem] mb-6 border border-gray-100 flex flex-col gap-3">
+                              <p class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium">hello@groove.com</span></p>
+                              <div class="h-px bg-gray-100 w-full"></div>
+                              <p class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium">+31 20 123 4567</span></p>
+                          </div>
+                          <h3 class="text-dark font-bold mb-4">Follow Us</h3>
+                          <div class="flex gap-4">
+                              <a href="#" class="p-3 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand-light transition-colors"><i data-lucide="instagram" class="w-6 h-6"></i></a>
+                              <a href="#" class="p-3 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand-light transition-colors"><i data-lucide="twitter" class="w-6 h-6"></i></a>
+                              <a href="#" class="p-3 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand-light transition-colors"><i data-lucide="facebook" class="w-6 h-6"></i></a>
+                          </div>`
+            }
+        };
+
+        function navigateTo(page) {
+            toggleSidebar(false); 
+            
+            if (page === 'home') {
+                closePage();
+                toggleMenu(false);
+            } else if (page === 'menu') {
+                closePage();
+                toggleMenu(true);
+            } else {
+                document.getElementById('pageTitle').innerText = pagesData[page].title;
+                document.getElementById('pageContent').innerHTML = pagesData[page].content;
+                document.getElementById('pageOverlay').classList.add('active');
+                lucide.createIcons();
+            }
+        }
+
+        function closePage() {
+            document.getElementById('pageOverlay').classList.remove('active');
+        }
+
+        // Initialize App
+        window.onload = fetchData;
+
+    </script>
+</body>
+</html>
