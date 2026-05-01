@@ -1,4 +1,5 @@
 id,name,description,price,oldPrice,category,isTopSeller,isSpecialOffer,specialOfferTag
+29,Milk,,3.00,5.00,Hot Drinks,true,true,New
 1,Espresso,Single origin espresso shot,3.00,5.00,Hot Drinks,true,false,33% OFF
 2,Americano,Classic espresso with hot water,3.50,,Hot Drinks,false,false,
 3,Velvet Cortado,Double shot with silky micro-foam,4.50,,Hot Drinks,false,false,
