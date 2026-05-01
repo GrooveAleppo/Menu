@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Groove Menu</title>
     
-    <!-- Tailwind CSS (via official CDN) -->
+    <!-- تم التحديث للروابط الرسمية المباشرة لحل مشكلة الملف المعطوب -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons (via official CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     <!-- Google Fonts: Inter (Sans Serif) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -221,6 +219,13 @@
         let activeCategory = '';
         let heroAutoScrollInterval;
 
+        // دالة آمنة لتشغيل الأيقونات
+        function initIcons() {
+            if(typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
         // --- Helper Function for Dynamic Menu Images ---
         function getImgProps(item) {
             let baseName = item.image ? item.image : item.name;
@@ -286,7 +291,7 @@
 
                 setTimeout(() => {
                     document.getElementById('loadingScreen').style.display = 'none';
-                    lucide.createIcons();
+                    initIcons();
                 }, 500);
 
             } catch (error) {
@@ -299,7 +304,7 @@
                         <p class="text-red-500 font-bold text-lg">Error loading menu data.</p>
                         <p class="text-sm text-gray-500 max-w-xs">Ensure <code class="bg-gray-100 px-1 rounded">menu.csv</code> exists and the site is running on a server.</p>
                     </div>`;
-                lucide.createIcons();
+                initIcons();
             }
         }
 
@@ -585,7 +590,7 @@
                 document.getElementById('pageTitle').innerText = pagesData[page].title;
                 document.getElementById('pageContent').innerHTML = pagesData[page].content;
                 document.getElementById('pageOverlay').classList.add('active');
-                lucide.createIcons();
+                initIcons();
             }
         }
 

@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إعدادات قائمة Groove</title>
     
-    <!-- Tailwind CSS (via official CDN) -->
+    <!-- تم التحديث للروابط الرسمية المباشرة لحل مشكلة الملف المعطوب -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons (via official CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     <!-- Google Fonts: Cairo for Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -190,6 +188,13 @@
         let heroFilesData = [];
         let uploadingRowIndex = -1;
 
+        // دالة آمنة لتشغيل الأيقونات
+        function initIcons() {
+            if(typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
         // --- تهيئة بيانات GitHub المحفوظة مسبقاً ---
         let ghConfig = {
             username: localStorage.getItem('ghUsername') || '',
@@ -230,7 +235,7 @@
             }
             renderHeroFiles();
 
-            lucide.createIcons();
+            initIcons();
 
             if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
                 document.getElementById('statusMessage').innerText = "يرجى إكمال 'إعدادات الربط' لتفعيل الميزات.";
@@ -335,7 +340,7 @@
                 </div>
             `}).join('');
             
-            lucide.createIcons();
+            initIcons();
         }
 
         function removeHeroFile(index) {
@@ -381,7 +386,7 @@
                     document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
                 }
                 
-                // تفريغ المدخل ليسمح برفع نفس الملف مجدداً إذا لزم الأمر
+                // تفريغ المدخل
                 document.getElementById('heroMediaInput').value = '';
             };
             reader.readAsDataURL(file);
@@ -455,7 +460,9 @@
                     const fileData = await getRes.json();
                     currentSha = fileData.sha;
                 }
-            } catch(e) {}
+            } catch(e) {
+                // Ignore 404s here, it just means the file is new and doesn't have a SHA yet.
+            }
 
             const putRes = await fetch(apiUrl, {
                 method: 'PUT',
@@ -555,7 +562,7 @@
             btn.disabled = true;
             document.getElementById('statusMessage').innerText = "جاري الاتصال بـ GitHub لرفع التعديلات...";
             document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
-            lucide.createIcons();
+            initIcons();
 
             try {
                 // 1. تحضير ورفع ملف CSV
@@ -576,7 +583,7 @@
                 const heroJsonStr = JSON.stringify(heroFilesData, null, 2);
                 await pushFileToGitHub('hero.json', utf8_to_b64(heroJsonStr), "تحديث صور وفيديوهات الهيرو (hero.json)");
 
-                document.getElementById('statusMessage').innerText = "تم الحفظ بنجاح! قد تستغرق التعديلات دقيقة لتظهر على موقعك.";
+                document.getElementById('statusMessage').innerText = "تم الحفظ بنجاح! قد تستغرق التعديلات بضع دقائق لتظهر على موقعك.";
                 document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
                 
             } catch (error) {
@@ -587,7 +594,7 @@
             } finally {
                 btn.innerHTML = originalBtnHtml;
                 btn.disabled = false;
-                lucide.createIcons();
+                initIcons();
             }
         }
     </script>
