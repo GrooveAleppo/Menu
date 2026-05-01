@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Groove Menu</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (via official CDN) -->
     <script src="./tailwindcss.js"></script>
     
     <!-- Lucide Icons -->
@@ -22,12 +22,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            DEFAULT: '#7b937e', // Logo color (Sage Green)
+                            DEFAULT: '#7b937e',
                             light: '#eef2ef',
                             accent: '#5f7561'
                         },
                         dark: '#111111',
-                        surface: '#faf9f6' // Off-white background
+                        surface: '#faf9f6'
                     },
                     fontFamily: {
                         'sans': ['Inter', 'sans-serif'],
@@ -72,96 +72,98 @@
             animation: fade-in-up 0.5s ease-out forwards;
             opacity: 0;
         }
+
+        /* Smooth Carousel Snapping */
+        .carousel-snap {
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
-<body class="font-sans text-dark antialiased bg-surface">
+<body class="font-sans text-dark antialiased bg-surface sm:bg-gray-100">
 
     <!-- Loading Screen -->
     <div id="loadingScreen" class="fixed inset-0 bg-surface z-[60] flex items-center justify-center">
-        <img src="./assets/logo.png" alt="Groove Logo" class="h-20 object-contain animate-pulse">
+        <img src="./assets/logo.png" alt="Groove Logo" class="h-20 object-contain animate-pulse" onerror="this.onerror=null; this.style.display='none';">
     </div>
 
     <!-- Main App Container -->
-    <div class="max-w-md mx-auto relative bg-surface min-h-screen shadow-2xl overflow-hidden flex flex-col">
+    <div class="max-w-5xl mx-auto relative bg-surface min-h-screen sm:shadow-2xl overflow-hidden flex flex-col">
 
         <!-- ================= HOME SCREEN ================= -->
-        <div id="homeScreen" class="pb-32 bg-surface min-h-screen overflow-y-auto">
+        <div id="homeScreen" class="pb-24 bg-surface min-h-screen overflow-y-auto">
             
-            <!-- Restored Top App Bar -->
-            <header class="py-5 px-6 flex justify-between items-center bg-surface sticky top-0 z-30">
-                <button onclick="toggleSidebar(true)" class="p-2 -ml-2 text-dark w-10">
+            <!-- Top App Bar -->
+            <header class="py-5 px-6 flex justify-between items-center bg-surface/90 backdrop-blur sticky top-0 z-30">
+                <button onclick="toggleSidebar(true)" class="p-2 -ml-2 text-dark w-10 hover:bg-gray-100 rounded-full transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
                 </button>
-                <img src="./assets/logo.png" alt="Groove Logo" class="h-8 object-contain">
+                <img src="./assets/logo.png" alt="Groove Logo" class="h-8 md:h-10 object-contain" onerror="this.onerror=null; this.style.display='none';">
                 <div class="w-10"></div> <!-- Placeholder to balance center alignment -->
             </header>
 
-            <!-- Hero Carousel Section (Hidden by default, shown dynamically if files exist) -->
-            <section id="heroSection" class="mb-10 mt-2 hidden">
-                <div id="heroCarouselContainer" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 px-5 pb-4">
+            <!-- 1. Hero Carousel Section (Full Width, Auto-play) -->
+            <section id="heroSection" class="mb-10 hidden relative group w-full">
+                <!-- Navigation Arrows (Shown on hover for desktop) -->
+                <button onclick="scrollCarousel('left')" class="absolute left-4 top-[50%] -translate-y-1/2 bg-white/70 backdrop-blur p-2.5 rounded-full shadow-md text-dark z-10 hidden md:group-hover:block transition-all hover:bg-white active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button onclick="scrollCarousel('right')" class="absolute right-4 top-[50%] -translate-y-1/2 bg-white/70 backdrop-blur p-2.5 rounded-full shadow-md text-dark z-10 hidden md:group-hover:block transition-all hover:bg-white active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+
+                <div id="heroCarouselContainer" class="flex overflow-x-auto carousel-snap hide-scrollbar w-full cursor-grab">
                     <!-- Hero Slides will be dynamically injected here -->
+                </div>
+                
+                <!-- Pagination Dots -->
+                <div id="heroDots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10"></div>
+            </section>
+
+            <!-- 2. Full Menu Section -->
+            <section id="fullMenuSection" class="mb-14 pt-4">
+                <div class="px-5 md:px-8 mb-6">
+                    <h2 class="text-3xl md:text-4xl font-black tracking-tight text-dark">Our Menu</h2>
+                </div>
+
+                <!-- Categories Tabs -->
+                <div id="categoriesContainer" class="flex overflow-x-auto hide-scrollbar px-5 md:px-8 bg-surface shrink-0 gap-6 md:gap-10 border-b border-gray-200 mb-6 sticky top-[72px] z-20 backdrop-blur">
+                    <!-- Categories will be injected here -->
+                </div>
+
+                <!-- Menu Items List -->
+                <div class="px-5 md:px-8">
+                    <!-- Responsive Grid: 2 cols on mobile, 3 on tablet, 4 on desktop -->
+                    <div id="menuItemsContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-12">
+                        <!-- Items will be injected here -->
+                    </div>
                 </div>
             </section>
 
-            <!-- Top Sellers -->
-            <section id="topSellersSection" class="mb-10 px-5 hidden">
-                <div class="flex justify-between items-end mb-5">
+            <!-- 3. Top Sellers -->
+            <section id="topSellersSection" class="mb-14 px-5 md:px-8 hidden bg-gray-50 py-8 rounded-[2rem] mx-2 md:mx-4">
+                <div class="flex justify-between items-end mb-6">
                     <div>
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-brand-accent">Popular Now</span>
-                        <h2 class="text-3xl font-bold tracking-tight mt-1">Top Sellers</h2>
+                        <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-brand-accent">Popular Now</span>
+                        <h2 class="text-3xl md:text-4xl font-bold tracking-tight mt-1">Top Sellers</h2>
                     </div>
-                    <button class="text-brand-accent text-sm font-bold mb-1">See All</button>
                 </div>
-                <div id="topSellersContainer" class="flex overflow-x-auto hide-scrollbar gap-4 -mx-5 px-5 pb-4">
+                <div id="topSellersContainer" class="flex overflow-x-auto hide-scrollbar gap-4 md:gap-6 pb-4 cursor-grab">
                     <!-- Top Sellers will be injected here -->
                 </div>
             </section>
 
-            <!-- Special Offers -->
-            <section id="specialOffersSection" class="px-5 mb-10 hidden">
-                <div class="mb-5">
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-brand-accent">Handpicked For You</span>
-                    <h2 class="text-3xl font-bold tracking-tight mt-1">Special Offers</h2>
+            <!-- 4. Special Offers -->
+            <section id="specialOffersSection" class="px-5 md:px-8 mb-10 hidden">
+                <div class="mb-6">
+                    <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-brand-accent">Handpicked For You</span>
+                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mt-1">Special Offers</h2>
                 </div>
-                <div id="specialOffersContainer" class="flex flex-col gap-4">
+                <!-- Desktop: Grid Layout | Mobile: Column Layout -->
+                <div id="specialOffersContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                     <!-- Special Offers will be injected here -->
                 </div>
             </section>
-
-        </div>
-
-        <!-- Floating Full Menu Button -->
-        <div class="fixed bottom-8 left-0 right-0 flex justify-center z-40 max-w-md mx-auto pointer-events-none">
-            <button 
-                onclick="toggleMenu(true)"
-                class="bg-dark text-white px-8 py-4 rounded-full font-bold tracking-wide shadow-floating flex items-center gap-2 pointer-events-auto transition-transform active:scale-95"
-            >
-                FULL MENU
-            </button>
-        </div>
-
-        <!-- ================= FULL MENU OVERLAY ================= -->
-        <div id="menuOverlay" class="fixed inset-0 bg-surface z-50 flex flex-col slide-up max-w-md mx-auto shadow-2xl">
-            
-            <!-- Menu Header -->
-            <div class="flex justify-between items-center px-6 pt-10 pb-6 bg-surface shrink-0">
-                <h2 class="text-4xl font-black tracking-tight text-dark">Menu</h2>
-                <button onclick="toggleMenu(false)" class="p-2.5 bg-gray-100 rounded-full text-dark hover:bg-gray-200 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </button>
-            </div>
-
-            <!-- Categories Tabs -->
-            <div id="categoriesContainer" class="flex overflow-x-auto hide-scrollbar px-6 bg-surface shrink-0 gap-8 border-b border-gray-200">
-                <!-- Categories will be injected here -->
-            </div>
-
-            <!-- Menu Items List -->
-            <div class="flex-1 overflow-y-auto px-6 py-8 bg-surface">
-                <div id="menuItemsContainer" class="grid grid-cols-2 gap-x-4 gap-y-8">
-                    <!-- Items will be injected here -->
-                </div>
-            </div>
 
         </div>
 
@@ -169,7 +171,7 @@
         <div id="sidebarMenu" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/50 z-[70] opacity-0 pointer-events-none transition-opacity duration-300">
             <div id="sidebarContent" onclick="event.stopPropagation()" class="absolute top-0 left-0 w-[80%] max-w-[320px] h-full bg-surface shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
                 <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                    <img src="./assets/logo.jpeg" alt="Groove Logo" class="h-8 object-contain">
+                    <img src="./assets/logo.png" alt="Groove Logo" class="h-8 object-contain" onerror="this.onerror=null; this.style.display='none';">
                     <button onclick="toggleSidebar(false)" class="p-2 bg-gray-100 rounded-full text-dark hover:bg-gray-200 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
@@ -178,7 +180,7 @@
                     <button onclick="navigateTo('home')" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
                         <i data-lucide="home" class="w-5 h-5 text-gray-500"></i> Home
                     </button>
-                    <button onclick="navigateTo('menu')" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
+                    <button onclick="scrollToMenu()" class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
                         <i data-lucide="coffee" class="w-5 h-5 text-gray-500"></i> Full Menu
                     </button>
                     <div class="h-px bg-gray-200 my-2 mx-4"></div>
@@ -196,15 +198,17 @@
         </div>
 
         <!-- ================= GENERIC PAGE OVERLAY ================= -->
-        <div id="pageOverlay" class="fixed inset-0 bg-surface z-[60] flex flex-col slide-up max-w-md mx-auto shadow-2xl">
-            <div class="flex justify-between items-center px-6 pt-10 pb-6 bg-surface shrink-0">
-                <h2 id="pageTitle" class="text-4xl font-black tracking-tight text-dark">Page</h2>
+        <div id="pageOverlay" class="fixed inset-0 bg-surface z-[60] flex flex-col slide-up max-w-5xl mx-auto sm:shadow-2xl">
+            <div class="flex justify-between items-center px-6 md:px-10 pt-10 pb-6 bg-surface shrink-0 border-b border-gray-100">
+                <h2 id="pageTitle" class="text-4xl md:text-5xl font-black tracking-tight text-dark">Page</h2>
                 <button onclick="closePage()" class="p-2.5 bg-gray-100 rounded-full text-dark hover:bg-gray-200 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 md:w-6 md:h-6"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
-            <div id="pageContent" class="flex-1 overflow-y-auto px-6 py-4 bg-surface text-gray-600 leading-relaxed font-sans text-[15px]">
-                <!-- Content injected here -->
+            <div class="flex-1 overflow-y-auto bg-surface">
+                <div id="pageContent" class="px-6 md:px-10 py-8 md:py-12 text-gray-600 leading-relaxed font-sans text-[15px] md:text-lg max-w-3xl">
+                    <!-- Content injected here -->
+                </div>
             </div>
         </div>
 
@@ -215,19 +219,16 @@
         let itemsData = [];
         let categoriesData = [];
         let activeCategory = '';
+        let heroAutoScrollInterval;
 
         // --- Helper Function for Dynamic Menu Images ---
         function getImgProps(item) {
-            // Use item.image if provided, otherwise fallback to item.name
             let baseName = item.image ? item.image : item.name;
-            // Remove any existing extension so we can control it
             baseName = baseName.replace(/\.[^/.]+$/, "");
             
             const jpgUrl = `./assets/menu/${baseName}.jpg`;
-            // Escape quotes just in case the name contains an apostrophe
             const pngUrl = `./assets/menu/${baseName}.png`.replace(/'/g, "\\'");
             
-            // Try JPG first. If it fails, try PNG. If PNG fails, use placeholder.
             return `src="${jpgUrl}" onerror="if(!this.dataset.triedPng){ this.dataset.triedPng='true'; this.src='${pngUrl}'; } else { this.onerror=null; this.src='https://via.placeholder.com/400?text=No+Image'; }"`;
         }
 
@@ -253,7 +254,6 @@
         // --- Fetch Data ---
         async function fetchData() {
             try {
-                // Fetch CSV Data
                 const response = await fetch('./menu.csv');
                 
                 if (!response.ok) {
@@ -264,16 +264,12 @@
                 const rows = parseCSV(csvText);
                 const headers = rows[0].map(h => h.trim());
                 
-                // Convert CSV rows to array of objects
                 itemsData = rows.slice(1).filter(row => row.length === headers.length && row[0].trim() !== '').map(row => {
                     let obj = {};
                     headers.forEach((header, i) => {
                         let val = row[i] ? row[i].trim() : '';
-                        
-                        // Handle boolean flags if they are written as 'true'/'false' in CSV
                         if (val.toLowerCase() === 'true') val = true;
                         else if (val.toLowerCase() === 'false') val = false;
-                        
                         obj[header] = val;
                     });
                     return obj;
@@ -282,14 +278,12 @@
                 categoriesData = [...new Set(itemsData.map(item => item.category))];
                 activeCategory = categoriesData.length > 0 ? categoriesData[0] : '';
 
-                // Render all sections
-                await loadHeroAssets(); // Dynamically load hero assets
-                renderTopSellers();
-                renderSpecialOffers();
+                await loadHeroAssets(); 
                 renderCategories();
                 renderMenuItems();
+                renderTopSellers();
+                renderSpecialOffers();
 
-                // Hide loading screen
                 setTimeout(() => {
                     document.getElementById('loadingScreen').style.display = 'none';
                     lucide.createIcons();
@@ -299,10 +293,13 @@
                 console.error("Error fetching data:", error);
                 document.getElementById('loadingScreen').innerHTML = `
                     <div class="px-6 text-center flex flex-col items-center gap-4">
-                        <img src="./assets/logo.jpeg" alt="Groove Logo" class="h-16 object-contain opacity-50 grayscale">
-                        <p class="text-red-500 font-bold">Error loading menu data.</p>
-                        <p class="text-sm text-gray-500">Ensure <code class="bg-gray-100 px-1 rounded">./menu.csv</code> exists and the site is running on a local web server (e.g. Live Server), not just opened as a file.</p>
+                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-2">
+                            <i data-lucide="alert-circle" class="w-8 h-8 text-red-500"></i>
+                        </div>
+                        <p class="text-red-500 font-bold text-lg">Error loading menu data.</p>
+                        <p class="text-sm text-gray-500 max-w-xs">Ensure <code class="bg-gray-100 px-1 rounded">menu.csv</code> exists and the site is running on a server.</p>
                     </div>`;
+                lucide.createIcons();
             }
         }
 
@@ -311,10 +308,11 @@
         async function loadHeroAssets() {
             const heroSection = document.getElementById('heroSection');
             const container = document.getElementById('heroCarouselContainer');
+            const dotsContainer = document.getElementById('heroDots');
             const basePath = './assets/hero/';
             
             try {
-                // جلب قائمة الملفات من hero.json
+                // Fetch hero config
                 const response = await fetch('./hero.json');
                 if (!response.ok) throw new Error('hero.json not found');
                 const heroFiles = await response.json();
@@ -332,19 +330,129 @@
                     heroSection.classList.add('hidden');
                 } else {
                     heroSection.classList.remove('hidden');
+                    
+                    // Render Items (Full Width)
                     container.innerHTML = mediaFiles.map((media) => `
-                        <div class="w-[90%] shrink-0 snap-center bg-gray-100 rounded-[2.5rem] relative overflow-hidden h-[420px] shadow-lg">
+                        <div class="w-full shrink-0 snap-center relative overflow-hidden h-[35vh] md:h-[55vh] min-h-[250px]">
                             ${media.type === 'video' 
                                 ? `<video src="${media.src}" class="absolute inset-0 w-full h-full object-cover" autoplay loop muted playsinline></video>`
                                 : `<img src="${media.src}" class="absolute inset-0 w-full h-full object-cover" alt="Hero Promo">`
                             }
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                         </div>
                     `).join('');
+
+                    // Render Dots
+                    if(mediaFiles.length > 1) {
+                        dotsContainer.innerHTML = mediaFiles.map((_, i) => `
+                            <div class="w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? 'bg-white w-4' : 'bg-white/50'}"></div>
+                        `).join('');
+                        
+                        // Start Auto-play
+                        startHeroCarousel();
+                        
+                        // Track scroll to update dots
+                        container.addEventListener('scroll', updateHeroDots);
+                    }
                 }
             } catch(e) {
                 console.log("لم يتم إعداد الهيرو حتى الآن. (No hero files configured)");
                 heroSection.classList.add('hidden');
             }
+        }
+
+        // Hero Carousel Auto-scroll logic
+        function startHeroCarousel() {
+            const container = document.getElementById('heroCarouselContainer');
+            if(heroAutoScrollInterval) clearInterval(heroAutoScrollInterval);
+            
+            heroAutoScrollInterval = setInterval(() => {
+                const maxScrollLeft = container.scrollWidth - container.clientWidth;
+                // If at the end, scroll back to 0, otherwise scroll by container width
+                if (Math.ceil(container.scrollLeft) >= maxScrollLeft - 10) {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
+                }
+            }, 5000); // 5 Seconds
+        }
+
+        function updateHeroDots() {
+            const container = document.getElementById('heroCarouselContainer');
+            const dots = document.getElementById('heroDots').children;
+            if(!dots.length) return;
+            
+            const slideWidth = container.clientWidth;
+            const currentIndex = Math.round(container.scrollLeft / slideWidth);
+            
+            Array.from(dots).forEach((dot, index) => {
+                if(index === currentIndex) {
+                    dot.classList.add('w-4', 'bg-white');
+                    dot.classList.remove('bg-white/50');
+                } else {
+                    dot.classList.remove('w-4', 'bg-white');
+                    dot.classList.add('bg-white/50');
+                }
+            });
+        }
+
+        // Manual Scroll for Desktop Buttons
+        function scrollCarousel(direction) {
+            const container = document.getElementById('heroCarouselContainer');
+            if (direction === 'left') {
+                container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
+            } else {
+                container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
+            }
+            // Reset interval after manual interaction
+            startHeroCarousel(); 
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = categoriesData.map(category => `
+                <button
+                    onclick="changeCategory('${category}')"
+                    class="whitespace-nowrap flex items-center gap-2 pb-4 text-[15px] md:text-lg font-sans transition-colors relative ${
+                        activeCategory === category
+                            ? 'text-brand font-bold'
+                            : 'text-gray-400 font-medium hover:text-gray-600'
+                    }"
+                >
+                    ${category}
+                    ${activeCategory === category ? '<div class="absolute bottom-0 left-0 w-full h-[3px] bg-brand rounded-t-full"></div>' : ''}
+                </button>
+            `).join('');
+        }
+
+        function renderMenuItems() {
+            const container = document.getElementById('menuItemsContainer');
+            const filteredItems = itemsData.filter(item => item.category === activeCategory);
+
+            if (filteredItems.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-400 py-16 font-sans md:text-lg">No items found.</div>';
+                return;
+            }
+
+            container.innerHTML = filteredItems.map((item, index) => `
+                <div class="flex flex-col gap-2 group cursor-pointer animate-item" style="animation-delay: ${index * 60}ms">
+                    <div class="w-full aspect-square bg-gray-100 rounded-[1.5rem] md:rounded-[2rem] relative overflow-hidden mb-1 md:mb-3 shadow-sm group-hover:shadow-md transition-shadow">
+                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        ${item.tag ? `
+                            <span class="absolute top-3 right-3 md:top-4 md:right-4 bg-white/90 backdrop-blur text-brand-accent text-[10px] md:text-xs font-bold px-2.5 md:px-3 py-1 md:py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                                ${item.tag}
+                            </span>
+                        ` : ''}
+                    </div>
+                    <div class="flex flex-col px-1 md:px-2">
+                        <h3 class="text-lg md:text-xl font-bold leading-tight text-dark">${item.name}</h3>
+                        ${item.description ? `<p class="text-sm md:text-base text-gray-500 mt-1 md:mt-2 line-clamp-2 leading-snug">${item.description}</p>` : ''}
+                        <div class="text-base md:text-lg font-sans font-bold text-brand-accent mt-2 md:mt-3">
+                            $${item.price}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function renderTopSellers() {
@@ -355,13 +463,13 @@
             const container = document.getElementById('topSellersContainer');
             
             container.innerHTML = topSellers.map((item, index) => `
-                <div class="w-44 shrink-0 flex flex-col bg-white rounded-3xl p-3 shadow-soft animate-item" style="animation-delay: ${index * 150}ms">
-                    <div class="w-full h-40 rounded-[1.25rem] overflow-hidden bg-gray-50 mb-3">
-                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover" />
+                <div class="w-44 md:w-56 lg:w-64 shrink-0 flex flex-col bg-white rounded-3xl p-3 md:p-4 shadow-sm animate-item hover:shadow-lg transition-shadow cursor-pointer border border-gray-100" style="animation-delay: ${index * 150}ms">
+                    <div class="w-full h-40 md:h-48 rounded-[1.25rem] overflow-hidden bg-gray-50 mb-3 md:mb-4 relative">
+                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                     </div>
-                    <div class="px-1">
-                        <h3 class="font-bold text-lg leading-tight text-dark mb-1">${item.name}</h3>
-                        <div class="font-sans text-sm text-gray-600 font-medium">$${item.price}</div>
+                    <div class="px-1 md:px-2">
+                        <h3 class="font-bold text-lg md:text-xl leading-tight text-dark mb-1 md:mb-2">${item.name}</h3>
+                        <div class="font-sans text-sm md:text-base text-brand-accent font-bold">$${item.price}</div>
                     </div>
                 </div>
             `).join('');
@@ -375,70 +483,23 @@
             const container = document.getElementById('specialOffersContainer');
 
             container.innerHTML = specialOffers.map((item, index) => `
-                <div class="flex items-center gap-4 bg-white rounded-3xl p-3 shadow-soft relative animate-item" style="animation-delay: ${index * 200}ms">
-                    <div class="w-20 h-20 rounded-2xl overflow-hidden bg-gray-50 shrink-0">
-                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover" />
+                <div class="flex items-center gap-4 md:gap-6 bg-white rounded-3xl p-3 md:p-4 shadow-soft relative animate-item hover:shadow-lg transition-shadow cursor-pointer" style="animation-delay: ${index * 200}ms">
+                    <div class="w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-[1.25rem] overflow-hidden bg-gray-50 shrink-0">
+                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                     </div>
-                    <div class="flex flex-col flex-1 py-1 pr-16">
-                        <h3 class="text-lg font-bold leading-none mb-1.5 text-dark">${item.name}</h3>
-                        <p class="text-xs text-gray-500 leading-tight mb-2 line-clamp-1">${item.description}</p>
-                        <div class="flex items-center gap-2">
-                            <span class="font-sans font-bold text-brand-accent">$${item.price}</span>
-                            ${item.oldPrice ? `<span class="font-sans text-xs font-medium text-gray-400 line-through">$${item.oldPrice}</span>` : ''}
+                    <div class="flex flex-col flex-1 py-1 pr-16 md:pr-20">
+                        <h3 class="text-lg md:text-xl font-bold leading-none mb-1.5 md:mb-2.5 text-dark">${item.name}</h3>
+                        <p class="text-xs md:text-sm text-gray-500 leading-tight mb-2 md:mb-3 line-clamp-2 md:line-clamp-3">${item.description || ''}</p>
+                        <div class="flex items-center gap-2 md:gap-3">
+                            <span class="font-sans font-bold text-brand-accent md:text-lg">$${item.price}</span>
+                            ${item.oldPrice ? `<span class="font-sans text-xs md:text-sm font-medium text-gray-400 line-through">$${item.oldPrice}</span>` : ''}
                         </div>
                     </div>
                     ${item.tag ? `
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 bg-brand-light text-brand-accent text-[10px] font-bold px-2 py-1.5 rounded-full uppercase tracking-wide text-center leading-tight">
+                        <div class="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 bg-brand-light text-brand-accent text-[10px] md:text-xs font-bold px-2 md:px-3 py-1.5 md:py-2 rounded-full uppercase tracking-wide text-center leading-tight shadow-sm">
                             ${item.tag.replace(' ', '<br>')}
                         </div>
                     ` : ''}
-                </div>
-            `).join('');
-        }
-
-        function renderCategories() {
-            const container = document.getElementById('categoriesContainer');
-            container.innerHTML = categoriesData.map(category => `
-                <button
-                    onclick="changeCategory('${category}')"
-                    class="whitespace-nowrap flex items-center gap-2 pb-4 text-[15px] font-sans transition-colors relative ${
-                        activeCategory === category
-                            ? 'text-brand font-bold'
-                            : 'text-gray-400 font-medium hover:text-gray-600'
-                    }"
-                >
-                    ${category}
-                    ${activeCategory === category ? '<div class="absolute bottom-0 left-0 w-full h-[2px] bg-brand rounded-t-full"></div>' : ''}
-                </button>
-            `).join('');
-        }
-
-        function renderMenuItems() {
-            const container = document.getElementById('menuItemsContainer');
-            const filteredItems = itemsData.filter(item => item.category === activeCategory);
-
-            if (filteredItems.length === 0) {
-                container.innerHTML = '<div class="col-span-2 text-center text-gray-400 py-10 font-sans">No items found.</div>';
-                return;
-            }
-
-            container.innerHTML = filteredItems.map((item, index) => `
-                <div class="flex flex-col gap-2 group cursor-pointer animate-item" style="animation-delay: ${index * 60}ms">
-                    <div class="w-full aspect-square bg-gray-100 rounded-[1.5rem] relative overflow-hidden mb-1 shadow-sm">
-                        <img ${getImgProps(item)} alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        ${item.tag ? `
-                            <span class="absolute top-3 right-3 bg-white/90 backdrop-blur text-brand-accent text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                                ${item.tag}
-                            </span>
-                        ` : ''}
-                    </div>
-                    <div class="flex flex-col px-1">
-                        <h3 class="text-lg font-bold leading-tight text-dark">${item.name}</h3>
-                        ${item.description ? `<p class="text-sm text-gray-500 mt-1 line-clamp-2 leading-snug">${item.description}</p>` : ''}
-                        <div class="text-base font-sans font-bold text-brand-accent mt-2">
-                            $${item.price}
-                        </div>
-                    </div>
                 </div>
             `).join('');
         }
@@ -451,16 +512,13 @@
             renderMenuItems();  
         }
 
-        function toggleMenu(isOpen) {
-            const menu = document.getElementById('menuOverlay');
-            
-            if (isOpen) {
-                menu.classList.add('active');
-                document.body.style.overflow = 'hidden'; 
-            } else {
-                menu.classList.remove('active');
-                document.body.style.overflow = '';
-            }
+        // Navigate directly to the menu section instead of opening a modal
+        function scrollToMenu() {
+            toggleSidebar(false);
+            const menuSection = document.getElementById('fullMenuSection');
+            const yOffset = -70; // Adjust for sticky header
+            const y = menuSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({top: y, behavior: 'smooth'});
         }
 
         // --- Navigation & Pages ---
@@ -480,37 +538,39 @@
         const pagesData = {
             about: {
                 title: "About Us",
-                content: `<p class="mb-4">Welcome to <img src="./assets/logo.jpeg" alt="Groove" class="h-4 inline-block align-middle object-contain">. We are a community-driven coffee shop dedicated to bringing you the finest seasonal blends and freshly baked pastries.</p>
+                content: `<p class="mb-4">Welcome to <img src="./assets/logo.png" alt="Groove" class="h-5 md:h-6 inline-block align-middle object-contain" onerror="this.onerror=null; this.style.display='none';">. We are a community-driven coffee shop dedicated to bringing you the finest seasonal blends and freshly baked pastries.</p>
                           <p class="mb-4">Founded in 2026, our mission is simple: <em class="text-dark font-medium">Made by friends for friends</em>. We believe that a great cup of coffee is the perfect catalyst for connection.</p>
-                          <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=800" class="rounded-[1.5rem] mt-6 w-full object-cover h-48 shadow-soft">`
+                          <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=800" class="rounded-[1.5rem] mt-8 w-full object-cover h-48 md:h-72 shadow-soft">`
             },
             location: {
                 title: "Location",
-                content: `<p class="mb-4">Visit us at our flagship store. We're open 7 days a week.</p>
-                          <div class="bg-white shadow-soft p-5 rounded-[1.5rem] mb-4 border border-gray-100">
-                            <strong class="text-dark block mb-2">Address:</strong>
-                            123 Groove Street<br>
-                            Amsterdam, NH 1011 AB
-                          </div>
-                          <div class="bg-white shadow-soft p-5 rounded-[1.5rem] border border-gray-100">
-                            <strong class="text-dark block mb-2">Hours:</strong>
-                            Mon-Fri: 7:00 AM - 8:00 PM<br>
-                            Sat-Sun: 8:00 AM - 9:00 PM
+                content: `<p class="mb-6">Visit us at our flagship store. We're open 7 days a week.</p>
+                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div class="bg-white shadow-soft p-6 md:p-8 rounded-[1.5rem] border border-gray-100">
+                                <strong class="text-dark block mb-3 text-lg">Address:</strong>
+                                123 Groove Street<br>
+                                Amsterdam, NH 1011 AB
+                              </div>
+                              <div class="bg-white shadow-soft p-6 md:p-8 rounded-[1.5rem] border border-gray-100">
+                                <strong class="text-dark block mb-3 text-lg">Hours:</strong>
+                                Mon-Fri: 7:00 AM - 8:00 PM<br>
+                                Sat-Sun: 8:00 AM - 9:00 PM
+                              </div>
                           </div>`
             },
             contact: {
                 title: "Contact",
-                content: `<p class="mb-6">We'd love to hear from you! Reach out for reservations, catering, or just to say hi.</p>
-                          <div class="bg-white shadow-soft p-5 rounded-[1.5rem] mb-6 border border-gray-100 flex flex-col gap-3">
-                              <p class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium">hello@groove.com</span></p>
-                              <div class="h-px bg-gray-100 w-full"></div>
-                              <p class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium">+31 20 123 4567</span></p>
+                content: `<p class="mb-8">We'd love to hear from you! Reach out for reservations, catering, or just to say hi.</p>
+                          <div class="bg-white shadow-soft p-6 md:p-8 rounded-[1.5rem] mb-8 border border-gray-100 flex flex-col gap-4">
+                              <p class="flex items-center gap-4"><i data-lucide="mail" class="w-6 h-6 text-brand"></i> <span class="text-dark font-medium text-lg">hello@groove.com</span></p>
+                              <div class="h-px bg-gray-100 w-full my-2"></div>
+                              <p class="flex items-center gap-4"><i data-lucide="phone" class="w-6 h-6 text-brand"></i> <span class="text-dark font-medium text-lg">+31 20 123 4567</span></p>
                           </div>
-                          <h3 class="text-dark font-bold mb-4">Follow Us</h3>
-                          <div class="flex gap-4">
-                              <a href="#" class="p-3 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand-light transition-colors"><i data-lucide="instagram" class="w-6 h-6"></i></a>
-                              <a href="#" class="p-3 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand-light transition-colors"><i data-lucide="twitter" class="w-6 h-6"></i></a>
-                              <a href="#" class="p-3 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand-light transition-colors"><i data-lucide="facebook" class="w-6 h-6"></i></a>
+                          <h3 class="text-dark font-bold mb-5 text-xl">Follow Us</h3>
+                          <div class="flex gap-5">
+                              <a href="#" class="p-4 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand hover:text-white transition-all hover:-translate-y-1"><i data-lucide="instagram" class="w-6 h-6"></i></a>
+                              <a href="#" class="p-4 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand hover:text-white transition-all hover:-translate-y-1"><i data-lucide="twitter" class="w-6 h-6"></i></a>
+                              <a href="#" class="p-4 bg-white shadow-soft border border-gray-100 rounded-full text-brand hover:bg-brand hover:text-white transition-all hover:-translate-y-1"><i data-lucide="facebook" class="w-6 h-6"></i></a>
                           </div>`
             }
         };
@@ -520,10 +580,7 @@
             
             if (page === 'home') {
                 closePage();
-                toggleMenu(false);
-            } else if (page === 'menu') {
-                closePage();
-                toggleMenu(true);
+                window.scrollTo({top: 0, behavior: 'smooth'});
             } else {
                 document.getElementById('pageTitle').innerText = pagesData[page].title;
                 document.getElementById('pageContent').innerHTML = pagesData[page].content;
@@ -536,8 +593,53 @@
             document.getElementById('pageOverlay').classList.remove('active');
         }
 
+        // --- Make sliders draggable via mouse for desktop users ---
+        function enableDragScroll(sliderId) {
+            const slider = document.getElementById(sliderId);
+            if(!slider) return;
+            
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.classList.add('cursor-grabbing');
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+                
+                // Pause hero auto-scroll while dragging
+                if(sliderId === 'heroCarouselContainer' && heroAutoScrollInterval) {
+                    clearInterval(heroAutoScrollInterval);
+                }
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.remove('cursor-grabbing');
+                if(sliderId === 'heroCarouselContainer') startHeroCarousel();
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.remove('cursor-grabbing');
+                if(sliderId === 'heroCarouselContainer') startHeroCarousel();
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2; 
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        }
+
         // Initialize App
-        window.onload = fetchData;
+        window.onload = () => {
+            fetchData().then(() => {
+                enableDragScroll('heroCarouselContainer');
+                enableDragScroll('topSellersContainer');
+                enableDragScroll('categoriesContainer');
+            });
+        };
 
     </script>
 </body>

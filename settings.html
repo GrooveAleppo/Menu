@@ -6,10 +6,10 @@
     <title>إعدادات قائمة Groove</title>
     
     <!-- Tailwind CSS (via official CDN) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./tailwindcss.js"></script>
     
     <!-- Lucide Icons (via official CDN) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./lucide_icons.js"></script>
     
     <!-- Google Fonts: Cairo for Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,7 +47,7 @@
             border-radius: 4px;
             transition: all 0.2s;
             text-align: right;
-            direction: ltr; /* Keeping LTR for data like images/prices but RTL for text */
+            direction: ltr;
         }
         .table-input:hover { border-color: #e2e8f0; }
         .table-input:focus {
@@ -57,6 +57,12 @@
             box-shadow: 0 0 0 2px rgba(123, 147, 126, 0.2);
         }
         .arabic-text { direction: rtl; }
+        
+        /* Custom scrollbar for hero list */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="font-sans text-dark antialiased min-h-screen flex flex-col p-6">
@@ -69,7 +75,7 @@
                 <img src="./assets/logo.png" alt="Groove Logo" class="h-10 object-contain" onerror="this.onerror=null; this.style.display='none';">
                 <div>
                     <h1 class="text-2xl font-bold text-dark">إدارة قائمة الطعام</h1>
-                    <p class="text-sm text-gray-500">قم بتعديل، إضافة، أو حذف العناصر، ثم قم بتنزيل الملف المحدث.</p>
+                    <p class="text-sm text-gray-500">قم بتعديل، إضافة، أو حذف العناصر، ثم احفظ في GitHub.</p>
                 </div>
             </div>
             
@@ -94,12 +100,25 @@
 
         <!-- Hero Settings Block -->
         <div class="px-8 py-5 bg-white border-b border-gray-200">
-            <div class="flex items-center gap-2 mb-1">
-                <i data-lucide="image" class="w-5 h-5 text-brand"></i>
-                <h2 class="text-lg font-bold text-dark">إعدادات صور وفيديوهات قسم (Hero)</h2>
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <i data-lucide="monitor-play" class="w-5 h-5 text-brand"></i>
+                        <h2 class="text-lg font-bold text-dark">إعدادات قسم الواجهة (Hero)</h2>
+                    </div>
+                    <p class="text-sm text-gray-500">قم برفع الصور أو الفيديوهات لعرضها كمعرض متحرك في أعلى الموقع.</p>
+                </div>
+                <button onclick="document.getElementById('heroMediaInput').click()" class="flex justify-center items-center gap-2 px-4 py-2 bg-brand-light text-brand-accent hover:bg-brand hover:text-white font-semibold rounded-lg transition-colors text-sm shadow-sm shrink-0">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                    رفع وسائط (Hero)
+                </button>
+                <input type="file" id="heroMediaInput" accept="image/*,video/*" class="hidden" onchange="handleHeroMediaUpload(event)">
             </div>
-            <p class="text-sm text-gray-500 mb-3">اكتب أسماء الملفات الموجودة في مجلد <code class="bg-gray-100 px-1 rounded text-xs">assets/hero/</code> (كل ملف في سطر).</p>
-            <textarea id="heroFilesInput" rows="2" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg p-3 text-left font-mono text-sm" dir="ltr" placeholder="promo1.jpg&#10;video1.mp4"></textarea>
+            
+            <!-- Hero Files List -->
+            <div id="heroFilesList" class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                <!-- Hero items will be injected here via JS -->
+            </div>
         </div>
 
         <!-- Toolbar -->
@@ -114,7 +133,7 @@
         </div>
 
         <!-- Table Container -->
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 overflow-auto custom-scrollbar">
             <table class="w-full text-right border-collapse whitespace-nowrap">
                 <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
                     <tr id="tableHeaders" class="text-gray-600 text-sm">
@@ -168,6 +187,7 @@
     <script>
         let menuData = [];
         let headers = [];
+        let heroFilesData = [];
         let uploadingRowIndex = -1;
 
         // --- تهيئة بيانات GitHub المحفوظة مسبقاً ---
@@ -202,12 +222,13 @@
                 if (heroRes.ok) {
                     const heroFiles = await heroRes.json();
                     if(Array.isArray(heroFiles)) {
-                        document.getElementById('heroFilesInput').value = heroFiles.join('\n');
+                        heroFilesData = heroFiles;
                     }
                 }
             } catch(e) {
                 console.warn('No hero.json found, starting fresh.');
             }
+            renderHeroFiles();
 
             lucide.createIcons();
 
@@ -288,6 +309,84 @@
             }).join('');
         }
 
+        // --- وظائف Hero (رفع، عرض، إزالة) ---
+        function renderHeroFiles() {
+            const container = document.getElementById('heroFilesList');
+            if (heroFilesData.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-400 text-center py-6 bg-gray-50/50 border border-dashed border-gray-200 rounded-xl">لا يوجد وسائط لعرضها. انقر على "رفع وسائط" لإضافة صور أو فيديوهات للقسم العلوي.</div>';
+                return;
+            }
+
+            container.innerHTML = heroFilesData.map((fileName, index) => {
+                const isVideo = fileName.match(/\.(mp4|webm|ogg)$/i);
+                const icon = isVideo ? 'video' : 'image';
+                
+                return `
+                <div class="flex justify-between items-center bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl transition-colors hover:bg-gray-100">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-8 h-8 rounded-lg bg-white flex justify-center items-center shrink-0 shadow-sm">
+                            <i data-lucide="${icon}" class="w-4 h-4 text-brand"></i>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700 truncate dir-ltr text-left" dir="ltr">${fileName}</span>
+                    </div>
+                    <button onclick="removeHeroFile(${index})" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-white shadow-sm shrink-0" title="إزالة من العرض">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `}).join('');
+            
+            lucide.createIcons();
+        }
+
+        function removeHeroFile(index) {
+            if(confirm('هل أنت متأكد من إزالة هذا الملف من العرض؟\n(ملاحظة: سيختفي من الموقع، لكنه سيبقى محفوظاً في مجلد المستودع كنسخة احتياطية).')) {
+                heroFilesData.splice(index, 1);
+                renderHeroFiles();
+            }
+        }
+
+        function handleHeroMediaUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
+                alert("يرجى إدخال إعدادات الربط مع GitHub أولاً.");
+                openGitHubModal();
+                return;
+            }
+
+            // تنظيف اسم الملف من المسافات والرموز لتجنب المشاكل
+            const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_'); 
+            const filePath = `assets/hero/${cleanFileName}`;
+
+            document.getElementById('statusMessage').innerText = `جاري رفع الوسائط: ${cleanFileName}...`;
+            document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const base64Content = e.target.result.split(',')[1];
+                    await pushFileToGitHub(filePath, base64Content, `رفع ملف واجهة: ${cleanFileName}`);
+                    
+                    // إضافته للقائمة المعروضة
+                    heroFilesData.push(cleanFileName);
+                    renderHeroFiles();
+                    
+                    document.getElementById('statusMessage').innerText = `تم رفع ${cleanFileName} بنجاح! لا تنسَ الضغط على "حفظ في GitHub".`;
+                    document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
+                } catch (error) {
+                    console.error(error);
+                    alert("حدث خطأ أثناء الرفع: " + error.message);
+                    document.getElementById('statusMessage').innerText = "فشل رفع وسائط الهيرو.";
+                    document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
+                }
+                
+                // تفريغ المدخل ليسمح برفع نفس الملف مجدداً إذا لزم الأمر
+                document.getElementById('heroMediaInput').value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
         function updateCell(rowIndex, header, value) {
             menuData[rowIndex][header] = value;
         }
@@ -303,7 +402,7 @@
         }
 
         function deleteRow(index) {
-            if(confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+            if(confirm('هل أنت متأكد من حذف هذا المنتج بالكامل؟')) {
                 menuData.splice(index, 1);
                 renderTable();
             }
@@ -414,7 +513,7 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
-                    // استخراج محتوى Base64 الفعلي (إزالة الترويسة data:image/...)
+                    // استخراج محتوى Base64 الفعلي
                     const base64Content = e.target.result.split(',')[1];
                     await pushFileToGitHub(filePath, base64Content, `رفع صورة المنتج: ${fileName}`);
                     
@@ -430,6 +529,9 @@
                     document.getElementById('statusMessage').innerText = "فشل رفع الصورة.";
                     document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
                 }
+                
+                // تفريغ المدخل
+                document.getElementById('productImageInput').value = '';
             };
             reader.readAsDataURL(file);
         }
@@ -471,8 +573,7 @@
                 await pushFileToGitHub('menu.csv', utf8_to_b64(csvStr), "تحديث قائمة الطعام (menu.csv)");
 
                 // 2. تحضير ورفع ملف hero.json الخاص بالصور والفيديوهات
-                const heroLines = document.getElementById('heroFilesInput').value.split('\n').map(l => l.trim()).filter(l => l);
-                const heroJsonStr = JSON.stringify(heroLines, null, 2);
+                const heroJsonStr = JSON.stringify(heroFilesData, null, 2);
                 await pushFileToGitHub('hero.json', utf8_to_b64(heroJsonStr), "تحديث صور وفيديوهات الهيرو (hero.json)");
 
                 document.getElementById('statusMessage').innerText = "تم الحفظ بنجاح! قد تستغرق التعديلات دقيقة لتظهر على موقعك.";
