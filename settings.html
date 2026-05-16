@@ -1,20 +1,48 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إعدادات قائمة Groove</title>
-    
-    <!-- تم التحديث للروابط الرسمية المباشرة لحل مشكلة الملف المعطوب -->
+    <title>إعدادات قائمة Groove - Firebase</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Google Fonts: Cairo for Arabic -->
+
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Google Fonts: Cairo -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    
+
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUtaq22wuKtAZHtcYnta_sXHNJWkEoAiQ",
+            authDomain: "groove-menu.firebaseapp.com",
+            projectId: "groove-menu",
+            storageBucket: "groove-menu.firebasestorage.app",
+            messagingSenderId: "622362545565",
+            appId: "1:622362545565:web:7fc736c19970fd558c7374",
+            measurementId: "G-D35FC0ZMDB"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Enable Firestore Persistence
+        db.enablePersistence().catch((err) => {
+            console.warn('Persistence error:', err.code);
+        });
+
         tailwind.config = {
             theme: {
                 extend: {
@@ -36,7 +64,10 @@
     </script>
 
     <style>
-        body { background-color: #faf9f6; }
+        body {
+            background-color: #faf9f6;
+        }
+
         .table-input {
             width: 100%;
             background: transparent;
@@ -45,209 +76,465 @@
             border-radius: 4px;
             transition: all 0.2s;
             text-align: right;
-            direction: ltr;
         }
-        .table-input:hover { border-color: #e2e8f0; }
+
+        .table-input:hover {
+            border-color: #e2e8f0;
+        }
+
         .table-input:focus {
             background: white;
             border-color: #7b937e;
             outline: none;
             box-shadow: 0 0 0 2px rgba(123, 147, 126, 0.2);
         }
-        .arabic-text { direction: rtl; }
-        
-        /* Custom scrollbar for hero list */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .ltr {
+            direction: ltr;
+            text-align: left;
+        }
+
+        #authOverlay {
+            background: rgba(250, 249, 246, 0.98);
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
-<body class="font-sans text-dark antialiased min-h-screen flex flex-col p-6">
 
-    <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-        
-        <!-- Header -->
-        <header class="bg-surface px-8 py-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <img src="./assets/logo.png" alt="Groove Logo" class="h-10 object-contain" onerror="this.onerror=null; this.style.display='none';">
+<body class="font-sans text-dark antialiased min-h-screen flex flex-col p-6 overflow-hidden">
+
+    <!-- Auth Overlay -->
+    <div id="authOverlay" class="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100 text-center">
+            <img src="./assets/logo.png" class="h-12 mx-auto mb-6 object-contain">
+            <h2 class="text-2xl font-bold mb-2">تسجيل الدخول</h2>
+            <p class="text-gray-500 text-sm mb-8">يرجى تسجيل الدخول للوصول للإعدادات</p>
+
+            <div class="space-y-4 text-right">
                 <div>
-                    <h1 class="text-2xl font-bold text-dark">إدارة قائمة الطعام</h1>
-                    <p class="text-sm text-gray-500">قم بتعديل، إضافة، أو حذف العناصر، ثم احفظ في GitHub.</p>
+                    <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail"
+                        class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 ltr focus:ring-2 focus:ring-brand outline-none"
+                        value="groovealeppo@gmail.com" readonly>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">كلمة السر</label>
+                    <input type="password" id="loginPassword"
+                        class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 ltr focus:ring-2 focus:ring-brand outline-none"
+                        placeholder="••••••••">
+                </div>
+                <button onclick="handleLogin()" id="loginBtn"
+                    class="w-full bg-dark text-white font-bold py-4 rounded-xl hover:bg-brand transition-all shadow-lg active:scale-95">دخول</button>
+                <p id="loginError" class="text-red-500 text-xs mt-2 hidden">خطأ في البيانات، يرجى المحاولة مرة أخرى.</p>
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="max-w-7xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+
+        <!-- Header -->
+        <header
+            class="bg-surface px-8 py-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <img id="headerLogo" src="./assets/logo.png" alt="Groove Logo" class="h-10 object-contain">
+                <div>
+                    <h1 class="text-2xl font-bold text-dark">إدارة القائمة (Firebase)</h1>
+                    <p class="text-sm text-gray-500">تحكم في محتوى الموقع، الصور، والمنتجات بشكل لحظي.</p>
                 </div>
             </div>
-            
+
             <div class="flex items-center gap-3">
-                <button onclick="openGitHubModal()" class="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-xl transition-colors">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                    إعدادات الربط
+                <button onclick="downloadTemplate()"
+                    class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-dark font-semibold rounded-xl transition-colors text-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    تحميل القالب (CSV)
                 </button>
-                <button onclick="document.getElementById('csvFileInput').click()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-xl transition-colors hidden sm:flex">
+                <button onclick="document.getElementById('csvFileInput').click()"
+                    class="flex items-center gap-2 px-4 py-2 bg-brand text-white font-bold rounded-xl hover:bg-brand-accent transition-colors text-sm shadow-sm">
                     <i data-lucide="upload" class="w-4 h-4"></i>
-                    رفع ملف (CSV)
+                    استيراد CSV
                 </button>
-                <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleFileUpload(event)">
-                <input type="file" id="productImageInput" accept="image/*" class="hidden" onchange="handleProductImage(event)">
-                
-                <button onclick="saveToGitHub()" id="saveBtn" class="flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand-accent text-white font-bold rounded-xl transition-colors shadow-md hover:shadow-lg">
-                    <i data-lucide="github" class="w-4 h-4"></i>
-                    حفظ في GitHub
+                <input type="file" id="csvFileInput" class="hidden" accept=".csv" onchange="handleImport(event)">
+                <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 transition-colors"
+                    title="تسجيل خروج">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Hero Settings Block -->
-        <div class="px-8 py-5 bg-white border-b border-gray-200">
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <i data-lucide="monitor-play" class="w-5 h-5 text-brand"></i>
-                        <h2 class="text-lg font-bold text-dark">إعدادات قسم الواجهة (Hero)</h2>
+        <div class="flex-1 overflow-auto p-8 space-y-10">
+
+            <!-- Carousel Section -->
+            <section class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="play-circle" class="w-5 h-5 text-brand"></i>
+                        <h2 class="text-lg font-bold text-dark">صور وفيديوهات الـ Carousel</h2>
                     </div>
-                    <p class="text-sm text-gray-500">قم برفع الصور أو الفيديوهات لعرضها كمعرض متحرك في أعلى الموقع.</p>
+                    <button onclick="addCarouselItem()"
+                        class="text-brand font-bold flex items-center gap-1 text-sm hover:underline">
+                        <i data-lucide="plus" class="w-4 h-4"></i> إضافة عنصر جديد
+                    </button>
                 </div>
-                <button onclick="document.getElementById('heroMediaInput').click()" class="flex justify-center items-center gap-2 px-4 py-2 bg-brand-light text-brand-accent hover:bg-brand hover:text-white font-semibold rounded-lg transition-colors text-sm shadow-sm shrink-0">
-                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                    رفع وسائط (Hero)
-                </button>
-                <input type="file" id="heroMediaInput" accept="image/*,video/*" class="hidden" onchange="handleHeroMediaUpload(event)">
-            </div>
-            
-            <!-- Hero Files List -->
-            <div id="heroFilesList" class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                <!-- Hero items will be injected here via JS -->
-            </div>
-        </div>
 
-        <!-- Toolbar -->
-        <div class="px-8 py-3 bg-gray-50 flex justify-between items-center border-b border-gray-200">
-            <div class="flex items-center gap-2">
-                <button onclick="addRow()" class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 hover:border-brand hover:text-brand text-gray-700 font-semibold rounded-lg transition-colors text-sm shadow-sm">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    إضافة منتج جديد
-                </button>
-            </div>
-            <div id="statusMessage" class="text-sm font-semibold text-brand">جاري تحميل البيانات...</div>
-        </div>
+                <div id="carouselItemsList" class="space-y-3">
+                    <!-- Carousel items will be injected here -->
+                </div>
 
-        <!-- Table Container -->
-        <div class="flex-1 overflow-auto custom-scrollbar">
-            <table class="w-full text-right border-collapse whitespace-nowrap">
-                <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
-                    <tr id="tableHeaders" class="text-gray-600 text-sm">
-                        <!-- Headers injected here -->
-                    </tr>
-                </thead>
-                <tbody id="tableBody" class="divide-y divide-gray-100">
-                    <!-- Rows injected here -->
-                </tbody>
-            </table>
-        </div>
-        
-    </div>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="saveCarousel()"
+                        class="bg-brand text-white font-bold px-8 py-3 rounded-xl hover:bg-brand-accent transition-colors shadow-md">حفظ
+                        الـ Carousel</button>
+                </div>
+            </section>
 
-    <!-- نافذة إعدادات GitHub المنبثقة -->
-    <div id="githubModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-right">
-            <div class="flex justify-between items-center mb-4">
-                <button onclick="closeGitHubModal()" class="text-gray-400 hover:text-red-500"><i data-lucide="x" class="w-5 h-5"></i></button>
-                <h2 class="text-xl font-bold text-dark">إعدادات الربط مع GitHub</h2>
-            </div>
-            <p class="text-sm text-gray-500 mb-6">أدخل بيانات مستودعك ليتمكن الموقع من تحديث الملف تلقائياً. (يتم حفظ هذه البيانات في متصفحك محلياً فقط لأمانك).</p>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">اسم المستخدم (Username)</label>
-                    <input type="text" id="ghUsername" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" placeholder="مثال: AhmedAli">
+            <!-- Menu Table Section -->
+            <section>
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="coffee" class="w-5 h-5 text-brand"></i>
+                        <h2 class="text-lg font-bold text-dark">أصناف المنيو</h2>
+                    </div>
+                    <button onclick="addRow()"
+                        class="bg-white border-2 border-brand text-brand hover:bg-brand hover:text-white font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 shadow-sm">
+                        <i data-lucide="plus" class="w-4 h-4"></i> إضافة صنف جديد
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">اسم المستودع (Repository)</label>
-                    <input type="text" id="ghRepo" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" placeholder="مثال: groove-menu">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">الفرع (Branch)</label>
-                    <input type="text" id="ghBranch" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" value="main">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">رمز المرور (Personal Access Token)</label>
-                    <input type="password" id="ghToken" class="w-full border border-gray-300 focus:border-brand outline-none rounded-lg px-3 py-2 text-left" dir="ltr" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-                    <p class="text-xs text-gray-500 mt-1">يجب أن يمتلك الرمز صلاحيات <strong>repo</strong> كاملة.</p>
-                </div>
-            </div>
 
-            <div class="mt-8 flex justify-end gap-3">
-                <button onclick="closeGitHubModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-dark font-semibold rounded-lg transition-colors">إلغاء</button>
-                <button onclick="saveGitHubSettings()" class="px-4 py-2 bg-brand hover:bg-brand-accent text-white font-bold rounded-lg transition-colors">حفظ البيانات</button>
-            </div>
+                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                    <table class="w-full text-right border-collapse">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-bold border-b border-gray-200">
+                            <tr>
+                                <th class="px-2 py-4 w-10"></th>
+                                <th class="px-4 py-4">الاسم</th>
+                                <th class="px-4 py-4">القسم</th>
+                                <th class="px-4 py-4">السعر</th>
+                                <th class="px-4 py-4">سعر قديم</th>
+                                <th class="px-4 py-4">الوصف</th>
+                                <th class="px-4 py-4">الصورة (Drive)</th>
+                                <th class="px-4 py-4">تاغ</th>
+                                <th class="px-4 py-4 text-center">أفضل مبيعات</th>
+                                <th class="px-4 py-4 text-center">عرض خاص</th>
+                                <th class="px-4 py-4">الترتيب</th>
+                                <th class="px-4 py-4 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-gray-100 text-sm">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Logo Section -->
+            <section class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i data-lucide="image" class="w-5 h-5 text-brand"></i>
+                            <h2 class="text-lg font-bold text-dark">لوغو الصفحة</h2>
+                        </div>
+                        <div class="flex gap-4 items-end">
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">رابط
+                                    صورة اللوغو (Google Drive)</label>
+                                <input type="text" id="logoUrlInput"
+                                    class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 ltr focus:border-brand outline-none"
+                                    placeholder="https://drive.google.com/...">
+                            </div>
+                            <button onclick="updateLogo()"
+                                class="bg-brand text-white font-bold px-6 py-3 rounded-xl hover:bg-brand-accent transition-colors shadow-sm">تحديث</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i data-lucide="list-ordered" class="w-5 h-5 text-brand"></i>
+                            <h2 class="text-lg font-bold text-dark">ترتيب الأقسام (اسحب للترتيب)</h2>
+                        </div>
+                        <div id="categorySortableList"
+                            class="flex flex-wrap gap-2 min-h-[50px] p-2 bg-white border border-dashed border-gray-200 rounded-xl">
+                            <!-- Categories will be injected here -->
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">* يتم تحديث الترتيب تلقائياً عند السحب.</p>
+                    </div>
+                </div>
+            </section>
+
         </div>
     </div>
 
     <script>
         let menuData = [];
-        let headers = [];
-        let heroFilesData = [];
-        let uploadingRowIndex = -1;
+        let carouselData = [];
 
-        // دالة آمنة لتشغيل الأيقونات
-        function initIcons() {
-            if(typeof lucide !== 'undefined') {
-                lucide.createIcons();
+        // --- Auth Handlers ---
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user && user.email === 'groovealeppo@gmail.com') {
+                document.getElementById('authOverlay').classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                initData();
+            } else {
+                document.getElementById('authOverlay').classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        });
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            const error = document.getElementById('loginError');
+
+            btn.disabled = true;
+            btn.innerText = "جاري الدخول...";
+            error.classList.add('hidden');
+
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+            } catch (e) {
+                console.error(e);
+                error.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = "دخول";
             }
         }
 
-        // --- تهيئة بيانات GitHub المحفوظة مسبقاً ---
-        let ghConfig = {
-            username: localStorage.getItem('ghUsername') || '',
-            repo: localStorage.getItem('ghRepo') || '',
-            branch: localStorage.getItem('ghBranch') || 'main',
-            token: localStorage.getItem('ghToken') || ''
-        };
+        function handleLogout() {
+            firebase.auth().signOut();
+        }
 
-        // Try fetching initial data
-        window.onload = async () => {
-            // Fetch CSV
-            try {
-                const response = await fetch('./menu.csv');
-                if (!response.ok) throw new Error("File not found");
-                const text = await response.text();
-                processCSV(text);
-                document.getElementById('statusMessage').innerText = "تم تحميل البيانات بنجاح";
-                document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
-            } catch (error) {
-                console.warn(error);
-                document.getElementById('statusMessage').innerText = "لم يتم العثور على menu.csv. سيتم إنشاء ملف جديد عند الحفظ.";
-                document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
-                headers = ["name", "category", "price", "oldPrice", "description", "image", "tag", "isTopSeller", "isSpecialOffer"];
-                renderTable();
-            }
+        // --- Firebase Handlers ---
 
-            // Fetch Hero config
-            try {
-                const heroRes = await fetch('./hero.json');
-                if (heroRes.ok) {
-                    const heroFiles = await heroRes.json();
-                    if(Array.isArray(heroFiles)) {
-                        heroFilesData = heroFiles;
-                    }
+        function initData() {
+            // Fetch App Settings
+            db.collection('settings').doc('app').onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('logoUrlInput').value = data.logoUrl || '';
+                    if (data.logoUrl) document.getElementById('headerLogo').src = data.logoUrl.includes('drive.google.com') ? getDirectLink(data.logoUrl) : data.logoUrl;
+                    carouselData = data.carousel || [];
+                    renderCarouselList();
+                } else {
+                    db.collection('settings').doc('app').set({ logoUrl: '', carousel: [] });
                 }
-            } catch(e) {
-                console.warn('No hero.json found, starting fresh.');
-            }
-            renderHeroFiles();
+            });
 
-            initIcons();
+            // Fetch Category Order
+            db.collection('settings').doc('categories').onSnapshot((doc) => {
+                if (doc.exists) {
+                    const list = doc.data().list || [];
+                    renderCategorySortable(list);
+                }
+            });
 
-            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
-                document.getElementById('statusMessage').innerText = "يرجى إكمال 'إعدادات الربط' لتفعيل الميزات.";
-                document.getElementById('statusMessage').className = "text-sm font-semibold text-orange-500";
+            // Fetch Menu
+            db.collection('menu').onSnapshot((snapshot) => {
+                menuData = [];
+                snapshot.forEach(doc => {
+                    menuData.push({ id: doc.id, ...doc.data() });
+                });
+                renderTable();
+                lucide.createIcons();
+            });
+        }
+
+        function getDirectLink(url, isVideo = false) {
+            if (!url) return '';
+            const driveMatch = url.match(/(?:\/d\/|id=)([\w-]+)/);
+            if (driveMatch && driveMatch[1]) {
+                const fileId = driveMatch[1];
+                if (isVideo) {
+                    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+                }
+                return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
             }
-        };
+            return url;
+        }
+
+        // --- Logo Functions ---
+        async function updateLogo() {
+            const url = document.getElementById('logoUrlInput').value.trim();
+            try {
+                await db.collection('settings').doc('app').update({ logoUrl: url });
+                alert('تم تحديث اللوغو!');
+            } catch (e) { alert('خطأ في التحديث'); }
+        }
+
+        function renderCategorySortable(list) {
+            const container = document.getElementById('categorySortableList');
+            // Merge with existing categories from menu just in case some are missing
+            const allCategories = [...new Set([...list, ...menuData.map(item => item.category)])].filter(Boolean);
+
+            container.innerHTML = allCategories.map(cat => `
+                <div class="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm cursor-move flex items-center gap-2" data-name="${cat}">
+                    <i data-lucide="grip-horizontal" class="w-3 h-3 text-gray-300"></i>
+                    ${cat}
+                </div>
+            `).join('');
+            lucide.createIcons();
+
+            if (!container.dataset.sortableInitialized) {
+                Sortable.create(container, {
+                    animation: 150,
+                    onEnd: () => {
+                        const newList = Array.from(container.children).map(el => el.dataset.name);
+                        db.collection('settings').doc('categories').set({ list: newList });
+                    }
+                });
+                container.dataset.sortableInitialized = 'true';
+            }
+        }
+
+        // Initialize Table Sorting
+        const tableBody = document.getElementById('tableBody');
+        Sortable.create(tableBody, {
+            animation: 150,
+            handle: '.drag-handle',
+            onEnd: async () => {
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                const batch = db.batch();
+                rows.forEach((row, index) => {
+                    const id = row.dataset.id;
+                    const docRef = db.collection('menu').doc(id);
+                    batch.update(docRef, { order: index + 1 });
+                });
+                await batch.commit();
+                console.log('Items re-ordered');
+            }
+        });
+
+        // --- Carousel Functions ---
+        function renderCarouselList() {
+            const container = document.getElementById('carouselItemsList');
+            if (carouselData.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4 italic">لا يوجد عناصر مضافة</p>';
+                return;
+            }
+            container.innerHTML = carouselData.map((item, index) => `
+                <div class="flex gap-3 items-center bg-white p-3 rounded-xl border border-gray-200">
+                    <div class="flex-1">
+                        <input type="text" value="${item.url}" onchange="updateCarouselItem(${index}, 'url', this.value)" class="w-full text-xs ltr border-none focus:ring-0" placeholder="رابط الملف">
+                    </div>
+                    <select onchange="updateCarouselItem(${index}, 'type', this.value)" class="text-xs border-none bg-gray-50 rounded-lg focus:ring-0">
+                        <option value="image" ${item.type === 'image' ? 'selected' : ''}>صورة</option>
+                        <option value="video" ${item.type === 'video' ? 'selected' : ''}>فيديو</option>
+                    </select>
+                    <button onclick="removeCarouselItem(${index})" class="text-gray-300 hover:text-red-500 transition-colors p-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addCarouselItem() {
+            carouselData.push({ type: 'image', url: '' });
+            renderCarouselList();
+        }
+
+        function updateCarouselItem(index, key, value) {
+            carouselData[index][key] = value;
+        }
+
+        function removeCarouselItem(index) {
+            carouselData.splice(index, 1);
+            renderCarouselList();
+        }
+
+        async function saveCarousel() {
+            try {
+                await db.collection('settings').doc('app').update({ carousel: carouselData });
+                alert('تم حفظ الـ Carousel!');
+            } catch (e) { alert('خطأ في الحفظ'); }
+        }
+
+        // --- Menu Table Functions ---
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = menuData.sort((a, b) => (a.order || 0) - (b.order || 0)).map((item, index) => `
+                <tr class="hover:bg-gray-50 transition-colors group" data-id="${item.id}">
+                    <td class="px-2 py-2 text-center">
+                        <div class="drag-handle cursor-move text-gray-300 hover:text-brand">
+                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                        </div>
+                    </td>
+                    <td class="px-2 py-2"><input type="text" class="table-input font-bold" value="${item.name || ''}" onchange="updateItem('${item.id}', 'name', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" class="table-input" value="${item.category || ''}" onchange="updateItem('${item.id}', 'category', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" class="table-input ltr" value="${item.price || ''}" onchange="updateItem('${item.id}', 'price', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" class="table-input ltr text-gray-400" value="${item.oldPrice || ''}" onchange="updateItem('${item.id}', 'oldPrice', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" class="table-input text-xs text-gray-500" value="${item.description || ''}" onchange="updateItem('${item.id}', 'description', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" class="table-input ltr text-xs text-blue-500" value="${item.image || ''}" onchange="updateItem('${item.id}', 'image', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" class="table-input text-xs" value="${item.tag || ''}" onchange="updateItem('${item.id}', 'tag', this.value)"></td>
+                    <td class="px-2 py-2 text-center">
+                        <input type="checkbox" ${item.isTopSeller ? 'checked' : ''} onchange="updateItem('${item.id}', 'isTopSeller', this.checked)" class="rounded text-brand focus:ring-brand">
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <input type="checkbox" ${item.isSpecialOffer ? 'checked' : ''} onchange="updateItem('${item.id}', 'isSpecialOffer', this.checked)" class="rounded text-brand focus:ring-brand">
+                    </td>
+                    <td class="px-2 py-2"><input type="number" class="table-input ltr w-16 text-center" value="${item.order || 0}" onchange="updateItem('${item.id}', 'order', parseInt(this.value))"></td>
+                    <td class="px-4 py-2 text-center">
+                        <button onclick="deleteItem('${item.id}')" class="text-gray-300 hover:text-red-500 transition-colors">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        async function updateItem(id, key, value) {
+            try {
+                await db.collection('menu').doc(id).update({ [key]: value });
+            } catch (e) { console.error("Error updating doc:", e); }
+        }
+
+        async function addRow() {
+            const newItem = {
+                name: 'منتج جديد',
+                category: menuData.length > 0 ? menuData[0].category : 'قهوة',
+                price: '0',
+                oldPrice: '',
+                description: '',
+                image: '',
+                tag: '',
+                isTopSeller: false,
+                isSpecialOffer: false
+            };
+            try {
+                await db.collection('menu').add(newItem);
+            } catch (e) { alert('خطأ في الإضافة'); }
+        }
+
+        async function deleteItem(id) {
+            if (confirm('هل أنت متأكد من الحذف؟')) {
+                try {
+                    await db.collection('menu').doc(id).delete();
+                } catch (e) { alert('خطأ في الحذف'); }
+            }
+        }
+
+        // --- CSV Functions ---
+        function downloadTemplate() {
+            const headers = ["name", "category", "price", "oldPrice", "description", "image", "tag", "isTopSeller", "isSpecialOffer"];
+            const csvContent = headers.join(",") + "\n" + "Example Coffee,Coffee,5.00,7.00,Delicious hot coffee,https://drive.google.com/...,New,TRUE,FALSE";
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "menu_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
         function parseCSV(str) {
             const arr = [];
             let quote = false;
             for (let row = 0, col = 0, c = 0; c < str.length; c++) {
-                let cc = str[c], nc = str[c+1];
+                let cc = str[c], nc = str[c + 1];
                 arr[row] = arr[row] || [];
                 arr[row][col] = arr[row][col] || '';
                 if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
@@ -261,342 +548,46 @@
             return arr;
         }
 
-        function processCSV(text) {
-            const rows = parseCSV(text);
-            if(rows.length > 0) {
-                headers = rows[0].map(h => h.trim());
-                menuData = rows.slice(1).filter(r => r.length === headers.length && r[0].trim() !== '').map(row => {
-                    let obj = {};
-                    headers.forEach((h, i) => { obj[h] = row[i] ? row[i].trim() : ''; });
-                    return obj;
-                });
-                renderTable();
-            }
-        }
-
-        function renderTable() {
-            const thead = document.getElementById('tableHeaders');
-            const tbody = document.getElementById('tableBody');
-            
-            // Render Headers
-            let headersHTML = headers.map(h => `<th class="py-4 px-4 font-bold uppercase tracking-wider">${h}</th>`).join('');
-            headersHTML += `<th class="py-4 px-4 min-w-[100px] text-center">إجراءات</th>`;
-            thead.innerHTML = headersHTML;
-
-            // Render Body
-            tbody.innerHTML = menuData.map((row, rowIndex) => {
-                let tr = `<tr class="hover:bg-gray-50 group">`;
-                headers.forEach(h => {
-                    let val = row[h] || '';
-                    let isRTL = ['name', 'description', 'category', 'tag'].includes(h);
-                    tr += `
-                        <td class="px-2 py-2 border-r border-gray-100 first:border-r-0">
-                            <input type="text" 
-                                class="table-input ${isRTL ? 'arabic-text' : 'text-left'}" 
-                                value="${val.replace(/"/g, '&quot;')}" 
-                                onchange="updateCell(${rowIndex}, '${h}', this.value)">
-                        </td>
-                    `;
-                });
-                tr += `
-                    <td class="px-4 py-2 text-center border-r border-gray-100">
-                        <div class="flex justify-center items-center gap-1">
-                            <button onclick="triggerImageUpload(${rowIndex})" class="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-full hover:bg-blue-50" title="رفع صورة لهذا المنتج">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                            </button>
-                            <button onclick="deleteRow(${rowIndex})" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50" title="حذف">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
-                return tr;
-            }).join('');
-        }
-
-        // --- وظائف Hero (رفع، عرض، إزالة) ---
-        function renderHeroFiles() {
-            const container = document.getElementById('heroFilesList');
-            if (heroFilesData.length === 0) {
-                container.innerHTML = '<div class="text-sm text-gray-400 text-center py-6 bg-gray-50/50 border border-dashed border-gray-200 rounded-xl">لا يوجد وسائط لعرضها. انقر على "رفع وسائط" لإضافة صور أو فيديوهات للقسم العلوي.</div>';
-                return;
-            }
-
-            container.innerHTML = heroFilesData.map((fileName, index) => {
-                const isVideo = fileName.match(/\.(mp4|webm|ogg)$/i);
-                const icon = isVideo ? 'video' : 'image';
-                
-                return `
-                <div class="flex justify-between items-center bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl transition-colors hover:bg-gray-100">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="w-8 h-8 rounded-lg bg-white flex justify-center items-center shrink-0 shadow-sm">
-                            <i data-lucide="${icon}" class="w-4 h-4 text-brand"></i>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-700 truncate dir-ltr text-left" dir="ltr">${fileName}</span>
-                    </div>
-                    <button onclick="removeHeroFile(${index})" class="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-white shadow-sm shrink-0" title="إزالة من العرض">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            `}).join('');
-            
-            initIcons();
-        }
-
-        function removeHeroFile(index) {
-            if(confirm('هل أنت متأكد من إزالة هذا الملف من العرض؟\n(ملاحظة: سيختفي من الموقع، لكنه سيبقى محفوظاً في مجلد المستودع كنسخة احتياطية).')) {
-                heroFilesData.splice(index, 1);
-                renderHeroFiles();
-            }
-        }
-
-        function handleHeroMediaUpload(event) {
+        async function handleImport(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
-                alert("يرجى إدخال إعدادات الربط مع GitHub أولاً.");
-                openGitHubModal();
-                return;
-            }
-
-            // تنظيف اسم الملف من المسافات والرموز لتجنب المشاكل
-            const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_'); 
-            const filePath = `assets/hero/${cleanFileName}`;
-
-            document.getElementById('statusMessage').innerText = `جاري رفع الوسائط: ${cleanFileName}...`;
-            document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
-
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async (e) => {
                 try {
-                    const base64Content = e.target.result.split(',')[1];
-                    await pushFileToGitHub(filePath, base64Content, `رفع ملف واجهة: ${cleanFileName}`);
-                    
-                    // إضافته للقائمة المعروضة
-                    heroFilesData.push(cleanFileName);
-                    renderHeroFiles();
-                    
-                    document.getElementById('statusMessage').innerText = `تم رفع ${cleanFileName} بنجاح! لا تنسَ الضغط على "حفظ في GitHub".`;
-                    document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
-                } catch (error) {
-                    console.error(error);
-                    alert("حدث خطأ أثناء الرفع: " + error.message);
-                    document.getElementById('statusMessage').innerText = "فشل رفع وسائط الهيرو.";
-                    document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
-                }
-                
-                // تفريغ المدخل
-                document.getElementById('heroMediaInput').value = '';
-            };
-            reader.readAsDataURL(file);
-        }
+                    const text = e.target.result;
+                    const rows = parseCSV(text);
+                    if (rows.length < 2) { alert('الملف فارغ أو غير صحيح'); return; }
 
-        function updateCell(rowIndex, header, value) {
-            menuData[rowIndex][header] = value;
-        }
-
-        function addRow() {
-            let newRow = {};
-            headers.forEach(h => newRow[h] = '');
-            if(headers.includes('isTopSeller')) newRow['isTopSeller'] = 'FALSE';
-            if(headers.includes('isSpecialOffer')) newRow['isSpecialOffer'] = 'FALSE';
-            
-            menuData.unshift(newRow); // Add to top
-            renderTable();
-        }
-
-        function deleteRow(index) {
-            if(confirm('هل أنت متأكد من حذف هذا المنتج بالكامل؟')) {
-                menuData.splice(index, 1);
-                renderTable();
-            }
-        }
-
-        // --- وظائف الربط مع GitHub ---
-
-        function openGitHubModal() {
-            document.getElementById('ghUsername').value = ghConfig.username;
-            document.getElementById('ghRepo').value = ghConfig.repo;
-            document.getElementById('ghBranch').value = ghConfig.branch;
-            document.getElementById('ghToken').value = ghConfig.token;
-            document.getElementById('githubModal').classList.remove('hidden');
-        }
-
-        function closeGitHubModal() {
-            document.getElementById('githubModal').classList.add('hidden');
-        }
-
-        function saveGitHubSettings() {
-            ghConfig.username = document.getElementById('ghUsername').value.trim();
-            ghConfig.repo = document.getElementById('ghRepo').value.trim();
-            ghConfig.branch = document.getElementById('ghBranch').value.trim() || 'main';
-            ghConfig.token = document.getElementById('ghToken').value.trim();
-
-            localStorage.setItem('ghUsername', ghConfig.username);
-            localStorage.setItem('ghRepo', ghConfig.repo);
-            localStorage.setItem('ghBranch', ghConfig.branch);
-            localStorage.setItem('ghToken', ghConfig.token);
-
-            closeGitHubModal();
-            alert('تم حفظ إعدادات GitHub بنجاح!');
-        }
-
-        // دالة ترميز Base64 آمنة
-        function utf8_to_b64(str) {
-            return window.btoa(unescape(encodeURIComponent(str)));
-        }
-
-        // دالة رفع أي ملف إلى GitHub (للصور، الـ CSV، والـ JSON)
-        async function pushFileToGitHub(filePath, base64Content, commitMessage) {
-            const apiUrl = `https://api.github.com/repos/${ghConfig.username}/${ghConfig.repo}/contents/${filePath}`;
-            
-            let currentSha = null;
-            try {
-                const getRes = await fetch(`${apiUrl}?ref=${ghConfig.branch}`, {
-                    headers: { 'Authorization': `Bearer ${ghConfig.token}`, 'Accept': 'application/vnd.github+json' }
-                });
-                if (getRes.ok) {
-                    const fileData = await getRes.json();
-                    currentSha = fileData.sha;
-                }
-            } catch(e) {
-                // Ignore 404s here, it just means the file is new and doesn't have a SHA yet.
-            }
-
-            const putRes = await fetch(apiUrl, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${ghConfig.token}`,
-                    'Accept': 'application/vnd.github+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: commitMessage,
-                    content: base64Content,
-                    sha: currentSha,
-                    branch: ghConfig.branch
-                })
-            });
-
-            if (!putRes.ok) {
-                const errObj = await putRes.json();
-                throw new Error(errObj.message || 'فشل في الرفع');
-            }
-        }
-
-        // --- وظيفة رفع صور المنتجات ---
-        function triggerImageUpload(index) {
-            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
-                alert("يرجى إدخال إعدادات الربط مع GitHub أولاً.");
-                openGitHubModal();
-                return;
-            }
-            uploadingRowIndex = index;
-            document.getElementById('productImageInput').click();
-        }
-
-        function handleProductImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const row = menuData[uploadingRowIndex];
-            
-            // استخراج اسم مناسب للصورة (نستخدم الاسم في حقل image إن وجد، وإلا نستخدم name ونستبدل المسافات)
-            let baseName = row['image'] ? row['image'].replace(/\.[^/.]+$/, "") : row['name'].trim().replace(/\s+/g, '_');
-            
-            if(!baseName) {
-                alert("يرجى كتابة اسم المنتج أولاً قبل رفع الصورة.");
-                return;
-            }
-
-            const ext = file.name.split('.').pop();
-            const fileName = `${baseName}.${ext}`;
-            const filePath = `assets/menu/${fileName}`;
-
-            document.getElementById('statusMessage').innerText = `جاري رفع صورة ${fileName}...`;
-            document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    // استخراج محتوى Base64 الفعلي
-                    const base64Content = e.target.result.split(',')[1];
-                    await pushFileToGitHub(filePath, base64Content, `رفع صورة المنتج: ${fileName}`);
-                    
-                    // تحديث الجدول باسم الصورة الجديد
-                    menuData[uploadingRowIndex]['image'] = fileName;
-                    renderTable();
-                    
-                    document.getElementById('statusMessage').innerText = `تم رفع صورة ${fileName} بنجاح! لا تنسَ الضغط على "حفظ في GitHub".`;
-                    document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
-                } catch (error) {
-                    console.error(error);
-                    alert("حدث خطأ أثناء رفع الصورة: " + error.message);
-                    document.getElementById('statusMessage').innerText = "فشل رفع الصورة.";
-                    document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
-                }
-                
-                // تفريغ المدخل
-                document.getElementById('productImageInput').value = '';
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // --- وظيفة الحفظ النهائية (Menu + Hero) ---
-        async function saveToGitHub() {
-            if (menuData.length === 0) {
-                alert("لا يوجد بيانات لتصديرها.");
-                return;
-            }
-
-            if(!ghConfig.token || !ghConfig.username || !ghConfig.repo) {
-                alert("يرجى إدخال إعدادات الربط مع GitHub أولاً.");
-                openGitHubModal();
-                return;
-            }
-
-            const btn = document.getElementById('saveBtn');
-            const originalBtnHtml = btn.innerHTML;
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> جاري الحفظ...`;
-            btn.disabled = true;
-            document.getElementById('statusMessage').innerText = "جاري الاتصال بـ GitHub لرفع التعديلات...";
-            document.getElementById('statusMessage').className = "text-sm font-semibold text-blue-600";
-            initIcons();
-
-            try {
-                // 1. تحضير ورفع ملف CSV
-                let csvStr = headers.join(',') + '\n';
-                menuData.forEach(row => {
-                    let rowValues = headers.map(h => {
-                        let val = String(row[h] || '');
-                        if (val.includes(',') || val.includes('"') || val.includes('\n')) {
-                            val = `"${val.replace(/"/g, '""')}"`;
-                        }
-                        return val;
+                    const headers = rows[0].map(h => h.trim().replace(/^"|"$/g, ''));
+                    const items = rows.slice(1).filter(r => r.length >= headers.length && r[0]).map(row => {
+                        let obj = {};
+                        headers.forEach((h, i) => {
+                            let val = row[i] ? row[i].trim() : '';
+                            if (h === 'isTopSeller' || h === 'isSpecialOffer') {
+                                val = val.toUpperCase() === 'TRUE' || val === '1';
+                            }
+                            obj[h] = val;
+                        });
+                        return obj;
                     });
-                    csvStr += rowValues.join(',') + '\n';
-                });
-                await pushFileToGitHub('menu.csv', utf8_to_b64(csvStr), "تحديث قائمة الطعام (menu.csv)");
 
-                // 2. تحضير ورفع ملف hero.json الخاص بالصور والفيديوهات
-                const heroJsonStr = JSON.stringify(heroFilesData, null, 2);
-                await pushFileToGitHub('hero.json', utf8_to_b64(heroJsonStr), "تحديث صور وفيديوهات الهيرو (hero.json)");
-
-                document.getElementById('statusMessage').innerText = "تم الحفظ بنجاح! قد تستغرق التعديلات بضع دقائق لتظهر على موقعك.";
-                document.getElementById('statusMessage').className = "text-sm font-semibold text-green-600";
-                
-            } catch (error) {
-                console.error(error);
-                alert('حدث خطأ: ' + error.message);
-                document.getElementById('statusMessage').innerText = "فشل الحفظ في GitHub.";
-                document.getElementById('statusMessage').className = "text-sm font-semibold text-red-500";
-            } finally {
-                btn.innerHTML = originalBtnHtml;
-                btn.disabled = false;
-                initIcons();
-            }
+                    if (confirm(`هل أنت متأكد من استيراد ${items.length} صنف؟`)) {
+                        for (const item of items) {
+                            await db.collection('menu').add(item);
+                        }
+                        alert('تم الاستيراد بنجاح!');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('خطأ أثناء معالجة الملف');
+                }
+                event.target.value = ''; // Reset input
+            };
+            reader.readAsText(file);
         }
+
     </script>
 </body>
+
 </html>
