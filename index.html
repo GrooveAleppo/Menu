@@ -122,7 +122,8 @@
     </div>
 
     <!-- PWA Install Banner -->
-    <div id="installBanner" class="fixed bottom-6 left-6 right-6 z-[80] bg-dark text-white p-5 rounded-3xl shadow-floating flex items-center justify-between gap-4 transform translate-y-32 transition-transform duration-500 max-w-md mx-auto">
+    <div id="installBanner"
+        class="fixed bottom-6 left-6 right-6 z-[80] bg-dark text-white p-5 rounded-3xl shadow-floating flex items-center justify-between gap-4 transform translate-y-32 transition-transform duration-500 max-w-md mx-auto">
         <div class="flex items-center gap-3">
             <div class="bg-brand rounded-2xl p-2">
                 <img src="./assets/logo.png" class="h-8 w-8 object-contain">
@@ -132,7 +133,8 @@
                 <p class="text-[10px] text-gray-400">ثبت التطبيق لتجربة أسرع وأفضل</p>
             </div>
         </div>
-        <button id="installBtn" class="bg-brand text-white px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap">تثبيت</button>
+        <button id="installBtn"
+            class="bg-brand text-white px-5 py-2 rounded-xl text-xs font-bold whitespace-nowrap">تثبيت</button>
     </div>
 
     <!-- Main App Container -->
@@ -358,7 +360,7 @@
                     });
 
                     categoriesData = [...new Set(itemsData.map(item => item.category))].filter(Boolean);
-                    
+
                     // Sort categoriesData based on customCategoryOrder
                     categoriesData.sort((a, b) => {
                         const indexA = customCategoryOrder.indexOf(a);
@@ -406,10 +408,10 @@
                 const src = getDirectDriveLink(media.url, isVideo);
                 return `
                     <div class="w-full shrink-0 snap-start bg-gray-100 relative overflow-hidden h-[450px]">
-                        ${isVideo 
-                            ? `<video src="${src}" class="absolute inset-0 w-full h-full object-cover" autoplay loop muted playsinline></video>`
-                            : `<img src="${src}" class="absolute inset-0 w-full h-full object-cover" alt="Hero Promo">`
-                        }
+                        ${isVideo
+                        ? `<video src="${src}" class="absolute inset-0 w-full h-full object-cover" autoplay loop muted playsinline></video>`
+                        : `<img src="${src}" class="absolute inset-0 w-full h-full object-cover" alt="Hero Promo">`
+                    }
                     </div>
                 `;
             }).join('');
@@ -554,22 +556,25 @@
                 content: `<p class="mb-4">Visit us at our flagship store. We're open 7 days a week.</p>
                           <div class="bg-white shadow-soft p-5 rounded-[1.5rem] mb-4 border border-gray-100">
                             <strong class="text-dark block mb-2">Address:</strong>
-                            123 Groove Street<br>
-                            Amsterdam, NH 1011 AB
+                            Al-Azizieh, InFront on Pizzza House<br>
+                            Aleppo, Syria
                           </div>
                           <div class="bg-white shadow-soft p-5 rounded-[1.5rem] border border-gray-100">
                             <strong class="text-dark block mb-2">Hours:</strong>
-                            Mon-Fri: 7:00 AM - 8:00 PM<br>
-                            Sat-Sun: 8:00 AM - 9:00 PM
-                          </div>`
+                            Daily: 10:00 AM - 12:00 AM (Midnight)
+                          </div>
+                          <a href="https://www.google.com/maps/search/?api=1&query=36.21131376103663,37.15256332574845" target="_blank" class="w-full bg-brand text-white font-bold py-4 rounded-[1.5rem] flex items-center justify-center gap-2 shadow-soft hover:bg-brand-accent transition-colors">
+                            <i data-lucide="map" class="w-5 h-5"></i>
+                            Open in Google Maps
+                          </a>`
             },
             contact: {
                 title: "Contact",
                 content: `<p class="mb-6">We'd love to hear from you! Reach out for reservations, catering, or just to say hi.</p>
                           <div class="bg-white shadow-soft p-5 rounded-[1.5rem] mb-6 border border-gray-100 flex flex-col gap-3">
-                              <p class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium">hello@groove.com</span></p>
+                              <p class="flex items-center gap-3"><i data-lucide="mail" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium">groovealeppo@gmail.com</span></p>
                               <div class="h-px bg-gray-100 w-full"></div>
-                              <p class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium">+31 20 123 4567</span></p>
+                              <p class="flex items-center gap-3"><i data-lucide="phone" class="w-5 h-5 text-brand"></i> <span class="text-dark font-medium ltr">+963 999 999 999</span></p>
                           </div>
                           <h3 class="text-dark font-bold mb-4">Follow Us</h3>
                           <div class="flex gap-4">
@@ -599,7 +604,7 @@
         // Initialize App
         window.onload = () => {
             fetchData();
-            
+
             // Register Service Worker for PWA
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./service-worker.js')
