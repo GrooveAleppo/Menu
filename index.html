@@ -14,7 +14,7 @@
     <script src="./tailwindcss.js"></script>
 
     <!-- Lucide Icons -->
-    <script src="./lucide_icons.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -166,6 +166,41 @@
                 </div>
             </section>
 
+            <!-- Interactive Cup Builder Banner -->
+            <section class="px-6 mb-10">
+                <a href="./builder.html"
+                    class="block relative overflow-hidden bg-gradient-to-r from-brand-accent to-brand rounded-3xl p-6 shadow-lg text-white group transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+                    <div
+                        class="absolute left-0 bottom-0 opacity-10 transform -translate-x-4 translate-y-4 group-hover:scale-110 transition-transform duration-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="w-40 h-40">
+                            <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+                            <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+                            <line x1="6" x2="6" y1="2" y2="4" />
+                            <line x1="10" x2="10" y1="2" y2="4" />
+                            <line x1="14" x2="14" y1="2" y2="4" />
+                        </svg>
+                    </div>
+                    <div class="relative z-10 flex justify-between items-center gap-4">
+                        <div class="flex-1 text-left">
+                            <span
+                                class="inline-block text-[10px] font-bold uppercase tracking-widest text-brand-light bg-white/20 px-2.5 py-1 rounded-full mb-2">NEW
+                                & EXCLUSIVE 🔥</span>
+                            <h3 class="text-xl sm:text-2xl font-black leading-tight text-white font-sans">Design Your
+                                Custom Drink!</h3>
+                            <p
+                                class="text-xs text-brand-light mt-1 opacity-90 leading-relaxed max-w-[240px] sm:max-w-none font-sans">
+                                Build your perfect coffee cup dynamically and order instantly via WhatsApp.</p>
+                        </div>
+                        <div
+                            class="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center shrink-0 transition-colors shadow-inner">
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-white"></i>
+                        </div>
+                    </div>
+                </a>
+            </section>
+
             <!-- 2. Main Menu Section -->
             <section id="mainMenuSection" class="mb-10">
                 <div class="px-6 mb-5">
@@ -243,6 +278,10 @@
                         class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
                         <i data-lucide="coffee" class="w-5 h-5 text-gray-500"></i> Full Menu
                     </button>
+                    <a href="./builder.html"
+                        class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl bg-brand-light/70 text-brand-accent hover:bg-brand-light flex items-center gap-3 transition-colors">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i> Build your Cup
+                    </a>
                     <div class="h-px bg-gray-200 my-2 mx-4"></div>
                     <button onclick="navigateTo('about')"
                         class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
@@ -307,8 +346,8 @@
 
         function getImgProps(item) {
             const url = getDirectDriveLink(item.image);
-            if (!url) return `src="https://via.placeholder.com/400?text=No+Image"`;
-            return `src="${url}" onerror="this.onerror=null; this.src='https://via.placeholder.com/400?text=Error+Loading';"`;
+            if (!url) return `src="./logo.png"`;
+            return `src="${url}" onerror="this.onerror=null; this.src='./logo.png';"`;
         }
 
         // --- Fetch Data from Firebase ---
@@ -477,7 +516,13 @@
 
         function renderCategories() {
             const container = document.getElementById('categoriesContainer');
-            container.innerHTML = categoriesData.map(category => `
+            const buildYourCupTab = `
+                <a href="./builder.html" class="whitespace-nowrap flex items-center gap-1.5 pb-4 text-[15px] font-sans text-brand-accent font-black hover:text-brand transition-colors relative">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-brand animate-pulse"></i>
+                    Build your Cup
+                </a>
+            `;
+            container.innerHTML = buildYourCupTab + categoriesData.map(category => `
                 <button
                     onclick="changeCategory('${category}')"
                     class="whitespace-nowrap flex items-center gap-2 pb-4 text-[15px] font-sans transition-colors relative ${activeCategory === category
@@ -489,6 +534,7 @@
                     ${activeCategory === category ? '<div class="absolute bottom-0 left-0 w-full h-[2px] bg-brand rounded-t-full"></div>' : ''}
                 </button>
             `).join('');
+            lucide.createIcons();
         }
 
         function renderMenuItems() {

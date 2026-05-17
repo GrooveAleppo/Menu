@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Groove Cashier - Recipe Lookup</title>
+
+    <!-- Tailwind CSS -->
+    <script src="./tailwindcss.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUtaq22wuKtAZHtcYnta_sXHNJWkEoAiQ",
+            authDomain: "groove-menu.firebaseapp.com",
+            projectId: "groove-menu",
+            storageBucket: "groove-menu.firebasestorage.app",
+            messagingSenderId: "622362545565",
+            appId: "1:622362545565:web:7fc736c19970fd558c7374",
+            measurementId: "G-D35FC0ZMDB"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#7b937e',
+                            light: '#eef2ef',
+                            accent: '#5f7561'
+                        },
+                        dark: '#111111',
+                        surface: '#faf9f6'
+                    },
+                    fontFamily: {
+                        'sans': ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #faf9f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-dark antialiased bg-surface min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-6xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 no-print">
+        <!-- Header -->
+        <header class="bg-surface px-4 py-4 sm:px-8 border-b border-gray-150 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-3">
+                <a href="./settings.html" class="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm" title="Back to Settings">
+                    <i data-lucide="chevron-left" class="w-5 h-5 text-dark"></i>
+                </a>
+                <div class="text-left">
+                    <h1 class="text-base sm:text-xl font-black text-dark flex items-center gap-1.5 leading-tight">
+                        Groove Cashier Terminal
+                        <span class="text-[10px] bg-brand/15 text-brand-accent px-2 py-0.5 rounded-full font-bold">Barista Tool ☕</span>
+                    </h1>
+                    <p class="text-[10px] sm:text-xs text-gray-500">Search and lookup customer visual cup recipes instantly</p>
+                </div>
+            </div>
+            <img id="mainLogo" src="./assets/logo.png" alt="Groove Logo" class="h-9 object-contain">
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="flex-1 flex flex-col md:flex-row min-h-[500px]">
+            <!-- Left Panel: Search & Recipes List -->
+            <div class="flex-1 border-r border-gray-100 p-4 sm:p-6 flex flex-col space-y-4">
+                <!-- Search bar -->
+                <div class="relative">
+                    <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-4 top-3.5"></i>
+                    <input type="text" id="input-search" oninput="filterRecipes()" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="Search by drink name or keyword...">
+                </div>
+
+                <!-- Recipes count & filter -->
+                <div class="flex justify-between items-center text-xs font-bold text-gray-400 px-1">
+                    <span id="recipes-count">Loading recipes...</span>
+                    <span>Firebase Connected 🟢</span>
+                </div>
+
+                <!-- Recipes list container -->
+                <div id="recipes-list" class="flex-1 overflow-y-auto max-h-[550px] space-y-3 pr-1">
+                    <!-- Cards will be dynamically injected here -->
+                </div>
+            </div>
+
+            <!-- Right Panel: Recipe Detail Ticket Card -->
+            <div class="w-full md:w-[420px] bg-gray-50/50 p-4 sm:p-6 flex flex-col justify-between border-t md:border-t-0 border-gray-100">
+                <div class="space-y-6">
+                    <div class="flex items-center gap-2 pb-4 border-b border-gray-200">
+                        <i data-lucide="receipt" class="w-5 h-5 text-brand"></i>
+                        <h2 class="text-sm font-black text-gray-400 uppercase tracking-widest">Selected Order Ticket</h2>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div id="ticket-empty-state" class="py-16 text-center text-gray-400 space-y-3">
+                        <i data-lucide="coffee" class="w-12 h-12 mx-auto text-gray-300 animate-bounce"></i>
+                        <p class="text-sm font-bold">Select a custom drink from the left panel to view prep details & recipe ticket</p>
+                    </div>
+
+                    <!-- Ticket details wrapper -->
+                    <div id="ticket-details" class="hidden space-y-6 text-left">
+                        <!-- Custom drink name -->
+                        <div class="bg-white rounded-2xl p-4 border border-gray-150 shadow-sm relative overflow-hidden">
+                            <div class="absolute right-0 top-0 bg-brand/10 text-brand-accent px-3 py-1 rounded-bl-xl font-bold text-[10px]">REGISTERED</div>
+                            <span class="text-[9px] font-bold text-brand-accent uppercase tracking-wider block mb-0.5">Drink Name</span>
+                            <h3 id="ticket-drink-name" class="text-xl font-black text-dark">Default Name</h3>
+                            <span id="ticket-date" class="text-[10px] text-gray-400 block mt-1">Saved just now</span>
+                        </div>
+
+                        <!-- Recipe breakdown -->
+                        <div class="bg-white rounded-2xl p-5 border border-gray-150 shadow-sm space-y-4">
+                            <div>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Base Type</span>
+                                <span id="ticket-base" class="inline-block bg-gray-100 text-dark font-black text-xs px-3 py-1 rounded-lg uppercase">Espresso</span>
+                            </div>
+
+                            <div class="h-px bg-gray-100 w-full"></div>
+
+                            <!-- Fluid Ratios -->
+                            <div>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Liquid Ratios (ml)</span>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-100">
+                                        <span class="text-[9px] font-bold text-amber-800 block">Espresso</span>
+                                        <span id="ticket-vol-espresso" class="text-sm font-black text-amber-900">0 ml</span>
+                                    </div>
+                                    <div class="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100">
+                                        <span class="text-[9px] font-bold text-emerald-800 block">Fresh Milk</span>
+                                        <span id="ticket-vol-milk" class="text-sm font-black text-emerald-900">0 ml</span>
+                                    </div>
+                                    <div class="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100">
+                                        <span class="text-[9px] font-bold text-blue-800 block">Hot Water</span>
+                                        <span id="ticket-vol-water" class="text-sm font-black text-blue-900">0 ml</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="h-px bg-gray-100 w-full"></div>
+
+                            <!-- Additions / Toppings -->
+                            <div>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Toppings & Foam</span>
+                                <div class="space-y-1.5">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-gray-400 font-semibold">Milk Foam Thickness</span>
+                                        <span id="ticket-foam" class="font-bold text-dark">None</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-gray-400 font-semibold">Whipped Cream Added</span>
+                                        <span id="ticket-whipped" class="font-bold text-dark">No</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-gray-400 font-semibold">Ice Cubes Added</span>
+                                        <span id="ticket-ice" class="font-bold text-dark">No</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="h-px bg-gray-100 w-full"></div>
+
+                            <!-- Syrups -->
+                            <div>
+                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Flavor Syrups (Pumps)</span>
+                                <div id="ticket-syrups-list" class="grid grid-cols-2 gap-2 text-xs">
+                                    <!-- Syrup pumps -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cost and Total volume -->
+                        <div class="bg-brand/10 border border-brand/20 rounded-2xl p-4 flex justify-between items-center">
+                            <div>
+                                <span class="text-[9px] font-bold text-brand-accent uppercase tracking-wider block mb-0.5">Est. Price</span>
+                                <span id="ticket-price" class="text-lg font-black text-brand-accent">0 SYP</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] font-bold text-brand-accent uppercase tracking-wider block mb-0.5">Total Size</span>
+                                <span id="ticket-total-volume" class="text-lg font-black text-dark">0 ml</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions block at the bottom -->
+                <div id="ticket-actions" class="hidden mt-6 flex flex-col gap-2 shrink-0">
+                    <button onclick="window.print()" class="w-full bg-dark text-white font-bold py-3.5 rounded-2xl hover:bg-black transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
+                        <i data-lucide="printer" class="w-5 h-5"></i>
+                        Print Prep Ticket
+                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="editRecipe()" class="bg-brand text-white font-bold py-3 rounded-2xl hover:bg-brand-accent transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 text-xs">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            Edit Recipe
+                        </button>
+                        <button onclick="deleteRecipe()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-2xl transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 text-xs">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            Delete Recipe
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT ONLY VIEW -->
+    <div class="print-only hidden text-left p-6 max-w-xs mx-auto border border-dashed border-gray-400 rounded-lg bg-white font-mono text-sm leading-relaxed">
+        <div class="text-center mb-4">
+            <h2 class="text-lg font-black uppercase">Groove Coffee Shop</h2>
+            <p class="text-[10px] text-gray-400">--- Barista Prep Ticket ---</p>
+        </div>
+        
+        <div class="space-y-2">
+            <div><strong>Drink Name:</strong> <span id="print-name" class="font-bold"></span></div>
+            <div><strong>Base:</strong> <span id="print-base" class="uppercase"></span></div>
+            <div class="h-px bg-gray-300 my-2"></div>
+            <div><strong>Espresso Shots:</strong> <span id="print-espresso"></span></div>
+            <div><strong>Fresh Milk:</strong> <span id="print-milk"></span></div>
+            <div><strong>Hot Water:</strong> <span id="print-water"></span></div>
+            <div class="h-px bg-gray-300 my-2"></div>
+            <div><strong>Foam Level:</strong> <span id="print-foam"></span></div>
+            <div><strong>Whipped Cream:</strong> <span id="print-whipped"></span></div>
+            <div><strong>Ice Cubes:</strong> <span id="print-ice"></span></div>
+            <div class="h-px bg-gray-300 my-2"></div>
+            <div><strong>Syrups:</strong></div>
+            <div id="print-syrups" class="pl-4 space-y-1"></div>
+            <div class="h-px bg-gray-300 my-2"></div>
+            <div class="flex justify-between font-bold">
+                <span>Total Volume:</span>
+                <span id="print-volume"></span>
+            </div>
+            <div class="flex justify-between font-bold">
+                <span>Est Price:</span>
+                <span id="print-price"></span>
+            </div>
+        </div>
+        
+        <div class="text-center mt-6 text-[10px] text-gray-400">
+            <p>Made with love & precision ❤️</p>
+        </div>
+    </div>
+
+    <script>
+        let allRecipes = [];
+        let filteredRecipesList = [];
+        let selectedRecipeId = null;
+
+        // --- Fetch Database Settings ---
+        db.collection('settings').doc('app').onSnapshot((doc) => {
+            if (doc.exists) {
+                const settings = doc.data();
+                if (settings.logoUrl) {
+                    const logoSrc = settings.logoUrl.includes('drive.google.com') ? getDirectDriveLink(settings.logoUrl) : settings.logoUrl;
+                    document.getElementById('mainLogo').src = logoSrc;
+                }
+            }
+        });
+
+        function getDirectDriveLink(url) {
+            if (!url) return '';
+            const driveMatch = url.match(/(?:\/d\/|id=)([\w-]+)/);
+            if (driveMatch && driveMatch[1]) {
+                return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w600`;
+            }
+            return url;
+        }
+
+        // --- Fetch Real-time Custom Recipes from Firebase ---
+        db.collection('custom_recipes').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+            allRecipes = [];
+            snapshot.forEach((doc) => {
+                allRecipes.push({ id: doc.id, ...doc.data() });
+            });
+            document.getElementById('recipes-count').innerText = `${allRecipes.length} Custom Recipes Registered`;
+            filterRecipes();
+        }, (error) => {
+            console.error("Error listening to custom recipes:", error);
+            document.getElementById('recipes-count').innerText = "Failed to connect to cloud database.";
+        });
+
+        // --- Search/Filter Recipes ---
+        function filterRecipes() {
+            const query = document.getElementById('input-search').value.toLowerCase().trim();
+            if (!query) {
+                filteredRecipesList = [...allRecipes];
+            } else {
+                filteredRecipesList = allRecipes.filter(r => 
+                    r.name.toLowerCase().includes(query) || 
+                    (r.recipe && r.recipe.currentBase && r.recipe.currentBase.toLowerCase().includes(query))
+                );
+            }
+            renderRecipesList();
+        }
+
+        // --- Render Cards ---
+        function renderRecipesList() {
+            const container = document.getElementById('recipes-list');
+            if (filteredRecipesList.length === 0) {
+                container.innerHTML = `
+                    <div class="py-12 text-center text-gray-400 space-y-2">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto text-gray-300"></i>
+                        <p class="text-xs font-bold">No custom recipes match your search</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = filteredRecipesList.map(r => {
+                const isSelected = r.id === selectedRecipeId;
+                const formattedDate = r.createdAt ? new Date(r.createdAt.seconds * 1000).toLocaleString() : 'Just now';
+                
+                // Formulate short descriptions
+                let baseText = '';
+                if (r.recipe) {
+                    baseText = r.recipe.currentBase.toUpperCase();
+                }
+
+                return `
+                    <div onclick="selectRecipe('${r.id}')" class="flex items-center justify-between p-4 bg-white rounded-2xl border ${isSelected ? 'border-brand bg-brand-light/20 shadow-md' : 'border-gray-200 shadow-sm'} hover:shadow-md hover:border-gray-300 transition-all cursor-pointer text-left font-sans">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-black text-dark">${r.name}</span>
+                                <span class="text-[9px] bg-brand-light text-brand-accent px-2 py-0.5 rounded font-black uppercase">${baseText}</span>
+                            </div>
+                            <span class="text-[10px] text-gray-400 block">${formattedDate}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-black text-brand-accent block">${r.estimatedPrice || '0 SYP'}</span>
+                            <span class="text-[10px] text-gray-400 block">${r.volume || '0 ml'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- Select Recipe ---
+        function selectRecipe(id) {
+            selectedRecipeId = id;
+            renderRecipesList();
+
+            const recipeObj = allRecipes.find(r => r.id === id);
+            if (!recipeObj) return;
+
+            document.getElementById('ticket-empty-state').classList.add('hidden');
+            document.getElementById('ticket-details').classList.remove('hidden');
+            document.getElementById('ticket-actions').classList.remove('hidden');
+
+            const formattedDate = recipeObj.createdAt ? new Date(recipeObj.createdAt.seconds * 1000).toLocaleString() : 'Saved just now';
+
+            // Bind details
+            document.getElementById('ticket-drink-name').innerText = recipeObj.name;
+            document.getElementById('ticket-date').innerText = `Registered: ${formattedDate}`;
+            document.getElementById('ticket-price').innerText = recipeObj.estimatedPrice || '0 SYP';
+            document.getElementById('ticket-total-volume').innerText = recipeObj.volume || '0 ml';
+
+            const recipe = recipeObj.recipe || {};
+            document.getElementById('ticket-base').innerText = recipe.currentBase || 'Espresso';
+
+            // Fluids ratios volume
+            let finalEspressoVol = 0;
+            let finalMilkVol = 0;
+            let finalWaterVol = 0;
+
+            if (recipe.currentBase === 'espresso') {
+                finalEspressoVol = recipe.baseVolume;
+                finalMilkVol = recipe.milkVolume;
+                finalWaterVol = recipe.waterVolume;
+            } else if (recipe.currentBase === 'milk') {
+                finalEspressoVol = recipe.milkVolume;
+                finalMilkVol = recipe.baseVolume + recipe.milkVolume;
+                finalWaterVol = recipe.waterVolume;
+            } else if (recipe.currentBase === 'water') {
+                finalEspressoVol = recipe.waterVolume;
+                finalMilkVol = recipe.milkVolume;
+                finalWaterVol = recipe.baseVolume + recipe.waterVolume;
+            }
+
+            document.getElementById('ticket-vol-espresso').innerText = `${finalEspressoVol} ml`;
+            document.getElementById('ticket-vol-milk').innerText = `${finalMilkVol} ml`;
+            document.getElementById('ticket-vol-water').innerText = `${finalWaterVol} ml`;
+
+            // Foam, cream, ice
+            const foamType = recipe.foam || 'none';
+            document.getElementById('ticket-foam').innerText = foamType === 'none' ? 'No Foam' : foamType === 'light' ? 'Light' : foamType === 'medium' ? 'Medium' : 'Thick';
+            document.getElementById('ticket-whipped').innerText = recipe.whippedCream ? 'Whipped Cream ✨' : 'No Whipped Cream';
+            document.getElementById('ticket-ice').innerText = recipe.ice ? 'Ice Cubes 🧊' : 'No Ice';
+
+            // Syrups
+            const syrupsList = document.getElementById('ticket-syrups-list');
+            const syrups = recipe.syrups || {};
+            let syrupsHtml = '';
+            
+            let hasSyrups = false;
+            Object.keys(syrups).forEach(flavor => {
+                if (syrups[flavor] > 0) {
+                    hasSyrups = true;
+                    const flName = flavor.charAt(0).toUpperCase() + flavor.slice(1);
+                    syrupsHtml += `
+                        <div class="bg-white border border-gray-150 p-2 rounded-xl flex justify-between items-center">
+                            <span class="text-gray-400 font-semibold">${flName}</span>
+                            <span class="font-bold text-dark">${syrups[flavor]} pumps</span>
+                        </div>
+                    `;
+                }
+            });
+
+            if (!hasSyrups) {
+                syrupsHtml = '<p class="col-span-2 text-[10px] text-gray-400 italic text-left">No syrups added</p>';
+            }
+            syrupsList.innerHTML = syrupsHtml;
+
+            // --- BIND PRINT VERSION ---
+            document.getElementById('print-name').innerText = recipeObj.name;
+            document.getElementById('print-base').innerText = recipe.currentBase || 'Espresso';
+            document.getElementById('print-espresso').innerText = `${finalEspressoVol} ml`;
+            document.getElementById('print-milk').innerText = `${finalMilkVol} ml`;
+            document.getElementById('print-water').innerText = `${finalWaterVol} ml`;
+            document.getElementById('print-foam').innerText = foamType === 'none' ? 'No Foam' : foamType === 'light' ? 'Light' : foamType === 'medium' ? 'Medium' : 'Thick';
+            document.getElementById('print-whipped').innerText = recipe.whippedCream ? 'Yes' : 'No';
+            document.getElementById('print-ice').innerText = recipe.ice ? 'Yes' : 'No';
+            document.getElementById('print-volume').innerText = recipeObj.volume || '0 ml';
+            document.getElementById('print-price').innerText = recipeObj.estimatedPrice || '0 SYP';
+
+            const printSyrups = document.getElementById('print-syrups');
+            let printSyrupsHtml = '';
+            Object.keys(syrups).forEach(flavor => {
+                if (syrups[flavor] > 0) {
+                    const flName = flavor.charAt(0).toUpperCase() + flavor.slice(1);
+                    printSyrupsHtml += `<div>- ${flName} Syrup: ${syrups[flavor]} pumps</div>`;
+                }
+            });
+            if (printSyrupsHtml === '') {
+                printSyrupsHtml = '<div>- None</div>';
+            }
+            printSyrups.innerHTML = printSyrupsHtml;
+        }
+
+        function editRecipe() {
+            if (!selectedRecipeId) return;
+            window.location.href = `./builder.html?recipeId=${selectedRecipeId}`;
+        }
+
+        async function deleteRecipe() {
+            if (!selectedRecipeId) return;
+            
+            const recipeObj = allRecipes.find(r => r.id === selectedRecipeId);
+            if (!recipeObj) return;
+
+            if (confirm(`Are you sure you want to delete the custom recipe "${recipeObj.name}" permanently from the database?`)) {
+                try {
+                    await db.collection('custom_recipes').doc(selectedRecipeId).delete();
+                    alert('Recipe deleted successfully!');
+                    
+                    // Reset right panel to empty state
+                    selectedRecipeId = null;
+                    document.getElementById('ticket-empty-state').classList.remove('hidden');
+                    document.getElementById('ticket-details').classList.add('hidden');
+                    document.getElementById('ticket-actions').classList.add('hidden');
+                } catch (e) {
+                    console.error("Error deleting recipe:", e);
+                    alert("Failed to delete recipe. Please try again.");
+                }
+            }
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>

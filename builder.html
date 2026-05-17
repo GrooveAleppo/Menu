@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Design Your Perfect Cup - Groove Coffee Shop</title>
+
+    <!-- Tailwind CSS -->
+    <script src="./tailwindcss.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUtaq22wuKtAZHtcYnta_sXHNJWkEoAiQ",
+            authDomain: "groove-menu.firebaseapp.com",
+            projectId: "groove-menu",
+            storageBucket: "groove-menu.firebasestorage.app",
+            messagingSenderId: "622362545565",
+            appId: "1:622362545565:web:7fc736c19970fd558c7374",
+            measurementId: "G-D35FC0ZMDB"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#7b937e',
+                            light: '#eef2ef',
+                            accent: '#5f7561'
+                        },
+                        dark: '#111111',
+                        surface: '#faf9f6'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #faf9f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .fluid-layer {
+            transition: height 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.5s ease;
+        }
+
+        .steam-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            animation: rise 3s infinite ease-in;
+            opacity: 0;
+            bottom: 20px;
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: 20px;
+                transform: translateX(0) scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                bottom: 250px;
+                transform: translateX(var(--x-offset, 20px)) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* Glassmorphism card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+
+<body class="font-sans text-dark antialiased bg-surface min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
+
+    <div
+        class="max-w-6xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+
+        <!-- Header -->
+        <header class="bg-surface px-4 py-3 sm:px-6 border-b border-gray-150 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-3">
+                <a href="./index.html"
+                    class="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
+                    <i data-lucide="chevron-left" class="w-5 h-5 text-dark"></i>
+                </a>
+                <div>
+                    <h1 class="text-base sm:text-lg font-black text-dark flex items-center gap-1.5 leading-tight">
+                        Design Your Perfect Cup
+                    </h1>
+                    <p class="text-[10px] sm:text-xs text-gray-500">Build your custom drink in real-time!</p>
+                </div>
+            </div>
+            <img id="mainLogo" src="./assets/logo.png" alt="Groove Logo" class="h-8 sm:h-9 object-contain">
+        </header>
+
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+
+            <!-- Left Side: Dynamic Cup Visualizer -->
+            <div
+                class="flex-1 bg-gradient-to-b from-gray-50 to-gray-100/50 p-6 flex flex-col items-center justify-center border-r border-gray-150 relative min-h-[310px] lg:min-h-0 shrink-0">
+
+                <!-- Dynamic background aura based on coffee type -->
+                <div id="glow-bg"
+                    class="absolute w-64 h-64 rounded-full bg-brand/10 blur-[80px] transition-all duration-1000 -z-10">
+                </div>
+
+                <!-- Ambient Coffee Steam Animation -->
+                <div id="steam-container"
+                    class="absolute w-[200px] h-[300px] bottom-[300px] pointer-events-none overflow-hidden">
+                    <!-- Steam bubbles will be injected via JS -->
+                </div>
+
+                <!-- Coffee Cup Render Wrapper -->
+                <div class="relative my-4 sm:my-8 flex items-center justify-center w-[220px] h-[250px] sm:w-[280px] sm:h-[320px] shrink-0">
+                    <!-- Cup Handle -->
+                    <div
+                        class="absolute left-[15px] sm:left-[10px] top-[50px] sm:top-[60px] w-[40px] sm:w-[55px] h-[100px] sm:h-[140px] border-[6px] sm:border-[8px] border-amber-900/15 rounded-l-[50px] transition-all duration-500">
+                    </div>
+
+                    <!-- Glass Coffee Cup -->
+                    <div
+                        class="relative w-[160px] sm:w-[210px] h-[200px] sm:h-[270px] border-[6px] sm:border-[8px] border-white rounded-b-[50px] sm:rounded-b-[70px] overflow-hidden flex flex-col-reverse justify-start bg-white/10 backdrop-blur-[3px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] border-t-0 z-10">
+
+                        <!-- Fluid Layers -->
+                        <!-- 1. Whipped Cream Top Layer -->
+                        <div id="layer-whipped-cream"
+                            class="fluid-layer bg-white w-full flex items-center justify-center text-[10px] font-black text-amber-900/60 overflow-hidden shadow-inner shrink-0"
+                            style="height: 0%;">
+                            <span class="whitespace-nowrap">Whipped Cream ✨</span>
+                        </div>
+
+                        <!-- 2. Milk Foam Layer -->
+                        <div id="layer-foam"
+                            class="fluid-layer bg-[#fefbf3] w-full flex items-center justify-center text-[10px] font-black text-amber-900/50 overflow-hidden shrink-0 border-b border-[#faf5e6]/30"
+                            style="height: 0%;">
+                            <span class="whitespace-nowrap">Milk Foam 💭</span>
+                        </div>
+
+                        <!-- 3. Milk Layer -->
+                        <div id="layer-milk"
+                            class="fluid-layer bg-[#f7f4eb] w-full flex items-center justify-center text-[11px] font-black text-amber-900/70 overflow-hidden shrink-0"
+                            style="height: 0%;">
+                            <span class="whitespace-nowrap">Fresh Milk 🥛</span>
+                        </div>
+
+                        <!-- 4. Espresso Layer -->
+                        <div id="layer-espresso"
+                            class="fluid-layer bg-[#3d2314] w-full flex items-center justify-center text-[11px] font-black text-white/80 overflow-hidden shrink-0 shadow-[inset_0_-10px_20px_rgba(0,0,0,0.2)]"
+                            style="height: 0%;">
+                            <span class="whitespace-nowrap">Espresso ☕</span>
+                        </div>
+
+                        <!-- 5. Hot Water Layer -->
+                        <div id="layer-water"
+                            class="fluid-layer bg-sky-100/50 w-full flex items-center justify-center text-[11px] font-black text-sky-800/60 overflow-hidden shrink-0"
+                            style="height: 0%;">
+                            <span class="whitespace-nowrap">Hot Water 💧</span>
+                        </div>
+
+                        <!-- Ice Cubes layer overlays fluid layers -->
+                        <div id="ice-cubes-container"
+                            class="absolute inset-x-0 bottom-0 top-12 pointer-events-none flex flex-wrap items-center justify-around p-4 opacity-0 transition-opacity duration-500 z-20">
+                            <div
+                                class="w-8 h-8 bg-white/20 border border-white/40 rounded-lg rotate-12 backdrop-blur-[1px] shadow-sm">
+                            </div>
+                            <div
+                                class="w-7 h-7 bg-white/20 border border-white/40 rounded-lg -rotate-12 backdrop-blur-[1px] shadow-sm mt-8">
+                            </div>
+                            <div
+                                class="w-8 h-8 bg-white/20 border border-white/40 rounded-lg rotate-45 backdrop-blur-[1px] shadow-sm -mt-4">
+                            </div>
+                        </div>
+
+                        <!-- Syrups indicator lines inside the cup -->
+                        <div id="syrups-overlay"
+                            class="absolute inset-x-0 bottom-2 pointer-events-none flex flex-col gap-1 px-4 z-20 opacity-0 transition-opacity duration-500">
+                            <div class="h-1 bg-amber-600 rounded-full w-4/5 mx-auto animate-pulse"></div>
+                            <div class="h-1 bg-[#28150c] rounded-full w-2/3 mx-auto animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Stats Badge -->
+                <div class="flex gap-4 sm:gap-6 mt-1 sm:mt-2 text-center z-10 shrink-0">
+                    <div class="bg-white/80 border border-gray-150 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-sm">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase">Approx. Volume</span>
+                        <span id="stat-volume" class="text-xs sm:text-base font-black text-dark">250 ml</span>
+                    </div>
+                    <div class="bg-white/80 border border-gray-150 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-sm">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase">Est. Calories</span>
+                        <span id="stat-calories" class="text-xs sm:text-base font-black text-brand-accent">0 kcal</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side: Ingredient Controls Panel -->
+            <div
+                class="w-full lg:w-[480px] overflow-y-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-between space-y-6 sm:space-y-8 bg-white border-t lg:border-t-0 border-gray-150">
+
+                <div class="space-y-6">
+                    <!-- Active Custom Recipe Banner -->
+                    <div id="active-recipe-banner" class="hidden bg-brand/10 border border-brand/20 px-4 py-3 rounded-2xl flex items-center justify-between transition-all duration-500 mb-4 text-left">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-brand-accent animate-pulse"></i>
+                            <div>
+                                <span id="active-recipe-banner-label" class="text-[9px] font-bold text-brand-accent uppercase tracking-wider block leading-none mb-0.5">Custom Drink Loaded</span>
+                                <span id="active-recipe-name" class="text-sm font-black text-dark">Default</span>
+                            </div>
+                        </div>
+                        <button onclick="clearActiveRecipe()" class="text-gray-400 hover:text-red-500 transition-colors p-1 bg-white rounded-lg shadow-sm border border-gray-150 flex items-center justify-center">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Step 1: Base Selection -->
+                    <div>
+                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-2 text-left">Step 1: Select Drink Base</span>
+                        <div class="bg-gray-100 p-1 rounded-2xl flex gap-1 border border-gray-200/50">
+                            <button onclick="setBase('espresso')" id="btn-base-espresso"
+                                class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all bg-white shadow-sm text-dark">
+                                <i data-lucide="coffee" class="w-4 h-4 text-amber-900"></i>
+                                <span>Espresso</span>
+                            </button>
+                            <button onclick="setBase('milk')" id="btn-base-milk"
+                                class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all text-gray-500 hover:bg-gray-50/50 hover:text-dark">
+                                <i data-lucide="milk" class="w-4 h-4 text-amber-700"></i>
+                                <span>Hot Milk</span>
+                            </button>
+                            <button onclick="setBase('water')" id="btn-base-water"
+                                class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all text-gray-500 hover:bg-gray-50/50 hover:text-dark">
+                                <i data-lucide="droplet" class="w-4 h-4 text-sky-500"></i>
+                                <span>Americano</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Mixing Ratios (Espresso, Milk, Water sliders simultaneously) -->
+                    <div class="space-y-5 bg-gray-50 rounded-2xl p-4 sm:p-5 border border-gray-150/70 shadow-inner">
+                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-1 text-left">Step 2: Adjust Liquid Quantities</span>
+
+                        <!-- Base Ingredient Slider -->
+                        <div id="slider-container-base" class="space-y-1.5">
+                            <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
+                                <span id="label-base-slider" class="font-bold flex items-center gap-1"><i data-lucide="coffee" class="w-3.5 h-3.5 text-amber-900"></i> Espresso Volume</span>
+                                <span id="val-base-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">100 ml</span>
+                            </div>
+                            <input type="range" id="input-base-slider" min="30" max="250" value="100" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-900">
+                        </div>
+
+                        <!-- Milk Ratio Slider -->
+                        <div id="slider-container-milk" class="space-y-1.5 border-t border-gray-200/50 pt-3">
+                            <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
+                                <span id="label-milk-slider" class="font-bold flex items-center gap-1"><i data-lucide="milk" class="w-3.5 h-3.5 text-amber-600"></i> Add Fresh Milk</span>
+                                <span id="val-milk-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0 ml</span>
+                            </div>
+                            <input type="range" id="input-milk-slider" min="0" max="200" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-700">
+                        </div>
+
+                        <!-- Water Ratio Slider -->
+                        <div id="slider-container-water" class="space-y-1.5 border-t border-gray-200/50 pt-3">
+                            <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
+                                <span id="label-water-slider" class="font-bold flex items-center gap-1"><i data-lucide="droplet" class="w-3.5 h-3.5 text-sky-500"></i> Add Hot Water</span>
+                                <span id="val-water-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0 ml</span>
+                            </div>
+                            <input type="range" id="input-water-slider" min="0" max="200" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Toppings & Foams -->
+                    <div class="space-y-3">
+                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block">Step 3: Foam &
+                            Toppings</span>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Milk Foam Selector -->
+                            <div
+                                class="bg-gray-50 border border-gray-150 rounded-2xl p-3 flex flex-col justify-between">
+                                <label class="text-xs font-bold text-gray-600 mb-1.5 block">Milk Foam</label>
+                                <select id="select-foam" onchange="calculateSpecs()"
+                                    class="w-full text-xs font-semibold bg-white border border-gray-200 rounded-xl px-2 py-2 outline-none focus:border-brand">
+                                    <option value="none">No Foam</option>
+                                    <option value="light">Light (+0 SYP)</option>
+                                    <option value="medium">Medium (+0 SYP)</option>
+                                    <option value="heavy">Thick (+0 SYP)</option>
+                                </select>
+                            </div>
+
+                            <!-- Whipped Cream Toggle -->
+                            <div
+                                class="bg-gray-50 border border-gray-150 rounded-2xl p-3 flex flex-col justify-between">
+                                <label class="text-xs font-bold text-gray-600 mb-1.5 block">Whipped Cream</label>
+                                <div class="flex items-center justify-between">
+                                    <span id="lbl-price-whipped" class="text-[10px] font-semibold text-gray-400">+1,500 SYP</span>
+                                    <input type="checkbox" id="check-whipped-cream" onchange="calculateSpecs()"
+                                        class="w-4 h-4 text-brand bg-white border-gray-300 rounded focus:ring-brand accent-brand">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Syrups & Additions -->
+                    <div class="space-y-3">
+                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block">Step 4: Syrups
+                            & Ice</span>
+
+                        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-4">
+                            <!-- Ice check -->
+                            <div class="flex items-center justify-between pb-3 border-b border-gray-200/60">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-600 block">Add Ice Cubes (Ice)</span>
+                                    <span class="text-[10px] text-gray-400">Perfect for cold, refreshing drinks</span>
+                                </div>
+                                <input type="checkbox" id="check-ice" onchange="calculateSpecs()"
+                                    class="w-4 h-4 text-brand bg-white border-gray-300 rounded focus:ring-brand accent-brand">
+                            </div>
+
+                            <!-- Syrups slider grid -->
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center text-xs font-bold text-gray-600">
+                                    <span>Flavor Pumps (Syrups)</span>
+                                    <span id="lbl-price-syrup" class="text-[10px] text-brand-accent font-semibold">+800 SYP / pump</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div
+                                        class="bg-white border border-gray-200 rounded-xl p-2 flex justify-between items-center">
+                                        <span class="text-xs font-semibold text-gray-500">Caramel</span>
+                                        <div class="flex items-center gap-2">
+                                            <button onclick="changeSyrup('caramel', -1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">-</button>
+                                            <span id="qty-syrup-caramel" class="text-xs font-bold">0</span>
+                                            <button onclick="changeSyrup('caramel', 1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">+</button>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-white border border-gray-200 rounded-xl p-2 flex justify-between items-center">
+                                        <span class="text-xs font-semibold text-gray-500">Chocolate</span>
+                                        <div class="flex items-center gap-2">
+                                            <button onclick="changeSyrup('chocolate', -1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">-</button>
+                                            <span id="qty-syrup-chocolate" class="text-xs font-bold">0</span>
+                                            <button onclick="changeSyrup('chocolate', 1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">+</button>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-white border border-gray-200 rounded-xl p-2 flex justify-between items-center">
+                                        <span class="text-xs font-semibold text-gray-500">Vanilla</span>
+                                        <div class="flex items-center gap-2">
+                                            <button onclick="changeSyrup('vanilla', -1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">-</button>
+                                            <span id="qty-syrup-vanilla" class="text-xs font-bold">0</span>
+                                            <button onclick="changeSyrup('vanilla', 1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">+</button>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-white border border-gray-200 rounded-xl p-2 flex justify-between items-center">
+                                        <span class="text-xs font-semibold text-gray-500">Hazelnut</span>
+                                        <div class="flex items-center gap-2">
+                                            <button onclick="changeSyrup('hazelnut', -1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">-</button>
+                                            <span id="qty-syrup-hazelnut" class="text-xs font-bold">0</span>
+                                            <button onclick="changeSyrup('hazelnut', 1)"
+                                                class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-xs hover:bg-gray-200">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Summary & WhatsApp Button -->
+                <div class="border-t border-gray-150 pt-6 space-y-4">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-400 block mb-0.5">Estimated Cost</span>
+                            <span id="final-price" class="text-2xl sm:text-3xl font-black text-brand-accent">5,000
+                                SYP</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="saveMyRecipe()"
+                                class="p-3 bg-gray-50 border border-gray-200 rounded-2xl hover:bg-gray-100 transition-colors shadow-sm"
+                                title="Save recipe to browser">
+                                <i data-lucide="bookmark" class="w-5 h-5 text-gray-500"></i>
+                            </button>
+                            <button onclick="loadMyRecipe()"
+                                class="p-3 bg-gray-50 border border-gray-200 rounded-2xl hover:bg-gray-100 transition-colors shadow-sm"
+                                title="Load saved recipe">
+                                <i data-lucide="folder-heart" class="w-5 h-5 text-brand-accent"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="orderViaWhatsApp()"
+                        class="w-full bg-brand text-white font-bold py-4 rounded-2xl hover:bg-brand-accent transition-all shadow-lg shadow-brand/10 active:scale-[0.98] flex items-center justify-center gap-2">
+                        <i data-lucide="message-square" class="w-5 h-5"></i>
+                        Send Custom Order (WhatsApp)
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentBase = 'espresso';
+        let baseVolume = 100;
+        let milkVolume = 0;
+        let waterVolume = 0;
+        let syrups = { caramel: 0, chocolate: 0, vanilla: 0, hazelnut: 0 };
+
+        let whippedCreamPrice = 1500;
+        let syrupPumpPrice = 800;
+        let milkBasePricePer50ml = 1000;
+        let milkFoamPrice = 0;
+
+        // --- Fetch Database Settings ---
+        db.collection('settings').doc('app').onSnapshot((doc) => {
+            if (doc.exists) {
+                const settings = doc.data();
+                if (settings.logoUrl) {
+                    const logoSrc = settings.logoUrl.includes('drive.google.com') ? getDirectDriveLink(settings.logoUrl) : settings.logoUrl;
+                    document.getElementById('mainLogo').src = logoSrc;
+                }
+
+                // Dynamic prices
+                whippedCreamPrice = settings.whippedCreamPrice !== undefined ? settings.whippedCreamPrice : 1500;
+                syrupPumpPrice = settings.syrupPumpPrice !== undefined ? settings.syrupPumpPrice : 800;
+                milkBasePricePer50ml = settings.milkBasePricePer50ml !== undefined ? settings.milkBasePricePer50ml : 1000;
+                milkFoamPrice = settings.milkFoamPrice !== undefined ? settings.milkFoamPrice : 0;
+
+                // Sync prices in UI labels
+                const lblWhipped = document.getElementById('lbl-price-whipped');
+                const lblSyrup = document.getElementById('lbl-price-syrup');
+                if (lblWhipped) lblWhipped.innerText = `+${whippedCreamPrice.toLocaleString()} SYP`;
+                if (lblSyrup) lblSyrup.innerText = `+${syrupPumpPrice.toLocaleString()} SYP / pump`;
+
+                // Sync foam options labels
+                const selectFoam = document.getElementById('select-foam');
+                if (selectFoam) {
+                    selectFoam.options[1].text = `Light (+${milkFoamPrice.toLocaleString()} SYP)`;
+                    selectFoam.options[2].text = `Medium (+${milkFoamPrice.toLocaleString()} SYP)`;
+                    selectFoam.options[3].text = `Thick (+${milkFoamPrice.toLocaleString()} SYP)`;
+                }
+
+                // Recalculate specs to reflect new prices instantly
+                calculateSpecs();
+            }
+        });
+
+        function getDirectDriveLink(url) {
+            if (!url) return '';
+            const driveMatch = url.match(/(?:\/d\/|id=)([\w-]+)/);
+            if (driveMatch && driveMatch[1]) {
+                return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w600`;
+            }
+            return url;
+        }
+
+        // --- Steaming Bubbles Animation Helper ---
+        function createSteamingEffect() {
+            const container = document.getElementById('steam-container');
+            container.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'steam-bubble';
+                bubble.style.left = `${20 + Math.random() * 160}px`;
+                bubble.style.width = `${5 + Math.random() * 15}px`;
+                bubble.style.height = bubble.style.width;
+                bubble.style.animationDelay = `${Math.random() * 3}s`;
+                bubble.style.setProperty('--x-offset', `${-40 + Math.random() * 80}px`);
+                container.appendChild(bubble);
+            }
+        }
+        setInterval(createSteamingEffect, 3000);
+        createSteamingEffect();
+
+        // --- Base Selection Handler ---
+        function setBase(type) {
+            currentBase = type;
+
+            // UI Button Active states reset
+            const bases = ['espresso', 'milk', 'water'];
+            bases.forEach(b => {
+                const btn = document.getElementById(`btn-base-${b}`);
+                if (b === type) {
+                    btn.className = "flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all bg-white shadow-sm text-dark";
+                } else {
+                    btn.className = "flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all text-gray-500 hover:bg-gray-50/50 hover:text-dark";
+                }
+            });
+
+            // Adjust ranges and labels dynamically
+            const baseSlider = document.getElementById('input-base-slider');
+            const milkSlider = document.getElementById('input-milk-slider');
+            const waterSlider = document.getElementById('input-water-slider');
+
+            const labelBase = document.getElementById('label-base-slider');
+            const labelMilk = document.getElementById('label-milk-slider');
+            const labelWater = document.getElementById('label-water-slider');
+
+            const glowBg = document.getElementById('glow-bg');
+
+            if (type === 'espresso') {
+                labelBase.innerText = "Espresso Base Volume";
+                baseSlider.min = 30;
+                baseSlider.max = 120;
+                baseSlider.value = 60;
+
+                labelMilk.innerText = "Add Fresh Milk";
+                milkSlider.value = 100;
+
+                labelWater.innerText = "Add Hot Water";
+                waterSlider.value = 0;
+
+                glowBg.className = "absolute w-64 h-64 rounded-full bg-amber-950/10 blur-[80px] transition-all duration-1000 -z-10";
+            } else if (type === 'milk') {
+                labelBase.innerText = "Hot Milk Base Volume";
+                baseSlider.min = 100;
+                baseSlider.max = 250;
+                baseSlider.value = 200;
+
+                labelMilk.innerText = "Add Extra Milk";
+                milkSlider.value = 0;
+
+                labelWater.innerText = "Add Hot Water";
+                waterSlider.value = 0;
+
+                glowBg.className = "absolute w-64 h-64 rounded-full bg-orange-100/30 blur-[80px] transition-all duration-1000 -z-10";
+            } else if (type === 'water') {
+                labelBase.innerText = "Hot Water Base Volume";
+                baseSlider.min = 100;
+                baseSlider.max = 250;
+                baseSlider.value = 180;
+
+                labelMilk.innerText = "Add Fresh Milk";
+                milkSlider.value = 0;
+
+                labelWater.innerText = "Add Extra Water";
+                waterSlider.value = 0;
+
+                glowBg.className = "absolute w-64 h-64 rounded-full bg-sky-200/20 blur-[80px] transition-all duration-1000 -z-10";
+            }
+
+            updateRatios();
+        }
+
+        // --- Handle Slider adjustments ---
+        function updateRatios() {
+            baseVolume = parseInt(document.getElementById('input-base-slider').value);
+            milkVolume = parseInt(document.getElementById('input-milk-slider').value);
+            waterVolume = parseInt(document.getElementById('input-water-slider').value);
+
+            document.getElementById('val-base-slider').innerText = `${baseVolume} ml`;
+            document.getElementById('val-milk-slider').innerText = `${milkVolume} ml`;
+            document.getElementById('val-water-slider').innerText = `${waterVolume} ml`;
+
+            calculateSpecs();
+        }
+
+        // --- Syrup Counters ---
+        function changeSyrup(flavor, val) {
+            const count = syrups[flavor] + val;
+            if (count >= 0 && count <= 4) {
+                syrups[flavor] = count;
+                document.getElementById(`qty-syrup-${flavor}`).innerText = count;
+                calculateSpecs();
+            }
+        }
+
+        // --- Render Cup Fluid Ratios and Calculate Specs ---
+        function calculateSpecs() {
+            const foamType = document.getElementById('select-foam').value;
+            const hasWhippedCream = document.getElementById('check-whipped-cream').checked;
+            const hasIce = document.getElementById('check-ice').checked;
+
+            // Foam height allocation (in % of rendering)
+            let foamHeight = 0;
+            if (foamType === 'light') foamHeight = 10;
+            else if (foamType === 'medium') foamHeight = 20;
+            else if (foamType === 'heavy') foamHeight = 30;
+
+            // Whipped cream height allocation
+            let creamHeight = hasWhippedCream ? 25 : 0;
+
+            // Map base choices to absolute fluid milliliters
+            let finalEspressoVol = 0;
+            let finalMilkVol = 0;
+            let finalWaterVol = 0;
+
+            if (currentBase === 'espresso') {
+                finalEspressoVol = baseVolume;
+                finalMilkVol = milkVolume;
+                finalWaterVol = waterVolume;
+            } else if (currentBase === 'milk') {
+                finalEspressoVol = milkVolume; // In Milk base, the "add milk" represents extra milk, we treat "add espresso" slider values
+                finalMilkVol = baseVolume + milkVolume;
+                finalWaterVol = waterVolume;
+            } else if (currentBase === 'water') {
+                finalEspressoVol = waterVolume; // In water base, the sliders map correctly
+                finalMilkVol = milkVolume;
+                finalWaterVol = baseVolume + waterVolume;
+            }
+
+            // Total volume calculations
+            let totalFluidMl = finalEspressoVol + finalMilkVol + finalWaterVol;
+            let displayVolume = totalFluidMl;
+            if (foamType !== 'none') displayVolume += 30;
+            if (hasWhippedCream) displayVolume += 40;
+
+            document.getElementById('stat-volume').innerText = `${displayVolume} ml`;
+
+            // Max scale the rendering heights inside the cup
+            let espressoPct = totalFluidMl > 0 ? (finalEspressoVol / totalFluidMl) * 100 : 0;
+            let milkPct = totalFluidMl > 0 ? (finalMilkVol / totalFluidMl) * 100 : 0;
+            let waterPct = totalFluidMl > 0 ? (finalWaterVol / totalFluidMl) * 100 : 0;
+
+            // Adjust overall heights relative to cup space left by Foam & Cream
+            let availablePct = 100 - (foamHeight + creamHeight);
+
+            let finalEspressoH = (espressoPct * availablePct) / 100;
+            let finalMilkH = (milkPct * availablePct) / 100;
+            let finalWaterH = (waterPct * availablePct) / 100;
+
+            // Update DOM heights
+            document.getElementById('layer-espresso').style.height = `${finalEspressoH}%`;
+            document.getElementById('layer-milk').style.height = `${finalMilkH}%`;
+            document.getElementById('layer-water').style.height = `${finalWaterH}%`;
+            document.getElementById('layer-foam').style.height = `${foamHeight}%`;
+            document.getElementById('layer-whipped-cream').style.height = `${creamHeight}%`;
+
+            // Overlay Ice Cubes
+            document.getElementById('ice-cubes-container').style.opacity = hasIce ? '1' : '0';
+
+            // Show syrups overlay if syrup pumps exist
+            const totalSyrups = Object.values(syrups).reduce((a, b) => a + b, 0);
+            document.getElementById('syrups-overlay').style.opacity = totalSyrups > 0 ? '1' : '0';
+
+            // --- Calories Calculation ---
+            let cals = 0;
+            cals += (finalEspressoVol * 0.5);
+            cals += (finalMilkVol * 0.6);
+            cals += (foamType === 'light' ? 10 : foamType === 'medium' ? 20 : foamType === 'heavy' ? 30 : 0);
+            cals += (hasWhippedCream ? 140 : 0);
+            cals += (syrups.caramel * 60);
+            cals += (syrups.chocolate * 65);
+            cals += (syrups.vanilla * 55);
+            cals += (syrups.hazelnut * 55);
+            document.getElementById('stat-calories').innerText = `${Math.round(cals)} kcal`;
+
+            // --- Price Calculation ---
+            let price = 6000; // Base Cup Price
+
+            // Add Espresso shots cost if espresso volume exceeds 30ml
+            if (finalEspressoVol > 30) {
+                const extraShots = Math.floor((finalEspressoVol - 30) / 30);
+                price += extraShots * 1500;
+            }
+
+            // Extra Milk cost
+            if (finalMilkVol > 0) {
+                // If base is milk, 150ml of milk is free, only count milk above 150ml
+                let billableMilk = currentBase === 'milk' ? Math.max(0, finalMilkVol - 150) : finalMilkVol;
+                if (billableMilk > 0) {
+                    price += Math.ceil(billableMilk / 50) * milkBasePricePer50ml;
+                }
+            }
+
+            // Whipped cream cost
+            if (hasWhippedCream) price += whippedCreamPrice;
+
+            // Syrups cost
+            price += totalSyrups * syrupPumpPrice;
+
+            // Milk foam cost
+            if (foamType !== 'none') price += milkFoamPrice;
+
+            // Round price to nearest 1000 SYP
+            price = Math.round(price / 1000) * 1000;
+
+            // Format price as local currency
+            document.getElementById('final-price').innerText = `${price.toLocaleString()} SYP`;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const editingRecipeId = urlParams.get('recipeId');
+        let editingRecipeName = '';
+
+        // --- Save and Load Custom Recipes to LocalStorage & Firebase ---
+        function saveMyRecipe() {
+            document.getElementById('input-recipe-name').value = editingRecipeName || '';
+            const modal = document.getElementById('recipe-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeRecipeModal() {
+            const modal = document.getElementById('recipe-modal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function clearActiveRecipe() {
+            document.getElementById('active-recipe-banner').classList.add('hidden');
+        }
+
+        async function submitRecipeToFirebase() {
+            const drinkName = document.getElementById('input-recipe-name').value.trim();
+            if (!drinkName) {
+                alert('Please enter a name for your custom drink!');
+                return;
+            }
+
+            const recipe = {
+                currentBase,
+                baseVolume,
+                milkVolume,
+                waterVolume,
+                syrups,
+                foam: document.getElementById('select-foam').value,
+                whippedCream: document.getElementById('check-whipped-cream').checked,
+                ice: document.getElementById('check-ice').checked
+            };
+
+            const finalPrice = document.getElementById('final-price').innerText;
+            const volume = document.getElementById('stat-volume').innerText;
+
+            try {
+                if (editingRecipeId) {
+                    // Check name uniqueness excluding the current recipe
+                    const existing = await db.collection('custom_recipes')
+                        .where('name', '==', drinkName)
+                        .get();
+                    
+                    let exists = false;
+                    existing.forEach(doc => {
+                        if (doc.id !== editingRecipeId) exists = true;
+                    });
+
+                    if (exists) {
+                        alert('This name is already registered by another customer! Please choose another unique name.');
+                        return;
+                    }
+
+                    // Update existing custom recipe
+                    await db.collection('custom_recipes').doc(editingRecipeId).update({
+                        name: drinkName,
+                        recipe: recipe,
+                        volume: volume,
+                        estimatedPrice: finalPrice,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    editingRecipeName = drinkName;
+                    alert(`Perfect! Custom drink "${drinkName}" has been successfully updated!`);
+                } else {
+                    // Check if name already exists in firebase to ensure unique order names
+                    const existing = await db.collection('custom_recipes').where('name', '==', drinkName).get();
+                    if (!existing.empty) {
+                        alert('This name is already registered! Please choose another unique name so the cashier can identify your drink easily.');
+                        return;
+                    }
+
+                    // Add to firebase collection
+                    await db.collection('custom_recipes').add({
+                        name: drinkName,
+                        recipe: recipe,
+                        volume: volume,
+                        estimatedPrice: finalPrice,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    alert(`Perfect! "${drinkName}" is now registered with Groove Coffee Shop! Next time you visit, simply tell the cashier your custom drink name: "${drinkName}"!`);
+                }
+
+                // Also save to localStorage
+                localStorage.setItem('groove_custom_recipe', JSON.stringify({ name: drinkName, ...recipe }));
+
+                // Show in the active recipe banner
+                document.getElementById('active-recipe-name').innerText = drinkName;
+                const bannerLabel = document.getElementById('active-recipe-banner-label');
+                if (bannerLabel) {
+                    bannerLabel.innerText = editingRecipeId ? 'Editing Custom Recipe' : 'Custom Drink Loaded';
+                }
+                document.getElementById('active-recipe-banner').classList.remove('hidden');
+
+                closeRecipeModal();
+            } catch (e) {
+                console.error(e);
+                alert('Error saving recipe to cloud. Please try again!');
+            }
+        }
+
+        function loadMyRecipe() {
+            const data = localStorage.getItem('groove_custom_recipe');
+            if (!data) {
+                alert('No saved recipes found on this browser!');
+                return;
+            }
+            try {
+                const recipe = JSON.parse(data);
+                currentBase = recipe.currentBase;
+                baseVolume = recipe.baseVolume;
+                milkVolume = recipe.milkVolume;
+                waterVolume = recipe.waterVolume || 0;
+                syrups = recipe.syrups;
+
+                // Sync UI controls
+                document.getElementById('input-base-slider').value = baseVolume;
+                document.getElementById('input-milk-slider').value = milkVolume;
+                document.getElementById('input-water-slider').value = waterVolume;
+                document.getElementById('select-foam').value = recipe.foam;
+                document.getElementById('check-whipped-cream').checked = recipe.whippedCream;
+                document.getElementById('check-ice').checked = recipe.ice;
+
+                Object.keys(syrups).forEach(flavor => {
+                    document.getElementById(`qty-syrup-${flavor}`).innerText = syrups[flavor];
+                });
+
+                // Trigger states
+                setBase(currentBase);
+                
+                if (recipe.name) {
+                    document.getElementById('active-recipe-name').innerText = recipe.name;
+                    document.getElementById('active-recipe-banner').classList.remove('hidden');
+                    alert(`Your favorite custom recipe "${recipe.name}" has been loaded successfully!`);
+                } else {
+                    document.getElementById('active-recipe-banner').classList.add('hidden');
+                    alert('Your favorite custom recipe has been loaded successfully!');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // --- WhatsApp Ordering Flow ---
+        function orderViaWhatsApp() {
+            const phone = "963988628045"; // Groove Contact Number
+            const finalPrice = document.getElementById('final-price').innerText;
+            const volume = document.getElementById('stat-volume').innerText;
+
+            let finalEspressoVol = 0;
+            let finalMilkVol = 0;
+            let finalWaterVol = 0;
+
+            if (currentBase === 'espresso') {
+                finalEspressoVol = baseVolume;
+                finalMilkVol = milkVolume;
+                finalWaterVol = waterVolume;
+            } else if (currentBase === 'milk') {
+                finalEspressoVol = milkVolume;
+                finalMilkVol = baseVolume + milkVolume;
+                finalWaterVol = waterVolume;
+            } else if (currentBase === 'water') {
+                finalEspressoVol = waterVolume;
+                finalMilkVol = milkVolume;
+                finalWaterVol = baseVolume + waterVolume;
+            }
+
+            let baseText = `Base Category: ${currentBase.toUpperCase()}`;
+            let additions = [];
+
+            if (finalEspressoVol > 0) additions.push(`Espresso Shot (${finalEspressoVol}ml)`);
+            if (finalMilkVol > 0) additions.push(`Fresh Milk (${finalMilkVol}ml)`);
+            if (finalWaterVol > 0) additions.push(`Hot Water (${finalWaterVol}ml)`);
+
+            const foam = document.getElementById('select-foam').value;
+            if (foam !== 'none') {
+                const fStr = foam === 'light' ? 'Light' : foam === 'medium' ? 'Medium' : 'Thick';
+                additions.push(`Milk Foam (${fStr})`);
+            }
+
+            if (document.getElementById('check-whipped-cream').checked) additions.push("Whipped Cream ✨");
+            if (document.getElementById('check-ice').checked) additions.push("Ice Cubes 🧊");
+
+            Object.keys(syrups).forEach(flavor => {
+                if (syrups[flavor] > 0) {
+                    const flName = flavor.charAt(0).toUpperCase() + flavor.slice(1);
+                    additions.push(`${flName} Syrup (Pumps: ${syrups[flavor]})`);
+                }
+            });
+
+            const additionsText = additions.length > 0 ? additions.map(a => `   - ${a}`).join('\n') : '   - None';
+
+            const message = `Hello Groove! ☕\nI want to order my custom visual coffee recipe that I created on your website:\n\n*${baseText}*\n*Ratios & Ingredients:*\n${additionsText}\n\n*Total Volume:* ${volume}\n*Estimated Price:* ${finalPrice}\n\nPlease prepare it for me. Thank you! ❤️`;
+
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        async function loadEditingRecipe() {
+            if (!editingRecipeId) return;
+
+            try {
+                const doc = await db.collection('custom_recipes').doc(editingRecipeId).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const recipe = data.recipe || {};
+
+                    editingRecipeName = data.name || '';
+
+                    // 1. Set drink base
+                    selectBase(recipe.currentBase || 'espresso');
+
+                    // 2. Set slider values
+                    baseVolume = recipe.baseVolume !== undefined ? recipe.baseVolume : 100;
+                    milkVolume = recipe.milkVolume !== undefined ? recipe.milkVolume : 0;
+                    waterVolume = recipe.waterVolume !== undefined ? recipe.waterVolume : 0;
+
+                    document.getElementById('input-base-slider').value = baseVolume;
+                    document.getElementById('input-milk-slider').value = milkVolume;
+                    document.getElementById('input-water-slider').value = waterVolume;
+
+                    // 3. Set Foam
+                    const foamType = recipe.foam || 'none';
+                    document.getElementById('select-foam').value = foamType;
+
+                    // 4. Set Cream & Ice Checkboxes
+                    document.getElementById('check-whipped-cream').checked = !!recipe.whippedCream;
+                    document.getElementById('check-ice').checked = !!recipe.ice;
+
+                    // 5. Set Syrups
+                    syrups = recipe.syrups || { caramel: 0, chocolate: 0, vanilla: 0, hazelnut: 0 };
+                    Object.keys(syrups).forEach(flavor => {
+                        const count = syrups[flavor] || 0;
+                        const qtyEl = document.getElementById(`qty-syrup-${flavor}`);
+                        if (qtyEl) qtyEl.innerText = count;
+                    });
+
+                    // 6. Active banner text
+                    const banner = document.getElementById('active-recipe-banner');
+                    const bannerName = document.getElementById('active-recipe-name');
+                    const bannerLabel = document.getElementById('active-recipe-banner-label');
+                    if (banner) {
+                        banner.classList.remove('hidden');
+                        if (bannerName) bannerName.innerText = editingRecipeName;
+                        if (bannerLabel) bannerLabel.innerText = 'Editing Custom Recipe';
+                    }
+
+                    // 7. Update UI and calculation specs
+                    updateRatios();
+                }
+            } catch (e) {
+                console.error("Error loading recipe to edit:", e);
+            }
+        }
+
+        // Initialize state
+        setBase('espresso');
+        lucide.createIcons();
+
+        // Load editing recipe if query parameter exists
+        loadEditingRecipe();
+    </script>
+    <!-- Name Recipe Modal -->
+    <div id="recipe-modal" class="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-100 transform scale-95 transition-transform duration-300">
+            <div class="flex items-center gap-3 mb-4 text-brand">
+                <div class="p-2.5 bg-brand-light rounded-xl">
+                    <i data-lucide="award" class="w-6 h-6 text-brand-accent animate-bounce"></i>
+                </div>
+                <div class="text-left">
+                    <h3 class="font-black text-dark text-base sm:text-lg">Name Your Creation!</h3>
+                    <p class="text-[10px] sm:text-xs text-gray-400">Save it to order by name at the shop!</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Custom Drink Name</label>
+                    <input type="text" id="input-recipe-name" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. Joyful Mocha, Alex Special" maxlength="40">
+                </div>
+                
+                <div class="flex gap-2.5 pt-2">
+                    <button onclick="closeRecipeModal()" class="flex-1 bg-gray-50 text-gray-500 hover:bg-gray-100 font-bold py-3 rounded-xl transition-all text-xs sm:text-sm border border-gray-200">
+                        Cancel
+                    </button>
+                    <button onclick="submitRecipeToFirebase()" class="flex-1 bg-brand text-white hover:bg-brand-accent font-bold py-3 rounded-xl transition-all text-xs sm:text-sm shadow-md shadow-brand/10">
+                        Save Recipe
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
