@@ -295,6 +295,14 @@
                         class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
                         <i data-lucide="phone" class="w-5 h-5 text-gray-500"></i> Contact
                     </button>
+
+                    <!-- Clear Cache Button -->
+                    <div class="mt-auto pt-6 pb-2">
+                        <button onclick="clearAllCache()"
+                            class="w-full text-center text-xs font-semibold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100/70 border border-red-100 rounded-xl py-2 px-3 flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Cache & Data
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -649,6 +657,14 @@
 
         function closePage() {
             document.getElementById('pageOverlay').classList.remove('active');
+        }
+
+        function clearAllCache() {
+            if (confirm("Are you sure you want to clear website cache and local data? This will reset all saved recipes, category arrangements, and reload the website.")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+            }
         }
 
         // Initialize App

@@ -411,23 +411,19 @@
                         </div>
                         <div class="flex gap-2">
                             <button onclick="saveMyRecipe()"
-                                class="p-3 bg-gray-50 border border-gray-200 rounded-2xl hover:bg-gray-100 transition-colors shadow-sm"
-                                title="Save recipe to browser">
-                                <i data-lucide="bookmark" class="w-5 h-5 text-gray-500"></i>
+                                class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl hover:bg-gray-100 transition-all shadow-sm active:scale-[0.98] flex items-center gap-1.5 text-xs font-bold text-gray-600"
+                                title="Save recipe">
+                                <i data-lucide="bookmark" class="w-4 h-4 text-gray-500"></i>
+                                Save
                             </button>
                             <button onclick="loadMyRecipe()"
-                                class="p-3 bg-gray-50 border border-gray-200 rounded-2xl hover:bg-gray-100 transition-colors shadow-sm"
-                                title="Load saved recipe">
-                                <i data-lucide="folder-heart" class="w-5 h-5 text-brand-accent"></i>
+                                class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl hover:bg-gray-100 transition-all shadow-sm active:scale-[0.98] flex items-center gap-1.5 text-xs font-bold text-brand-accent"
+                                title="Restore recipe">
+                                <i data-lucide="folder-heart" class="w-4 h-4 text-brand-accent"></i>
+                                Restore
                             </button>
                         </div>
                     </div>
-
-                    <button onclick="orderViaWhatsApp()"
-                        class="w-full bg-brand text-white font-bold py-4 rounded-2xl hover:bg-brand-accent transition-all shadow-lg shadow-brand/10 active:scale-[0.98] flex items-center justify-center gap-2">
-                        <i data-lucide="message-square" class="w-5 h-5"></i>
-                        Send Custom Order (WhatsApp)
-                    </button>
                 </div>
 
             </div>
@@ -446,6 +442,7 @@
         let syrupPumpPrice = 800;
         let milkBasePricePer50ml = 1000;
         let milkFoamPrice = 0;
+        let espressoPricePer40ml = 1500;
 
         // --- Fetch Database Settings ---
         db.collection('settings').doc('app').onSnapshot((doc) => {
@@ -461,6 +458,7 @@
                 syrupPumpPrice = settings.syrupPumpPrice !== undefined ? settings.syrupPumpPrice : 800;
                 milkBasePricePer50ml = settings.milkBasePricePer50ml !== undefined ? settings.milkBasePricePer50ml : 1000;
                 milkFoamPrice = settings.milkFoamPrice !== undefined ? settings.milkFoamPrice : 0;
+                espressoPricePer40ml = settings.espressoPricePer40ml !== undefined ? settings.espressoPricePer40ml : 1500;
 
                 // Sync prices in UI labels
                 const lblWhipped = document.getElementById('lbl-price-whipped');
@@ -684,10 +682,10 @@
             // --- Price Calculation ---
             let price = 6000; // Base Cup Price
 
-            // Add Espresso shots cost if espresso volume exceeds 30ml
-            if (finalEspressoVol > 30) {
-                const extraShots = Math.floor((finalEspressoVol - 30) / 30);
-                price += extraShots * 1500;
+            // Add Espresso shots cost if espresso volume exceeds 40ml
+            if (finalEspressoVol > 40) {
+                const extraShots = Math.floor((finalEspressoVol - 40) / 40);
+                price += extraShots * espressoPricePer40ml;
             }
 
             // Extra Milk cost
