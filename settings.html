@@ -147,8 +147,13 @@
             <div class="flex items-center gap-3">
                 <button onclick="downloadTemplate()"
                     class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-dark font-semibold rounded-xl transition-colors text-sm">
-                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                     تحميل القالب (CSV)
+                </button>
+                <button onclick="exportToCSV()"
+                    class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-dark font-semibold rounded-xl transition-colors text-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    تصدير CSV
                 </button>
                 <button onclick="document.getElementById('csvFileInput').click()"
                     class="flex items-center gap-2 px-4 py-2 bg-brand text-white font-bold rounded-xl hover:bg-brand-accent transition-colors text-sm shadow-sm">
@@ -214,6 +219,7 @@
                                 <th class="px-4 py-4">الوصف</th>
                                 <th class="px-4 py-4">الصورة (Drive)</th>
                                 <th class="px-4 py-4">تاغ</th>
+                                <th class="px-4 py-4 text-center">لون التاغ</th>
                                 <th class="px-4 py-4 text-center">أفضل مبيعات</th>
                                 <th class="px-4 py-4 text-center">عرض خاص</th>
                                 <th class="px-4 py-4">الترتيب</th>
@@ -468,6 +474,18 @@
                     <td class="px-2 py-2"><input type="text" class="table-input text-xs text-gray-500" value="${item.description || ''}" onchange="updateItem('${item.id}', 'description', this.value)"></td>
                     <td class="px-2 py-2"><input type="text" class="table-input ltr text-xs text-blue-500" value="${item.image || ''}" onchange="updateItem('${item.id}', 'image', this.value)"></td>
                     <td class="px-2 py-2"><input type="text" class="table-input text-xs" value="${item.tag || ''}" onchange="updateItem('${item.id}', 'tag', this.value)"></td>
+                    <td class="px-2 py-2 text-center relative">
+                        <button onclick="toggleColorPicker(event, '${item.id}')" class="w-8 h-8 rounded-full border border-gray-200 shadow-sm transition-transform active:scale-95" style="background-color: ${item.tagColor || '#7b937e'}"></button>
+                        
+                        <!-- Floating Palette -->
+                        <div id="picker-${item.id}" onclick="event.stopPropagation()" class="hidden absolute top-12 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 z-50 w-36">
+                            <div class="grid grid-cols-5 gap-2">
+                                ${['#7b937e', '#3b6b55', '#cca43b', '#9e6b4c', '#c87a63', '#b56b7c', '#7a5070', '#43506c', '#4a7c7a', '#4a4a4a'].map(color => `
+                                    <button onclick="selectTagColor(event, '${item.id}', '${color}')" class="w-5 h-5 rounded-full border border-gray-200 shadow-sm transition-transform hover:scale-115 active:scale-90" style="background-color: ${color}"></button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </td>
                     <td class="px-2 py-2 text-center">
                         <input type="checkbox" ${item.isTopSeller ? 'checked' : ''} onchange="updateItem('${item.id}', 'isTopSeller', this.checked)" class="rounded text-brand focus:ring-brand">
                     </td>
@@ -491,6 +509,51 @@
             } catch (e) { console.error("Error updating doc:", e); }
         }
 
+        let activePickerId = null;
+
+        function toggleColorPicker(event, id) {
+            event.stopPropagation();
+            const picker = document.getElementById(`picker-${id}`);
+            
+            // Close any other open picker
+            if (activePickerId && activePickerId !== id) {
+                const otherPicker = document.getElementById(`picker-${activePickerId}`);
+                if (otherPicker) otherPicker.classList.add('hidden');
+            }
+
+            if (picker) {
+                picker.classList.toggle('hidden');
+                if (!picker.classList.contains('hidden')) {
+                    activePickerId = id;
+                } else {
+                    activePickerId = null;
+                }
+            }
+        }
+
+        async function selectTagColor(event, id, color) {
+            if (event) event.stopPropagation();
+            const picker = document.getElementById(`picker-${id}`);
+            if (picker) picker.classList.add('hidden');
+            activePickerId = null;
+            
+            // Update UI immediately for responsiveness
+            const colorBtn = picker.previousElementSibling;
+            if (colorBtn) colorBtn.style.backgroundColor = color;
+            
+            // Update Firestore
+            await updateItem(id, 'tagColor', color);
+        }
+
+        // Close picker when clicking outside
+        document.addEventListener('click', () => {
+            if (activePickerId) {
+                const picker = document.getElementById(`picker-${activePickerId}`);
+                if (picker) picker.classList.add('hidden');
+                activePickerId = null;
+            }
+        });
+
         async function addRow() {
             const newItem = {
                 name: 'منتج جديد',
@@ -500,6 +563,7 @@
                 description: '',
                 image: '',
                 tag: '',
+                tagColor: '#7b937e',
                 isTopSeller: false,
                 isSpecialOffer: false
             };
@@ -518,13 +582,60 @@
 
         // --- CSV Functions ---
         function downloadTemplate() {
-            const headers = ["name", "category", "price", "oldPrice", "description", "image", "tag", "isTopSeller", "isSpecialOffer"];
-            const csvContent = headers.join(",") + "\n" + "Example Coffee,Coffee,5.00,7.00,Delicious hot coffee,https://drive.google.com/...,New,TRUE,FALSE";
+            const headers = ["name", "category", "price", "oldPrice", "description", "image", "tag", "tagColor", "isTopSeller", "isSpecialOffer"];
+            const csvContent = headers.join(",") + "\n" + "Example Coffee,Coffee,5.00,7.00,Delicious hot coffee,https://drive.google.com/...,New,#7b937e,TRUE,FALSE";
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
             link.setAttribute("download", "menu_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function escapeCSV(val) {
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        function exportToCSV() {
+            if (menuData.length === 0) {
+                alert('لا توجد بيانات لتصديرها!');
+                return;
+            }
+            const headers = ["name", "category", "price", "oldPrice", "description", "image", "tag", "tagColor", "isTopSeller", "isSpecialOffer", "order"];
+
+            // Sort by order so the exported file is in the same order as in settings table
+            const sortedMenu = [...menuData].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            const csvRows = [];
+            // Add header row
+            csvRows.push(headers.join(","));
+
+            // Add data rows
+            for (const item of sortedMenu) {
+                const values = headers.map(header => {
+                    let val = item[header];
+                    // Convert booleans to uppercase TRUE/FALSE
+                    if (header === 'isTopSeller' || header === 'isSpecialOffer') {
+                        val = val ? 'TRUE' : 'FALSE';
+                    }
+                    return escapeCSV(val);
+                });
+                csvRows.push(values.join(","));
+            }
+
+            const csvContent = "\uFEFF" + csvRows.join("\n"); // Include UTF-8 BOM for Arabic support in Excel
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `menu_export_${new Date().toISOString().slice(0, 10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -566,6 +677,8 @@
                             let val = row[i] ? row[i].trim() : '';
                             if (h === 'isTopSeller' || h === 'isSpecialOffer') {
                                 val = val.toUpperCase() === 'TRUE' || val === '1';
+                            } else if (h === 'order') {
+                                val = parseInt(val) || 0;
                             }
                             obj[h] = val;
                         });
