@@ -139,72 +139,89 @@
                     <!-- Steam bubbles will be injected via JS -->
                 </div>
 
+                <!-- Cup Style Switcher -->
+                <div class="absolute top-4 right-4 z-40 bg-white/80 backdrop-blur-md border border-gray-200/80 px-2 py-1 rounded-xl shadow-sm flex items-center gap-1">
+                    <button onclick="setCupStyle('glass')" id="btn-style-glass" class="px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-amber-900 text-white shadow-sm flex items-center gap-1">
+                        <i data-lucide="glass-water" class="w-3.5 h-3.5"></i> Glass
+                    </button>
+                    <button onclick="setCupStyle('ceramic')" id="btn-style-ceramic" class="px-3 py-1.5 rounded-lg text-xs font-black transition-all text-gray-500 hover:text-dark hover:bg-gray-100/60 flex items-center gap-1">
+                        <i data-lucide="coffee" class="w-3.5 h-3.5"></i> Ceramic Mug
+                    </button>
+                </div>
+
                 <!-- Coffee Cup Render Wrapper -->
-                <div class="relative my-4 sm:my-8 flex items-center justify-center w-[220px] h-[250px] sm:w-[280px] sm:h-[320px] shrink-0">
+                <div id="cup-wrapper" class="relative my-4 sm:my-8 flex items-center justify-center w-[220px] h-[260px] sm:w-[280px] sm:h-[330px] shrink-0 transition-all duration-500">
+                    
+                    <!-- Double-walled glass reflection highlight (top rim lip glow) -->
+                    <div id="cup-highlight" class="absolute top-1 sm:top-2 w-[150px] sm:w-[194px] h-[10px] sm:h-[14px] bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-full z-30 blur-[1px]"></div>
+
                     <!-- Cup Handle -->
-                    <div
-                        class="absolute left-[15px] sm:left-[10px] top-[50px] sm:top-[60px] w-[40px] sm:w-[55px] h-[100px] sm:h-[140px] border-[6px] sm:border-[8px] border-amber-900/15 rounded-l-[50px] transition-all duration-500">
+                    <div id="cup-handle"
+                        class="absolute left-[8px] sm:left-[1px] top-[60px] sm:top-[70px] w-[46px] sm:w-[62px] h-[90px] sm:h-[130px] border-[5px] sm:border-[7px] border-white/90 rounded-l-[35px] border-r-0 shadow-[-4px_5px_15px_rgba(0,0,0,0.04)] bg-white/5 backdrop-blur-[1px] transition-all duration-500 z-0">
                     </div>
 
-                    <!-- Glass Coffee Cup -->
-                    <div
-                        class="relative w-[160px] sm:w-[210px] h-[200px] sm:h-[270px] border-[6px] sm:border-[8px] border-white rounded-b-[50px] sm:rounded-b-[70px] overflow-hidden flex flex-col-reverse justify-start bg-white/10 backdrop-blur-[3px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] border-t-0 z-10">
+                    <!-- Glass Coffee Cup: Double walled container -->
+                    <div id="cup-body"
+                        class="relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-[5px] sm:border-[7px] border-white rounded-b-[45px] sm:rounded-b-[65px] overflow-hidden flex flex-col-reverse justify-start bg-gradient-to-tr from-white/10 to-white/20 backdrop-blur-[4px] shadow-[0_20px_45px_rgba(0,0,0,0.07),inset_0_-8px_20px_rgba(255,255,255,0.6),inset_0_8px_15px_rgba(255,255,255,0.3)] border-t-[3px] sm:border-t-[4px] z-10 transition-all duration-500">
+
+                        <!-- Inner Glass Line (Double wall effect simulation) -->
+                        <div id="cup-inner-line" class="absolute inset-[4px] sm:inset-[6px] border border-white/30 rounded-b-[40px] sm:rounded-b-[58px] pointer-events-none z-30 transition-opacity duration-300"></div>
 
                         <!-- Fluid Layers -->
                         <!-- 1. Whipped Cream Top Layer -->
                         <div id="layer-whipped-cream"
-                            class="fluid-layer bg-white w-full flex items-center justify-center text-[10px] font-black text-amber-900/60 overflow-hidden shadow-inner shrink-0"
+                            class="fluid-layer bg-gradient-to-b from-white to-[#fbf9f4] w-full flex items-center justify-center text-[10px] font-black text-amber-900/50 overflow-hidden shadow-[inset_0_-8px_12px_rgba(0,0,0,0.03)] shrink-0"
                             style="height: 0%;">
-                            <span class="whitespace-nowrap">Whipped Cream ✨</span>
+                            <span class="whitespace-nowrap drop-shadow-sm">Whipped Cream ✨</span>
                         </div>
 
-                        <!-- 2. Milk Foam Layer -->
+                        <!-- 2. Cold Foam Layer -->
                         <div id="layer-foam"
-                            class="fluid-layer bg-[#fefbf3] w-full flex items-center justify-center text-[10px] font-black text-amber-900/50 overflow-hidden shrink-0 border-b border-[#faf5e6]/30"
+                            class="fluid-layer bg-gradient-to-b from-[#f2f9fb] to-[#dbedf3] w-full flex items-center justify-center text-[10px] font-black text-sky-900/60 overflow-hidden shrink-0 border-b border-sky-100/30 shadow-[inset_0_4px_6px_rgba(255,255,255,0.5)]"
                             style="height: 0%;">
-                            <span class="whitespace-nowrap">Milk Foam 💭</span>
+                            <span class="whitespace-nowrap drop-shadow-sm">Cold Foam 🧊</span>
                         </div>
 
                         <!-- 3. Milk Layer -->
                         <div id="layer-milk"
-                            class="fluid-layer bg-[#f7f4eb] w-full flex items-center justify-center text-[11px] font-black text-amber-900/70 overflow-hidden shrink-0"
-                            style="height: 0%;">
-                            <span class="whitespace-nowrap">Fresh Milk 🥛</span>
+                            class="fluid-layer bg-gradient-to-b from-[#FAF6EB] to-[#ede3cb] w-full flex items-center justify-center text-[11px] font-black text-amber-950/60 overflow-hidden shrink-0 shadow-[inset_0_4px_8px_rgba(255,255,255,0.6)] animate-pulse"
+                            style="height: 0%; animation-duration: 4s;">
+                            <span class="whitespace-nowrap drop-shadow-sm">Fresh Milk 🥛</span>
                         </div>
 
                         <!-- 4. Espresso Layer -->
                         <div id="layer-espresso"
-                            class="fluid-layer bg-[#3d2314] w-full flex items-center justify-center text-[11px] font-black text-white/80 overflow-hidden shrink-0 shadow-[inset_0_-10px_20px_rgba(0,0,0,0.2)]"
+                            class="fluid-layer bg-gradient-to-b from-[#4A2C11] to-[#241203] w-full flex items-center justify-center text-[11px] font-black text-white/85 overflow-hidden shrink-0 shadow-[inset_0_12px_24px_rgba(0,0,0,0.4),inset_0_-10px_15px_rgba(0,0,0,0.6)]"
                             style="height: 0%;">
-                            <span class="whitespace-nowrap">Espresso ☕</span>
+                            <span class="whitespace-nowrap drop-shadow-sm">Espresso ☕</span>
                         </div>
 
                         <!-- 5. Hot Water Layer -->
                         <div id="layer-water"
-                            class="fluid-layer bg-sky-100/50 w-full flex items-center justify-center text-[11px] font-black text-sky-800/60 overflow-hidden shrink-0"
+                            class="fluid-layer bg-gradient-to-b from-sky-200/40 to-sky-300/30 w-full flex items-center justify-center text-[11px] font-black text-sky-900/60 overflow-hidden shrink-0"
                             style="height: 0%;">
-                            <span class="whitespace-nowrap">Hot Water 💧</span>
+                            <span class="whitespace-nowrap drop-shadow-sm">Hot Water 💧</span>
                         </div>
 
                         <!-- Ice Cubes layer overlays fluid layers -->
                         <div id="ice-cubes-container"
                             class="absolute inset-x-0 bottom-0 top-12 pointer-events-none flex flex-wrap items-center justify-around p-4 opacity-0 transition-opacity duration-500 z-20">
                             <div
-                                class="w-8 h-8 bg-white/20 border border-white/40 rounded-lg rotate-12 backdrop-blur-[1px] shadow-sm">
+                                class="w-8 h-8 bg-white/30 border border-white/60 rounded-xl rotate-12 backdrop-blur-[2px] shadow-[0_4px_8px_rgba(255,255,255,0.4)]">
                             </div>
                             <div
-                                class="w-7 h-7 bg-white/20 border border-white/40 rounded-lg -rotate-12 backdrop-blur-[1px] shadow-sm mt-8">
+                                class="w-7 h-7 bg-white/30 border border-white/60 rounded-xl -rotate-12 backdrop-blur-[2px] shadow-[0_4px_8px_rgba(255,255,255,0.4)] mt-8">
                             </div>
                             <div
-                                class="w-8 h-8 bg-white/20 border border-white/40 rounded-lg rotate-45 backdrop-blur-[1px] shadow-sm -mt-4">
+                                class="w-8 h-8 bg-white/30 border border-white/60 rounded-xl rotate-45 backdrop-blur-[2px] shadow-[0_4px_8px_rgba(255,255,255,0.4)] -mt-4">
                             </div>
                         </div>
 
                         <!-- Syrups indicator lines inside the cup -->
                         <div id="syrups-overlay"
-                            class="absolute inset-x-0 bottom-2 pointer-events-none flex flex-col gap-1 px-4 z-20 opacity-0 transition-opacity duration-500">
-                            <div class="h-1 bg-amber-600 rounded-full w-4/5 mx-auto animate-pulse"></div>
-                            <div class="h-1 bg-[#28150c] rounded-full w-2/3 mx-auto animate-pulse"></div>
+                            class="absolute inset-x-0 bottom-4 pointer-events-none flex flex-col gap-1.5 px-4 z-20 opacity-0 transition-opacity duration-500">
+                            <div class="h-1 bg-amber-500 rounded-full w-4/5 mx-auto animate-pulse"></div>
+                            <div class="h-1 bg-[#4A2C11]/80 rounded-full w-2/3 mx-auto animate-pulse"></div>
                         </div>
                     </div>
                 </div>
@@ -264,17 +281,29 @@
                         </div>
                     </div>
 
-                    <!-- Step 2: Mixing Ratios (Espresso, Milk, Water sliders simultaneously) -->
+                    <!-- Step 2: Espresso Shot & Liquid Quantities -->
                     <div class="space-y-5 bg-gray-50 rounded-2xl p-4 sm:p-5 border border-gray-150/70 shadow-inner">
-                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-1 text-left">Step 2: Adjust Liquid Quantities</span>
+                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-1 text-left">Step 2: Espresso Shot & Quantities</span>
 
-                        <!-- Base Ingredient Slider -->
-                        <div id="slider-container-base" class="space-y-1.5">
-                            <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
-                                <span id="label-base-slider" class="font-bold flex items-center gap-1"><i data-lucide="coffee" class="w-3.5 h-3.5 text-amber-900"></i> Espresso Volume</span>
-                                <span id="val-base-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">100 ml</span>
+                        <!-- Espresso Shot Type -->
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-gray-600">
+                                <i data-lucide="coffee" class="w-3.5 h-3.5 text-amber-900"></i> Espresso Shot
                             </div>
-                            <input type="range" id="input-base-slider" min="30" max="250" value="100" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-900">
+                            <div class="flex gap-2">
+                                <button onclick="setEspressoType('single')" id="btn-shot-single"
+                                    class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs transition-all bg-white text-gray-500 hover:bg-gray-50 border border-gray-200">
+                                    ☕ Single
+                                </button>
+                                <button onclick="setEspressoType('double')" id="btn-shot-double"
+                                    class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs transition-all bg-amber-900 text-white shadow-sm">
+                                    ☕☕ Double
+                                </button>
+                                <button onclick="setEspressoType('decaf')" id="btn-shot-decaf"
+                                    class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs transition-all bg-white text-gray-500 hover:bg-gray-50 border border-gray-200">
+                                    🌿 Decaf
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Milk Ratio Slider -->
@@ -283,7 +312,7 @@
                                 <span id="label-milk-slider" class="font-bold flex items-center gap-1"><i data-lucide="milk" class="w-3.5 h-3.5 text-amber-600"></i> Add Fresh Milk</span>
                                 <span id="val-milk-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0 ml</span>
                             </div>
-                            <input type="range" id="input-milk-slider" min="0" max="200" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-700">
+                            <input type="range" id="input-milk-slider" min="0" max="250" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-700">
                         </div>
 
                         <!-- Water Ratio Slider -->
@@ -292,33 +321,31 @@
                                 <span id="label-water-slider" class="font-bold flex items-center gap-1"><i data-lucide="droplet" class="w-3.5 h-3.5 text-sky-500"></i> Add Hot Water</span>
                                 <span id="val-water-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0 ml</span>
                             </div>
-                            <input type="range" id="input-water-slider" min="0" max="200" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                            <input type="range" id="input-water-slider" min="0" max="250" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
                         </div>
                     </div>
 
-                    <!-- Step 3: Toppings & Foams -->
+                    <!-- Step 3: Foam Options -->
                     <div class="space-y-3">
-                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block">Step 3: Foam &
-                            Toppings</span>
+                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block">Step 3: Foam
+                            Options</span>
 
                         <div class="grid grid-cols-2 gap-3">
-                            <!-- Milk Foam Selector -->
+                            <!-- Cold Foam Toggle -->
                             <div
                                 class="bg-gray-50 border border-gray-150 rounded-2xl p-3 flex flex-col justify-between">
-                                <label class="text-xs font-bold text-gray-600 mb-1.5 block">Milk Foam</label>
-                                <select id="select-foam" onchange="calculateSpecs()"
-                                    class="w-full text-xs font-semibold bg-white border border-gray-200 rounded-xl px-2 py-2 outline-none focus:border-brand">
-                                    <option value="none">No Foam</option>
-                                    <option value="light">Light (+0 SYP)</option>
-                                    <option value="medium">Medium (+0 SYP)</option>
-                                    <option value="heavy">Thick (+0 SYP)</option>
-                                </select>
+                                <label class="text-xs font-bold text-gray-600 mb-1.5 block flex items-center gap-1.5">🧊 Cold Foam</label>
+                                <div class="flex items-center justify-between">
+                                    <span id="lbl-price-foam" class="text-[10px] font-semibold text-gray-400">+0 SYP</span>
+                                    <input type="checkbox" id="check-cold-foam" onchange="calculateSpecs()"
+                                        class="w-4 h-4 text-brand bg-white border-gray-300 rounded focus:ring-brand accent-brand">
+                                </div>
                             </div>
 
                             <!-- Whipped Cream Toggle -->
                             <div
                                 class="bg-gray-50 border border-gray-150 rounded-2xl p-3 flex flex-col justify-between">
-                                <label class="text-xs font-bold text-gray-600 mb-1.5 block">Whipped Cream</label>
+                                <label class="text-xs font-bold text-gray-600 mb-1.5 block flex items-center gap-1.5">✨ Whipped Cream</label>
                                 <div class="flex items-center justify-between">
                                     <span id="lbl-price-whipped" class="text-[10px] font-semibold text-gray-400">+1,500 SYP</span>
                                     <input type="checkbox" id="check-whipped-cream" onchange="calculateSpecs()"
@@ -401,12 +428,29 @@
                     </div>
                 </div>
 
+                <!-- Saved Drinks List Section -->
+                <div class="border-t border-gray-150 pt-6 space-y-3">
+                    <button onclick="toggleSavedDrinksList()" class="w-full flex items-center justify-between py-2 text-dark font-bold text-sm border-b border-gray-100 hover:text-brand-accent transition-colors">
+                        <span class="flex items-center gap-2">
+                            <i data-lucide="list-music" class="w-4 h-4 text-brand-accent"></i>
+                            <span>Saved Drinks (<span id="saved-drinks-count">0</span>)</span>
+                        </span>
+                        <i id="saved-drinks-chevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300"></i>
+                    </button>
+                    <div id="saved-drinks-container" class="hidden max-h-48 overflow-y-auto space-y-2 pr-1">
+                        <!-- Dynamic list of saved drinks -->
+                        <div id="saved-drinks-list" class="space-y-2">
+                            <p class="text-xs text-gray-400 text-center py-4">No saved drinks found.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Footer Summary & WhatsApp Button -->
                 <div class="border-t border-gray-150 pt-6 space-y-4">
                     <div class="flex justify-between items-end">
                         <div>
                             <span class="text-xs font-semibold text-gray-400 block mb-0.5">Estimated Cost</span>
-                            <span id="final-price" class="text-2xl sm:text-3xl font-black text-brand-accent">12,000
+                            <span id="final-price" class="text-2xl sm:text-3xl font-black text-brand-accent">5,000
                                 SYP</span>
                         </div>
                         <div class="flex gap-2">
@@ -433,16 +477,19 @@
 
     <script>
         let currentBase = 'espresso';
-        let baseVolume = 100;
-        let milkVolume = 0;
+        let espressoType = 'double'; // single, double, decaf
+        let milkVolume = 100;
         let waterVolume = 0;
         let syrups = { caramel: 0, chocolate: 0, vanilla: 0, hazelnut: 0 };
+        const espressoVolumes = { single: 30, double: 60, decaf: 30 };
 
         let whippedCreamPrice = 1500;
         let syrupPumpPrice = 800;
         let milkBasePricePer50ml = 1000;
-        let milkFoamPrice = 0;
+        let coldFoamPrice = 0;
         let espressoPricePer40ml = 1500;
+        let baseCupPrice = 6000;
+        let decafSurcharge = 0;
 
         // --- Fetch Database Settings ---
         db.collection('settings').doc('app').onSnapshot((doc) => {
@@ -457,22 +504,18 @@
                 whippedCreamPrice = settings.whippedCreamPrice !== undefined ? settings.whippedCreamPrice : 1500;
                 syrupPumpPrice = settings.syrupPumpPrice !== undefined ? settings.syrupPumpPrice : 800;
                 milkBasePricePer50ml = settings.milkBasePricePer50ml !== undefined ? settings.milkBasePricePer50ml : 1000;
-                milkFoamPrice = settings.milkFoamPrice !== undefined ? settings.milkFoamPrice : 0;
+                coldFoamPrice = settings.milkFoamPrice !== undefined ? settings.milkFoamPrice : 0;
                 espressoPricePer40ml = settings.espressoPricePer40ml !== undefined ? settings.espressoPricePer40ml : 1500;
+                baseCupPrice = settings.baseCupPrice !== undefined ? settings.baseCupPrice : 6000;
+                decafSurcharge = settings.decafSurcharge !== undefined ? settings.decafSurcharge : 0;
 
                 // Sync prices in UI labels
                 const lblWhipped = document.getElementById('lbl-price-whipped');
                 const lblSyrup = document.getElementById('lbl-price-syrup');
+                const lblFoam = document.getElementById('lbl-price-foam');
                 if (lblWhipped) lblWhipped.innerText = `+${whippedCreamPrice.toLocaleString()} SYP`;
-                if (lblSyrup) lblSyrup.innerText = `+${syrupPumpPrice.toLocaleString()} SYP / pump`;
-
-                // Sync foam options labels
-                const selectFoam = document.getElementById('select-foam');
-                if (selectFoam) {
-                    selectFoam.options[1].text = `Light (+${milkFoamPrice.toLocaleString()} SYP)`;
-                    selectFoam.options[2].text = `Medium (+${milkFoamPrice.toLocaleString()} SYP)`;
-                    selectFoam.options[3].text = `Thick (+${milkFoamPrice.toLocaleString()} SYP)`;
-                }
+                if (lblSyrup) lblSyrup.innerText = `+${syrupPumpPrice.toLocaleString()} SYP`;
+                if (lblFoam) lblFoam.innerText = `+${coldFoamPrice.toLocaleString()} SYP`;
 
                 // Recalculate specs to reflect new prices instantly
                 calculateSpecs();
@@ -514,75 +557,71 @@
             const bases = ['espresso', 'milk', 'water'];
             bases.forEach(b => {
                 const btn = document.getElementById(`btn-base-${b}`);
-                if (b === type) {
-                    btn.className = "flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all bg-white shadow-sm text-dark";
-                } else {
-                    btn.className = "flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all text-gray-500 hover:bg-gray-50/50 hover:text-dark";
+                if (btn) {
+                    if (b === type) {
+                        btn.className = "flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all bg-white shadow-sm text-dark";
+                    } else {
+                        btn.className = "flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all text-gray-500 hover:bg-gray-50/50 hover:text-dark";
+                    }
                 }
             });
 
-            // Adjust ranges and labels dynamically
-            const baseSlider = document.getElementById('input-base-slider');
             const milkSlider = document.getElementById('input-milk-slider');
             const waterSlider = document.getElementById('input-water-slider');
-
-            const labelBase = document.getElementById('label-base-slider');
             const labelMilk = document.getElementById('label-milk-slider');
             const labelWater = document.getElementById('label-water-slider');
-
             const glowBg = document.getElementById('glow-bg');
 
             if (type === 'espresso') {
-                labelBase.innerText = "Espresso Base Volume";
-                baseSlider.min = 30;
-                baseSlider.max = 120;
-                baseSlider.value = 60;
-
-                labelMilk.innerText = "Add Fresh Milk";
+                espressoType = 'double';
+                labelMilk.innerHTML = '<i data-lucide="milk" class="w-3.5 h-3.5 text-amber-600"></i> Add Fresh Milk';
                 milkSlider.value = 100;
-
-                labelWater.innerText = "Add Hot Water";
+                labelWater.innerHTML = '<i data-lucide="droplet" class="w-3.5 h-3.5 text-sky-500"></i> Add Hot Water';
                 waterSlider.value = 0;
-
                 glowBg.className = "absolute w-64 h-64 rounded-full bg-amber-950/10 blur-[80px] transition-all duration-1000 -z-10";
             } else if (type === 'milk') {
-                labelBase.innerText = "Hot Milk Base Volume";
-                baseSlider.min = 100;
-                baseSlider.max = 250;
-                baseSlider.value = 200;
-
-                labelMilk.innerText = "Add Extra Milk";
-                milkSlider.value = 0;
-
-                labelWater.innerText = "Add Hot Water";
+                espressoType = 'single';
+                labelMilk.innerHTML = '<i data-lucide="milk" class="w-3.5 h-3.5 text-amber-600"></i> Fresh Milk';
+                milkSlider.value = 150;
+                labelWater.innerHTML = '<i data-lucide="droplet" class="w-3.5 h-3.5 text-sky-500"></i> Add Hot Water';
                 waterSlider.value = 0;
-
                 glowBg.className = "absolute w-64 h-64 rounded-full bg-orange-100/30 blur-[80px] transition-all duration-1000 -z-10";
             } else if (type === 'water') {
-                labelBase.innerText = "Hot Water Base Volume";
-                baseSlider.min = 100;
-                baseSlider.max = 250;
-                baseSlider.value = 180;
-
-                labelMilk.innerText = "Add Fresh Milk";
+                espressoType = 'single';
+                labelMilk.innerHTML = '<i data-lucide="milk" class="w-3.5 h-3.5 text-amber-600"></i> Add Fresh Milk';
                 milkSlider.value = 0;
-
-                labelWater.innerText = "Add Extra Water";
-                waterSlider.value = 0;
-
+                labelWater.innerHTML = '<i data-lucide="droplet" class="w-3.5 h-3.5 text-sky-500"></i> Hot Water';
+                waterSlider.value = 180;
                 glowBg.className = "absolute w-64 h-64 rounded-full bg-sky-200/20 blur-[80px] transition-all duration-1000 -z-10";
             }
 
+            setEspressoType(espressoType);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
             updateRatios();
+        }
+
+        // --- Espresso Shot Type Handler ---
+        function setEspressoType(type) {
+            espressoType = type;
+            const types = ['single', 'double', 'decaf'];
+            types.forEach(t => {
+                const btn = document.getElementById(`btn-shot-${t}`);
+                if (btn) {
+                    if (t === type) {
+                        btn.className = "flex-1 py-2.5 px-3 rounded-xl font-bold text-xs transition-all bg-amber-900 text-white shadow-sm";
+                    } else {
+                        btn.className = "flex-1 py-2.5 px-3 rounded-xl font-bold text-xs transition-all bg-white text-gray-500 hover:bg-gray-50 border border-gray-200";
+                    }
+                }
+            });
+            calculateSpecs();
         }
 
         // --- Handle Slider adjustments ---
         function updateRatios() {
-            baseVolume = parseInt(document.getElementById('input-base-slider').value);
             milkVolume = parseInt(document.getElementById('input-milk-slider').value);
             waterVolume = parseInt(document.getElementById('input-water-slider').value);
 
-            document.getElementById('val-base-slider').innerText = `${baseVolume} ml`;
             document.getElementById('val-milk-slider').innerText = `${milkVolume} ml`;
             document.getElementById('val-water-slider').innerText = `${waterVolume} ml`;
 
@@ -601,50 +640,31 @@
 
         // --- Render Cup Fluid Ratios and Calculate Specs ---
         function calculateSpecs() {
-            const foamType = document.getElementById('select-foam').value;
+            const hasColdFoam = document.getElementById('check-cold-foam').checked;
             const hasWhippedCream = document.getElementById('check-whipped-cream').checked;
             const hasIce = document.getElementById('check-ice').checked;
 
+            // Get espresso volume from shot type
+            const espressoVol = espressoVolumes[espressoType] || 30;
+
             // Foam height allocation (in % of rendering)
-            let foamHeight = 0;
-            if (foamType === 'light') foamHeight = 10;
-            else if (foamType === 'medium') foamHeight = 20;
-            else if (foamType === 'heavy') foamHeight = 30;
+            let foamHeight = hasColdFoam ? 18 : 0;
 
             // Whipped cream height allocation
             let creamHeight = hasWhippedCream ? 25 : 0;
 
-            // Map base choices to absolute fluid milliliters
-            let finalEspressoVol = 0;
-            let finalMilkVol = 0;
-            let finalWaterVol = 0;
-
-            if (currentBase === 'espresso') {
-                finalEspressoVol = baseVolume;
-                finalMilkVol = milkVolume;
-                finalWaterVol = waterVolume;
-            } else if (currentBase === 'milk') {
-                finalEspressoVol = milkVolume; // In Milk base, the "add milk" represents extra milk, we treat "add espresso" slider values
-                finalMilkVol = baseVolume + milkVolume;
-                finalWaterVol = waterVolume;
-            } else if (currentBase === 'water') {
-                finalEspressoVol = waterVolume; // In water base, the sliders map correctly
-                finalMilkVol = milkVolume;
-                finalWaterVol = baseVolume + waterVolume;
-            }
-
             // Total volume calculations
-            let totalFluidMl = finalEspressoVol + finalMilkVol + finalWaterVol;
+            let totalFluidMl = espressoVol + milkVolume + waterVolume;
             let displayVolume = totalFluidMl;
-            if (foamType !== 'none') displayVolume += 30;
+            if (hasColdFoam) displayVolume += 30;
             if (hasWhippedCream) displayVolume += 40;
 
             document.getElementById('stat-volume').innerText = `${displayVolume} ml`;
 
             // Max scale the rendering heights inside the cup
-            let espressoPct = totalFluidMl > 0 ? (finalEspressoVol / totalFluidMl) * 100 : 0;
-            let milkPct = totalFluidMl > 0 ? (finalMilkVol / totalFluidMl) * 100 : 0;
-            let waterPct = totalFluidMl > 0 ? (finalWaterVol / totalFluidMl) * 100 : 0;
+            let espressoPct = totalFluidMl > 0 ? (espressoVol / totalFluidMl) * 100 : 0;
+            let milkPct = totalFluidMl > 0 ? (milkVolume / totalFluidMl) * 100 : 0;
+            let waterPct = totalFluidMl > 0 ? (waterVolume / totalFluidMl) * 100 : 0;
 
             // Adjust overall heights relative to cup space left by Foam & Cream
             let availablePct = 100 - (foamHeight + creamHeight);
@@ -669,9 +689,9 @@
 
             // --- Calories Calculation ---
             let cals = 0;
-            cals += (finalEspressoVol * 0.5);
-            cals += (finalMilkVol * 0.6);
-            cals += (foamType === 'light' ? 10 : foamType === 'medium' ? 20 : foamType === 'heavy' ? 30 : 0);
+            cals += (espressoVol * 0.5);
+            cals += (milkVolume * 0.6);
+            cals += (hasColdFoam ? 35 : 0);
             cals += (hasWhippedCream ? 140 : 0);
             cals += (syrups.caramel * 60);
             cals += (syrups.chocolate * 65);
@@ -680,18 +700,21 @@
             document.getElementById('stat-calories').innerText = `${Math.round(cals)} kcal`;
 
             // --- Price Calculation ---
-            let price = 12000; // Base Cup Price
+            let price = baseCupPrice; // Dynamic Base Cup Price
 
-            // Add Espresso shots cost if espresso volume exceeds 40ml
-            if (finalEspressoVol > 40) {
-                const extraShots = Math.floor((finalEspressoVol - 40) / 40);
-                price += extraShots * espressoPricePer40ml;
+            // Double shot costs extra
+            if (espressoType === 'double') {
+                price += espressoPricePer40ml;
             }
 
-            // Extra Milk cost
-            if (finalMilkVol > 0) {
-                // If base is milk, 150ml of milk is free, only count milk above 150ml
-                let billableMilk = currentBase === 'milk' ? Math.max(0, finalMilkVol - 150) : finalMilkVol;
+            // Decaf surcharge
+            if (espressoType === 'decaf') {
+                price += decafSurcharge;
+            }
+
+            // Milk cost
+            if (milkVolume > 0) {
+                let billableMilk = currentBase === 'milk' ? Math.max(0, milkVolume - 150) : milkVolume;
                 if (billableMilk > 0) {
                     price += Math.ceil(billableMilk / 50) * milkBasePricePer50ml;
                 }
@@ -700,11 +723,11 @@
             // Whipped cream cost
             if (hasWhippedCream) price += whippedCreamPrice;
 
+            // Cold foam cost
+            if (hasColdFoam) price += coldFoamPrice;
+
             // Syrups cost
             price += totalSyrups * syrupPumpPrice;
-
-            // Milk foam cost
-            if (foamType !== 'none') price += milkFoamPrice;
 
             // Round price to nearest 1000 SYP
             price = Math.round(price / 1000) * 1000;
@@ -750,11 +773,12 @@
 
             const recipe = {
                 currentBase,
-                baseVolume,
+                espressoType,
+                espressoVolume: espressoVolumes[espressoType],
                 milkVolume,
                 waterVolume,
                 syrups,
-                foam: document.getElementById('select-foam').value,
+                coldFoam: document.getElementById('check-cold-foam').checked,
                 whippedCream: document.getElementById('check-whipped-cream').checked,
                 ice: document.getElementById('check-ice').checked
             };
@@ -780,6 +804,7 @@
                     }
 
                     // Update existing custom recipe
+                    // Update existing custom recipe in Firebase (keep cloud sync active for the cashier or link loads)
                     await db.collection('custom_recipes').doc(editingRecipeId).update({
                         name: drinkName,
                         recipe: recipe,
@@ -798,8 +823,8 @@
                         return;
                     }
 
-                    // Add to firebase collection
-                    await db.collection('custom_recipes').add({
+                    // Add to firebase collection (so cashier can read it)
+                    const docRef = await db.collection('custom_recipes').add({
                         name: drinkName,
                         recipe: recipe,
                         volume: volume,
@@ -807,24 +832,57 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
+                    // Keep track of the generated id locally if we want to update it later
+                    window.editingRecipeId = docRef.id;
+                    editingRecipeName = drinkName;
+                    
+                    // Update URL with recipeId
+                    const url = new URL(window.location);
+                    url.searchParams.set('recipeId', docRef.id);
+                    window.history.pushState({}, '', url);
+
                     alert(`Perfect! "${drinkName}" is now registered with Groove Coffee Shop! Next time you visit, simply tell the cashier your custom drink name: "${drinkName}"!`);
                 }
 
-                // Also save to localStorage
-                localStorage.setItem('groove_custom_recipe', JSON.stringify({ name: drinkName, ...recipe }));
+                // --- Manage list in LocalStorage ---
+                let localRecipes = [];
+                try {
+                    localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
+                } catch(e) {
+                    localRecipes = [];
+                }
+                
+                // Remove existing recipe with same id or name if updating
+                localRecipes = localRecipes.filter(r => r.id !== window.editingRecipeId && r.name !== drinkName);
+                
+                // Add new/updated recipe to the local storage list
+                localRecipes.unshift({
+                    id: window.editingRecipeId,
+                    name: drinkName,
+                    recipe: recipe,
+                    volume: volume,
+                    estimatedPrice: finalPrice
+                });
+                
+                localStorage.setItem('groove_custom_recipes', JSON.stringify(localRecipes));
+                // Also save the most recent loaded recipe to 'groove_custom_recipe' for legacy restore support
+                localStorage.setItem('groove_custom_recipe', JSON.stringify({ id: window.editingRecipeId, name: drinkName, ...recipe }));
 
                 // Show in the active recipe banner
                 document.getElementById('active-recipe-name').innerText = drinkName;
                 const bannerLabel = document.getElementById('active-recipe-banner-label');
                 if (bannerLabel) {
-                    bannerLabel.innerText = editingRecipeId ? 'Editing Custom Recipe' : 'Custom Drink Loaded';
+                    bannerLabel.innerText = window.editingRecipeId ? 'Editing Custom Recipe' : 'Custom Drink Loaded';
                 }
                 document.getElementById('active-recipe-banner').classList.remove('hidden');
+
+                // Refresh the local storage drinks list display
+                renderLocalSavedDrinks();
 
                 closeRecipeModal();
             } catch (e) {
                 console.error(e);
-                alert('Error saving recipe to cloud. Please try again!');
+                alert('Error saving recipe. Please try again!');
             }
         }
 
@@ -837,16 +895,15 @@
             try {
                 const recipe = JSON.parse(data);
                 currentBase = recipe.currentBase;
-                baseVolume = recipe.baseVolume;
+                espressoType = recipe.espressoType || 'double';
                 milkVolume = recipe.milkVolume;
                 waterVolume = recipe.waterVolume || 0;
                 syrups = recipe.syrups;
 
                 // Sync UI controls
-                document.getElementById('input-base-slider').value = baseVolume;
                 document.getElementById('input-milk-slider').value = milkVolume;
                 document.getElementById('input-water-slider').value = waterVolume;
-                document.getElementById('select-foam').value = recipe.foam;
+                document.getElementById('check-cold-foam').checked = !!recipe.coldFoam;
                 document.getElementById('check-whipped-cream').checked = recipe.whippedCream;
                 document.getElementById('check-ice').checked = recipe.ice;
 
@@ -876,35 +933,18 @@
             const finalPrice = document.getElementById('final-price').innerText;
             const volume = document.getElementById('stat-volume').innerText;
 
-            let finalEspressoVol = 0;
-            let finalMilkVol = 0;
-            let finalWaterVol = 0;
-
-            if (currentBase === 'espresso') {
-                finalEspressoVol = baseVolume;
-                finalMilkVol = milkVolume;
-                finalWaterVol = waterVolume;
-            } else if (currentBase === 'milk') {
-                finalEspressoVol = milkVolume;
-                finalMilkVol = baseVolume + milkVolume;
-                finalWaterVol = waterVolume;
-            } else if (currentBase === 'water') {
-                finalEspressoVol = waterVolume;
-                finalMilkVol = milkVolume;
-                finalWaterVol = baseVolume + waterVolume;
-            }
+            const espressoVol = espressoVolumes[espressoType];
+            const shotLabel = espressoType.charAt(0).toUpperCase() + espressoType.slice(1);
 
             let baseText = `Base Category: ${currentBase.toUpperCase()}`;
             let additions = [];
 
-            if (finalEspressoVol > 0) additions.push(`Espresso Shot (${finalEspressoVol}ml)`);
-            if (finalMilkVol > 0) additions.push(`Fresh Milk (${finalMilkVol}ml)`);
-            if (finalWaterVol > 0) additions.push(`Hot Water (${finalWaterVol}ml)`);
+            additions.push(`Espresso: ${shotLabel} Shot (${espressoVol}ml)`);
+            if (milkVolume > 0) additions.push(`Fresh Milk (${milkVolume}ml)`);
+            if (waterVolume > 0) additions.push(`Hot Water (${waterVolume}ml)`);
 
-            const foam = document.getElementById('select-foam').value;
-            if (foam !== 'none') {
-                const fStr = foam === 'light' ? 'Light' : foam === 'medium' ? 'Medium' : 'Thick';
-                additions.push(`Milk Foam (${fStr})`);
+            if (document.getElementById('check-cold-foam').checked) {
+                additions.push(`Cold Foam 🧊`);
             }
 
             if (document.getElementById('check-whipped-cream').checked) additions.push("Whipped Cream ✨");
@@ -937,20 +977,19 @@
                     editingRecipeName = data.name || '';
 
                     // 1. Set drink base
-                    selectBase(recipe.currentBase || 'espresso');
+                    setBase(recipe.currentBase || 'espresso');
 
-                    // 2. Set slider values
-                    baseVolume = recipe.baseVolume !== undefined ? recipe.baseVolume : 100;
+                    // 2. Set espresso type and slider values
+                    espressoType = recipe.espressoType || 'double';
                     milkVolume = recipe.milkVolume !== undefined ? recipe.milkVolume : 0;
                     waterVolume = recipe.waterVolume !== undefined ? recipe.waterVolume : 0;
 
-                    document.getElementById('input-base-slider').value = baseVolume;
+                    setEspressoType(espressoType);
                     document.getElementById('input-milk-slider').value = milkVolume;
                     document.getElementById('input-water-slider').value = waterVolume;
 
-                    // 3. Set Foam
-                    const foamType = recipe.foam || 'none';
-                    document.getElementById('select-foam').value = foamType;
+                    // 3. Set Foam Options
+                    document.getElementById('check-cold-foam').checked = !!recipe.coldFoam;
 
                     // 4. Set Cream & Ice Checkboxes
                     document.getElementById('check-whipped-cream').checked = !!recipe.whippedCream;
@@ -982,12 +1021,223 @@
             }
         }
 
+        // --- Saved Drinks List Handling ---
+        let savedDrinksListOpen = false;
+
+        function toggleSavedDrinksList() {
+            const container = document.getElementById('saved-drinks-container');
+            const chevron = document.getElementById('saved-drinks-chevron');
+            savedDrinksListOpen = !savedDrinksListOpen;
+
+            if (savedDrinksListOpen) {
+                container.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                container.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Render saved drinks list from localStorage
+        function renderLocalSavedDrinks() {
+            const listEl = document.getElementById('saved-drinks-list');
+            const countEl = document.getElementById('saved-drinks-count');
+            
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            
+            let localRecipes = [];
+            try {
+                localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
+            } catch(e) {
+                localRecipes = [];
+            }
+            
+            if (localRecipes.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No saved drinks found in local storage.</p>';
+                if (countEl) countEl.innerText = '0';
+                return;
+            }
+            
+            localRecipes.forEach((item) => {
+                const id = item.id || '';
+                const name = item.name || 'Unnamed Drink';
+                const estPrice = item.estimatedPrice || '0 SYP';
+                const volume = item.volume || '0 ml';
+                
+                const drinkCard = document.createElement('div');
+                drinkCard.className = "flex items-center justify-between p-3 bg-gray-50 border border-gray-150 rounded-xl hover:bg-gray-100/70 transition-all text-left group";
+                drinkCard.innerHTML = `
+                    <div class="flex-1 min-w-0 pr-2 cursor-pointer" onclick="loadLocalRecipe('${id}', '${name.replace(/'/g, "\\'")}')">
+                        <span class="block text-xs font-bold text-dark truncate group-hover:text-brand-accent transition-colors">${name}</span>
+                        <span class="block text-[10px] text-gray-400 font-semibold">${volume} • ${estPrice}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="loadLocalRecipe('${id}', '${name.replace(/'/g, "\\'")}')" class="p-1.5 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 text-gray-400 hover:text-brand-accent transition-all" title="Modify/Load Recipe">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="deleteLocalRecipe('${id}', '${name.replace(/'/g, "\\'")}')" class="p-1.5 hover:bg-white rounded-lg border border-transparent hover:border-red-100 text-gray-400 hover:text-red-500 transition-all" title="Delete Recipe">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(drinkCard);
+            });
+            
+            if (countEl) countEl.innerText = localRecipes.length;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function loadLocalRecipe(id, name) {
+            let localRecipes = [];
+            try {
+                localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
+            } catch(e) {
+                localRecipes = [];
+            }
+            
+            const match = localRecipes.find(r => r.id === id);
+            if (!match) {
+                alert("Recipe not found in local storage!");
+                return;
+            }
+            
+            // Set variables
+            const recipe = match.recipe || {};
+            currentBase = recipe.currentBase || 'espresso';
+            espressoType = recipe.espressoType || 'double';
+            milkVolume = recipe.milkVolume !== undefined ? recipe.milkVolume : 0;
+            waterVolume = recipe.waterVolume !== undefined ? recipe.waterVolume : 0;
+            syrups = recipe.syrups || { caramel: 0, chocolate: 0, vanilla: 0, hazelnut: 0 };
+            editingRecipeName = match.name || '';
+            window.editingRecipeId = id;
+            
+            // Sync URL parameter silently (without reloading page)
+            const url = new URL(window.location);
+            if (id) {
+                url.searchParams.set('recipeId', id);
+            } else {
+                url.searchParams.delete('recipeId');
+            }
+            window.history.pushState({}, '', url);
+
+            // Sync UI inputs
+            document.getElementById('input-milk-slider').value = milkVolume;
+            document.getElementById('input-water-slider').value = waterVolume;
+            document.getElementById('check-cold-foam').checked = !!recipe.coldFoam;
+            document.getElementById('check-whipped-cream').checked = !!recipe.whippedCream;
+            document.getElementById('check-ice').checked = !!recipe.ice;
+            
+            Object.keys(syrups).forEach(flavor => {
+                const count = syrups[flavor] || 0;
+                const qtyEl = document.getElementById(`qty-syrup-${flavor}`);
+                if (qtyEl) qtyEl.innerText = count;
+            });
+
+            // Set UI Base Category
+            setBase(currentBase);
+            setEspressoType(espressoType);
+            updateRatios();
+
+            // Set active banner
+            const banner = document.getElementById('active-recipe-banner');
+            const bannerName = document.getElementById('active-recipe-name');
+            const bannerLabel = document.getElementById('active-recipe-banner-label');
+            if (banner) {
+                banner.classList.remove('hidden');
+                if (bannerName) bannerName.innerText = editingRecipeName;
+                if (bannerLabel) bannerLabel.innerText = 'Editing Custom Recipe';
+            }
+            
+            alert(`Your custom recipe "${editingRecipeName}" has been loaded successfully!`);
+        }
+
+        async function deleteLocalRecipe(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}" from local storage?`)) {
+                return;
+            }
+            try {
+                // Delete from Firebase first if we have connectivity/id
+                if (id) {
+                    await db.collection('custom_recipes').doc(id).delete().catch(e => console.log("Firebase sync delete skipped/failed:", e));
+                }
+                
+                // Delete from localStorage list
+                let localRecipes = [];
+                try {
+                    localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
+                } catch(e) {
+                    localRecipes = [];
+                }
+                localRecipes = localRecipes.filter(r => r.id !== id);
+                localStorage.setItem('groove_custom_recipes', JSON.stringify(localRecipes));
+                
+                alert(`"${name}" was deleted successfully.`);
+                
+                // If we were editing this recipe, clear active state and reset URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentEditId = urlParams.get('recipeId');
+                if (currentEditId === id) {
+                    const url = new URL(window.location);
+                    url.searchParams.delete('recipeId');
+                    window.history.pushState({}, '', url);
+                    window.editingRecipeId = null;
+                    editingRecipeName = '';
+                    document.getElementById('active-recipe-banner').classList.add('hidden');
+                }
+                
+                renderLocalSavedDrinks();
+            } catch (e) {
+                console.error("Error deleting local recipe:", e);
+                alert("Failed to delete recipe. Please try again.");
+            }
+        }
+
+        // --- Cup Style Switcher ---
+        let currentCupStyle = 'glass';
+        function setCupStyle(style) {
+            currentCupStyle = style;
+            const btnGlass = document.getElementById('btn-style-glass');
+            const btnCeramic = document.getElementById('btn-style-ceramic');
+            const cupBody = document.getElementById('cup-body');
+            const cupHighlight = document.getElementById('cup-highlight');
+            const cupHandle = document.getElementById('cup-handle');
+            const cupInnerLine = document.getElementById('cup-inner-line');
+
+            if (style === 'glass') {
+                // Glass active styling
+                btnGlass.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-amber-900 text-white shadow-sm flex items-center gap-1";
+                btnCeramic.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all text-gray-500 hover:text-dark hover:bg-gray-100/60 flex items-center gap-1";
+                
+                // Cup style reset
+                cupBody.className = "relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-[5px] sm:border-[7px] border-white rounded-b-[45px] sm:rounded-b-[65px] overflow-hidden flex flex-col-reverse justify-start bg-gradient-to-tr from-white/10 to-white/20 backdrop-blur-[4px] shadow-[0_20px_45px_rgba(0,0,0,0.07),inset_0_-8px_20px_rgba(255,255,255,0.6),inset_0_8px_15px_rgba(255,255,255,0.3)] border-t-[3px] sm:border-t-[4px] z-10 transition-all duration-500";
+                cupHighlight.className = "absolute top-1 sm:top-2 w-[150px] sm:w-[194px] h-[10px] sm:h-[14px] bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-full z-30 blur-[1px]";
+                cupHandle.className = "absolute left-[8px] sm:left-[1px] top-[60px] sm:top-[70px] w-[46px] sm:w-[62px] h-[90px] sm:h-[130px] border-[5px] sm:border-[7px] border-white/90 rounded-l-[35px] border-r-0 shadow-[-4px_5px_15px_rgba(0,0,0,0.04)] bg-white/5 backdrop-blur-[1px] transition-all duration-500 z-0";
+                if (cupInnerLine) cupInnerLine.style.opacity = '1';
+            } else {
+                // Ceramic premium mug styling
+                btnCeramic.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-brand-accent text-white shadow-sm flex items-center gap-1";
+                btnGlass.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all text-gray-500 hover:text-dark hover:bg-gray-100/60 flex items-center gap-1";
+                
+                // Cup style ceramic: thick modern matte sage green ceramic
+                cupBody.className = "relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-[10px] sm:border-[14px] border-[#6b826e] rounded-b-[60px] sm:rounded-b-[85px] overflow-hidden flex flex-col-reverse justify-start bg-[#FAF6EB] shadow-[0_25px_50px_rgba(0,0,0,0.15),inset_0_20px_40px_rgba(0,0,0,0.1),inset_0_-15px_30px_rgba(0,0,0,0.05)] border-t-[2px] sm:border-t-[3px] z-10 transition-all duration-500";
+                cupHighlight.className = "hidden"; // No reflection highlight on ceramic rim
+                
+                // Bold solid ceramic handle
+                cupHandle.className = "absolute left-[-16px] sm:left-[-30px] top-[50px] sm:top-[60px] w-[60px] sm:w-[80px] h-[110px] sm:h-[150px] border-[14px] sm:border-[20px] border-[#6b826e] rounded-l-[45px] border-r-0 shadow-[-6px_8px_20px_rgba(0,0,0,0.12)] transition-all duration-500 z-0";
+                if (cupInnerLine) cupInnerLine.style.opacity = '0';
+            }
+        }
+
         // Initialize state
         setBase('espresso');
         lucide.createIcons();
 
         // Load editing recipe if query parameter exists
         loadEditingRecipe();
+        
+        // Initial render of local saved drinks
+        renderLocalSavedDrinks();
     </script>
     <!-- Name Recipe Modal -->
     <div id="recipe-modal" class="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">

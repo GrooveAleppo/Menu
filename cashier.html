@@ -11,6 +11,9 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- QR Code Generator -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -58,11 +61,56 @@
             -webkit-tap-highlight-color: transparent;
         }
         @media print {
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+            html, body {
+                width: 80mm;
+                margin: 0;
+                padding: 0;
+                background: white;
+                font-size: 12px;
+            }
             .no-print {
                 display: none !important;
             }
             .print-only {
                 display: block !important;
+                width: 72mm;
+                max-width: 72mm;
+                margin: 0 auto;
+                padding: 4mm 0;
+                border: none;
+                border-radius: 0;
+                box-shadow: none;
+                font-family: 'Courier New', 'Lucida Console', monospace;
+                font-size: 11px;
+                line-height: 1.4;
+                color: #000;
+            }
+            .print-only * {
+                font-family: 'Courier New', 'Lucida Console', monospace !important;
+            }
+            .receipt-divider {
+                border: none;
+                border-top: 1px dashed #000;
+                margin: 6px 0;
+            }
+            .receipt-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 1px 0;
+            }
+            .receipt-center {
+                text-align: center;
+            }
+            .receipt-qr {
+                text-align: center;
+                margin: 8px 0 4px;
+            }
+            .receipt-qr img, .receipt-qr canvas {
+                margin: 0 auto;
             }
         }
     </style>
@@ -209,7 +257,7 @@
 
                 <!-- Actions block at the bottom -->
                 <div id="ticket-actions" class="hidden mt-6 flex flex-col gap-2 shrink-0">
-                    <button onclick="window.print()" class="w-full bg-dark text-white font-bold py-3.5 rounded-2xl hover:bg-black transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
+                    <button onclick="printReceipt()" class="w-full bg-dark text-white font-bold py-3.5 rounded-2xl hover:bg-black transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
                         <i data-lucide="printer" class="w-5 h-5"></i>
                         Print Prep Ticket
                     </button>
@@ -228,41 +276,71 @@
         </div>
     </div>
 
-    <!-- PRINT ONLY VIEW -->
-    <div class="print-only hidden text-left p-6 max-w-xs mx-auto border border-dashed border-gray-400 rounded-lg bg-white font-mono text-sm leading-relaxed">
-        <div class="text-center mb-4">
-            <h2 class="text-lg font-black uppercase">Groove Coffee Shop</h2>
-            <p class="text-[10px] text-gray-400">--- Barista Prep Ticket ---</p>
-        </div>
+    <!-- PRINT ONLY: 80mm Thermal Receipt -->
+    <div id="print-receipt" class="print-only hidden" style="font-family: 'Courier New', monospace; font-size: 12px; width: 72mm; max-width: 72mm; margin: 0 auto; padding: 8px 0;">
         
-        <div class="space-y-2">
-            <div><strong>Drink Name:</strong> <span id="print-name" class="font-bold"></span></div>
-            <div><strong>Base:</strong> <span id="print-base" class="uppercase"></span></div>
-            <div class="h-px bg-gray-300 my-2"></div>
-            <div><strong>Espresso Shots:</strong> <span id="print-espresso"></span></div>
-            <div><strong>Fresh Milk:</strong> <span id="print-milk"></span></div>
-            <div><strong>Hot Water:</strong> <span id="print-water"></span></div>
-            <div class="h-px bg-gray-300 my-2"></div>
-            <div><strong>Foam Level:</strong> <span id="print-foam"></span></div>
-            <div><strong>Whipped Cream:</strong> <span id="print-whipped"></span></div>
-            <div><strong>Ice Cubes:</strong> <span id="print-ice"></span></div>
-            <div class="h-px bg-gray-300 my-2"></div>
-            <div><strong>Syrups:</strong></div>
-            <div id="print-syrups" class="pl-4 space-y-1"></div>
-            <div class="h-px bg-gray-300 my-2"></div>
-            <div class="flex justify-between font-bold">
-                <span>Total Volume:</span>
-                <span id="print-volume"></span>
-            </div>
-            <div class="flex justify-between font-bold">
-                <span>Est Price:</span>
-                <span id="print-price"></span>
-            </div>
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 6px;">
+            <div style="font-size: 16px; font-weight: 900; letter-spacing: 1px;">GROOVE COFFEE</div>
+            <div style="font-size: 10px; color: #555;">☕ Barista Prep Ticket ☕</div>
         </div>
-        
-        <div class="text-center mt-6 text-[10px] text-gray-400">
-            <p>Made with love & precision ❤️</p>
+
+        <hr class="receipt-divider" style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+
+        <!-- Drink Name -->
+        <div style="text-align: center; font-size: 15px; font-weight: 900; padding: 4px 0;" id="print-name"></div>
+
+        <hr class="receipt-divider" style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+
+        <!-- Recipe Details -->
+        <div style="padding: 2px 0;">
+            <div style="display: flex; justify-content: space-between;"><span>Base:</span><span id="print-base" style="font-weight: 700; text-transform: uppercase;"></span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Espresso:</span><span id="print-espresso" style="font-weight: 700;"></span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Fresh Milk:</span><span id="print-milk" style="font-weight: 700;"></span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Hot Water:</span><span id="print-water" style="font-weight: 700;"></span></div>
         </div>
+
+        <hr class="receipt-divider" style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+
+        <!-- Toppings -->
+        <div style="padding: 2px 0;">
+            <div style="display: flex; justify-content: space-between;"><span>Foam:</span><span id="print-foam" style="font-weight: 700;"></span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Whipped Cream:</span><span id="print-whipped" style="font-weight: 700;"></span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Ice Cubes:</span><span id="print-ice" style="font-weight: 700;"></span></div>
+        </div>
+
+        <hr class="receipt-divider" style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+
+        <!-- Syrups -->
+        <div style="padding: 2px 0;">
+            <div style="font-weight: 700; margin-bottom: 2px;">Syrups:</div>
+            <div id="print-syrups" style="padding-left: 8px;"></div>
+        </div>
+
+        <hr class="receipt-divider" style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+
+        <!-- Totals -->
+        <div style="padding: 2px 0;">
+            <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 13px;"><span>VOLUME:</span><span id="print-volume"></span></div>
+            <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; padding-top: 2px;"><span>PRICE:</span><span id="print-price"></span></div>
+        </div>
+
+        <hr class="receipt-divider" style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+
+        <!-- QR Code -->
+        <div style="text-align: center; padding: 6px 0;">
+            <div style="font-size: 9px; color: #555; margin-bottom: 4px;">Scan to view & reorder your drink</div>
+            <div id="print-qr" style="display: inline-block;"></div>
+        </div>
+
+        <hr class="receipt-divider" style="border: none; border-top: 1px dashed #000; margin: 6px 0;">
+
+        <!-- Footer -->
+        <div style="text-align: center; font-size: 9px; color: #555; padding: 4px 0;">
+            <div>Made with love & precision ❤️</div>
+            <div>Thank you for choosing Groove!</div>
+        </div>
+
     </div>
 
     <script>
@@ -382,32 +460,36 @@
             const recipe = recipeObj.recipe || {};
             document.getElementById('ticket-base').innerText = recipe.currentBase || 'Espresso';
 
-            // Fluids ratios volume
+            // Fluids ratios volume — supports both new (espressoType) and old (baseVolume) recipe formats
             let finalEspressoVol = 0;
-            let finalMilkVol = 0;
-            let finalWaterVol = 0;
+            let finalMilkVol = recipe.milkVolume || 0;
+            let finalWaterVol = recipe.waterVolume || 0;
+            let espressoLabel = '';
 
-            if (recipe.currentBase === 'espresso') {
-                finalEspressoVol = recipe.baseVolume;
-                finalMilkVol = recipe.milkVolume;
-                finalWaterVol = recipe.waterVolume;
-            } else if (recipe.currentBase === 'milk') {
-                finalEspressoVol = recipe.milkVolume;
-                finalMilkVol = recipe.baseVolume + recipe.milkVolume;
-                finalWaterVol = recipe.waterVolume;
-            } else if (recipe.currentBase === 'water') {
-                finalEspressoVol = recipe.waterVolume;
-                finalMilkVol = recipe.milkVolume;
-                finalWaterVol = recipe.baseVolume + recipe.waterVolume;
+            if (recipe.espressoType) {
+                // New format: espressoType (single/double/decaf)
+                const espressoVolumes = { single: 30, double: 60, decaf: 30 };
+                finalEspressoVol = recipe.espressoVolume || espressoVolumes[recipe.espressoType] || 30;
+                const shotName = recipe.espressoType.charAt(0).toUpperCase() + recipe.espressoType.slice(1);
+                espressoLabel = `${shotName} Shot (${finalEspressoVol}ml)`;
+            } else {
+                // Legacy format: baseVolume
+                finalEspressoVol = recipe.baseVolume || 0;
+                espressoLabel = `${finalEspressoVol} ml`;
             }
 
-            document.getElementById('ticket-vol-espresso').innerText = `${finalEspressoVol} ml`;
+            document.getElementById('ticket-vol-espresso').innerText = espressoLabel;
             document.getElementById('ticket-vol-milk').innerText = `${finalMilkVol} ml`;
             document.getElementById('ticket-vol-water').innerText = `${finalWaterVol} ml`;
 
-            // Foam, cream, ice
-            const foamType = recipe.foam || 'none';
-            document.getElementById('ticket-foam').innerText = foamType === 'none' ? 'No Foam' : foamType === 'light' ? 'Light' : foamType === 'medium' ? 'Medium' : 'Thick';
+            // Foam, cream, ice — supports both new (coldFoam) and old (foam) formats
+            let foamText = 'No Foam';
+            if (recipe.coldFoam) {
+                foamText = 'Cold Foam 🧊';
+            } else if (recipe.foam && recipe.foam !== 'none') {
+                foamText = recipe.foam === 'light' ? 'Light' : recipe.foam === 'medium' ? 'Medium' : 'Thick';
+            }
+            document.getElementById('ticket-foam').innerText = foamText;
             document.getElementById('ticket-whipped').innerText = recipe.whippedCream ? 'Whipped Cream ✨' : 'No Whipped Cream';
             document.getElementById('ticket-ice').innerText = recipe.ice ? 'Ice Cubes 🧊' : 'No Ice';
 
@@ -438,10 +520,10 @@
             // --- BIND PRINT VERSION ---
             document.getElementById('print-name').innerText = recipeObj.name;
             document.getElementById('print-base').innerText = recipe.currentBase || 'Espresso';
-            document.getElementById('print-espresso').innerText = `${finalEspressoVol} ml`;
+            document.getElementById('print-espresso').innerText = espressoLabel;
             document.getElementById('print-milk').innerText = `${finalMilkVol} ml`;
             document.getElementById('print-water').innerText = `${finalWaterVol} ml`;
-            document.getElementById('print-foam').innerText = foamType === 'none' ? 'No Foam' : foamType === 'light' ? 'Light' : foamType === 'medium' ? 'Medium' : 'Thick';
+            document.getElementById('print-foam').innerText = foamText;
             document.getElementById('print-whipped').innerText = recipe.whippedCream ? 'Yes' : 'No';
             document.getElementById('print-ice').innerText = recipe.ice ? 'Yes' : 'No';
             document.getElementById('print-volume').innerText = recipeObj.volume || '0 ml';
@@ -459,6 +541,32 @@
                 printSyrupsHtml = '<div>- None</div>';
             }
             printSyrups.innerHTML = printSyrupsHtml;
+
+            // --- Generate QR Code ---
+            generateReceiptQR(id);
+        }
+
+        function generateReceiptQR(recipeId) {
+            const qrContainer = document.getElementById('print-qr');
+            qrContainer.innerHTML = '';
+            
+            // Build the URL that opens the recipe in builder
+            const baseUrl = window.location.origin + window.location.pathname.replace('cashier.html', 'builder.html');
+            const recipeUrl = `${baseUrl}?recipeId=${recipeId}`;
+            
+            // Generate QR code
+            const qr = qrcode(0, 'M');
+            qr.addData(recipeUrl);
+            qr.make();
+            
+            // Render as img tag (better for thermal printers)
+            qrContainer.innerHTML = qr.createImgTag(3, 4);
+        }
+
+        function printReceipt() {
+            if (!selectedRecipeId) return;
+            // Small delay to ensure QR is rendered
+            setTimeout(() => { window.print(); }, 100);
         }
 
         function editRecipe() {

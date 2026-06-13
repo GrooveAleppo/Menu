@@ -212,26 +212,36 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Espresso per 40ml (SYP)</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">☕ Base Cup Price (SYP)</label>
+                        <input type="number" id="input-price-base" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 6000">
+                    </div>
+                    <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">☕☕ Double Shot Extra (SYP)</label>
                         <input type="number" id="input-price-espresso" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1500">
                     </div>
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Whipped Cream Cost (SYP)</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🌿 Decaf Surcharge (SYP)</label>
+                        <input type="number" id="input-price-decaf" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 500">
+                    </div>
+                    <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🥛 Milk Cost per 50ml (SYP)</label>
+                        <input type="number" id="input-price-milk" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1000">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🧊 Cold Foam Cost (SYP)</label>
+                        <input type="number" id="input-price-foam" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1000">
+                    </div>
+                    <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">✨ Whipped Cream Cost (SYP)</label>
                         <input type="number" id="input-price-whipped" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1500">
                     </div>
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Syrup Pump Cost (SYP)</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🍯 Syrup Pump Cost (SYP)</label>
                         <input type="number" id="input-price-syrup" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 800">
-                    </div>
-                    <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Milk Cost per 50ml (SYP)</label>
-                        <input type="number" id="input-price-milk" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1000">
-                    </div>
-                    <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Milk Foam Cost (SYP)</label>
-                        <input type="number" id="input-price-foam" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1000">
                     </div>
                 </div>
 
@@ -380,13 +390,15 @@
                     renderCarouselList();
 
                     // Pricing settings
+                    document.getElementById('input-price-base').value = data.baseCupPrice !== undefined ? data.baseCupPrice : 6000;
                     document.getElementById('input-price-espresso').value = data.espressoPricePer40ml !== undefined ? data.espressoPricePer40ml : 1500;
-                    document.getElementById('input-price-whipped').value = data.whippedCreamPrice !== undefined ? data.whippedCreamPrice : 1500;
-                    document.getElementById('input-price-syrup').value = data.syrupPumpPrice !== undefined ? data.syrupPumpPrice : 800;
+                    document.getElementById('input-price-decaf').value = data.decafSurcharge !== undefined ? data.decafSurcharge : 0;
                     document.getElementById('input-price-milk').value = data.milkBasePricePer50ml !== undefined ? data.milkBasePricePer50ml : 1000;
                     document.getElementById('input-price-foam').value = data.milkFoamPrice !== undefined ? data.milkFoamPrice : 0;
+                    document.getElementById('input-price-whipped').value = data.whippedCreamPrice !== undefined ? data.whippedCreamPrice : 1500;
+                    document.getElementById('input-price-syrup').value = data.syrupPumpPrice !== undefined ? data.syrupPumpPrice : 800;
                 } else {
-                    db.collection('settings').doc('app').set({ logoUrl: '', carousel: [], whippedCreamPrice: 1500, syrupPumpPrice: 800, milkBasePricePer50ml: 1000, milkFoamPrice: 0, espressoPricePer40ml: 1500 });
+                    db.collection('settings').doc('app').set({ logoUrl: '', carousel: [], baseCupPrice: 6000, espressoPricePer40ml: 1500, decafSurcharge: 0, whippedCreamPrice: 1500, syrupPumpPrice: 800, milkBasePricePer50ml: 1000, milkFoamPrice: 0 });
                 }
             });
 
@@ -581,19 +593,23 @@
         }
 
         async function savePricingSettings() {
+            const baseCupPrice = parseFloat(document.getElementById('input-price-base').value) || 0;
             const espressoPricePer40ml = parseFloat(document.getElementById('input-price-espresso').value) || 0;
-            const whippedCreamPrice = parseFloat(document.getElementById('input-price-whipped').value) || 0;
-            const syrupPumpPrice = parseFloat(document.getElementById('input-price-syrup').value) || 0;
+            const decafSurcharge = parseFloat(document.getElementById('input-price-decaf').value) || 0;
             const milkBasePricePer50ml = parseFloat(document.getElementById('input-price-milk').value) || 0;
             const milkFoamPrice = parseFloat(document.getElementById('input-price-foam').value) || 0;
+            const whippedCreamPrice = parseFloat(document.getElementById('input-price-whipped').value) || 0;
+            const syrupPumpPrice = parseFloat(document.getElementById('input-price-syrup').value) || 0;
 
             try {
                 await db.collection('settings').doc('app').update({
+                    baseCupPrice,
                     espressoPricePer40ml,
-                    whippedCreamPrice,
-                    syrupPumpPrice,
+                    decafSurcharge,
                     milkBasePricePer50ml,
-                    milkFoamPrice
+                    milkFoamPrice,
+                    whippedCreamPrice,
+                    syrupPumpPrice
                 });
                 alert('Pricing settings saved successfully to Firestore! All customers using the builder will see updated prices instantly.');
             } catch (e) {
