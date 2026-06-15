@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Groove Menu Dashboard - Admin Settings</title>
-
+    <link rel="shortcut icon" href="./assets/Favicon.png" type="image/png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -208,49 +208,73 @@
                     <i data-lucide="dollar-sign" class="w-5 h-5 text-brand animate-pulse"></i>
                     <div>
                         <h2 class="text-lg font-bold text-dark text-left">Custom Drink Pricing Settings</h2>
-                        <p class="text-xs text-gray-400 text-left">Configure the cost of toppings, syrups, and fresh milk in the interactive cup builder.</p>
+                        <p class="text-xs text-gray-400 text-left">Configure the cost of toppings, syrups, and fresh
+                            milk in the interactive cup builder.</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">☕ Base Cup Price (SYP)</label>
-                        <input type="number" id="input-price-base" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 6000">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">☕ Base Cup
+                            Price (SYP)</label>
+                        <input type="number" id="input-price-base"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="e.g. 6000">
                     </div>
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">☕☕ Double Shot Extra (SYP)</label>
-                        <input type="number" id="input-price-espresso" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1500">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">☕☕ Double
+                            Shot Extra (SYP)</label>
+                        <input type="number" id="input-price-espresso"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="e.g. 1500">
                     </div>
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🌿 Decaf Surcharge (SYP)</label>
-                        <input type="number" id="input-price-decaf" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 500">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🌿 Decaf
+                            Surcharge (SYP)</label>
+                        <input type="number" id="input-price-decaf"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="e.g. 500">
                     </div>
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🥛 Milk Cost per 50ml (SYP)</label>
-                        <input type="number" id="input-price-milk" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1000">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🥛 Milk
+                            Cost per 50ml (SYP)</label>
+                        <input type="number" id="input-price-milk"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="e.g. 1000">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🧊 Cold Foam Cost (SYP)</label>
-                        <input type="number" id="input-price-foam" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1000">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🧊 Cold
+                            Foam Cost (SYP)</label>
+                        <input type="number" id="input-price-foam"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="e.g. 1000">
                     </div>
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">✨ Whipped Cream Cost (SYP)</label>
-                        <input type="number" id="input-price-whipped" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 1500">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">✨ Whipped
+                            Cream Cost (SYP)</label>
+                        <input type="number" id="input-price-whipped"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="e.g. 1500">
                     </div>
                     <div class="text-left bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🍯 Syrup Pump Cost (SYP)</label>
-                        <input type="number" id="input-price-syrup" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. 800">
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">🍯 Syrup
+                            Pump Cost (SYP)</label>
+                        <input type="number" id="input-price-syrup"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="e.g. 800">
                     </div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-2">
-                    <a href="./cashier.html" class="w-full sm:w-auto bg-brand-light hover:bg-brand/10 text-brand-accent font-bold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm text-sm border border-brand/20">
+                    <a href="./cashier.html"
+                        class="w-full sm:w-auto bg-brand-light hover:bg-brand/10 text-brand-accent font-bold px-4 py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm text-sm border border-brand/20">
                         <i data-lucide="search" class="w-4 h-4"></i> Cashier Order Lookup
                     </a>
                     <button onclick="savePricingSettings()"
-                        class="w-full sm:w-auto bg-brand text-white font-bold px-8 py-3 rounded-xl hover:bg-brand-accent transition-colors shadow-md text-sm">Save Pricing Settings</button>
+                        class="w-full sm:w-auto bg-brand text-white font-bold px-8 py-3 rounded-xl hover:bg-brand-accent transition-colors shadow-md text-sm">Save
+                        Pricing Settings</button>
                 </div>
             </section>
 

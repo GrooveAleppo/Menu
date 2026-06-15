@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Design Your Perfect Cup - Groove Coffee Shop</title>
-
+    <link rel="shortcut icon" href="./assets/Favicon.png" type="image/png">
     <!-- Tailwind CSS -->
     <script src="./tailwindcss.js"></script>
 
@@ -106,7 +106,8 @@
         class="max-w-6xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
 
         <!-- Header -->
-        <header class="bg-surface px-4 py-3 sm:px-6 border-b border-gray-150 flex justify-between items-center shrink-0">
+        <header
+            class="bg-surface px-4 py-3 sm:px-6 border-b border-gray-150 flex justify-between items-center shrink-0">
             <div class="flex items-center gap-3">
                 <a href="./index.html"
                     class="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
@@ -140,27 +141,33 @@
                 </div>
 
                 <!-- Cup Style Switcher -->
-                <div class="absolute top-4 right-4 z-40 bg-white/80 backdrop-blur-md border border-gray-200/80 px-2 py-1 rounded-xl shadow-sm flex items-center gap-1">
-                    <button onclick="setCupStyle('glass')" id="btn-style-glass" class="px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-amber-900 text-white shadow-sm flex items-center gap-1">
-                        <i data-lucide="glass-water" class="w-3.5 h-3.5"></i> Glass
+                <div
+                    class="absolute top-4 right-4 z-40 bg-white/80 backdrop-blur-md border border-gray-200/80 px-2 py-1 rounded-xl shadow-sm flex items-center gap-1">
+                    <button onclick="setCupStyle('disposable')" id="btn-style-glass"
+                        class="px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-amber-900 text-white shadow-sm flex items-center gap-1">
+                        <i data-lucide="cup-toddy" class="w-3.5 h-3.5"></i> Disposable
                     </button>
-                    <button onclick="setCupStyle('ceramic')" id="btn-style-ceramic" class="px-3 py-1.5 rounded-lg text-xs font-black transition-all text-gray-500 hover:text-dark hover:bg-gray-100/60 flex items-center gap-1">
+                    <button onclick="setCupStyle('ceramic')" id="btn-style-ceramic"
+                        class="px-3 py-1.5 rounded-lg text-xs font-black transition-all text-gray-500 hover:text-dark hover:bg-gray-100/60 flex items-center gap-1">
                         <i data-lucide="coffee" class="w-3.5 h-3.5"></i> Ceramic Mug
                     </button>
                 </div>
 
                 <!-- Coffee Cup Render Wrapper -->
-                <div id="cup-wrapper" class="relative my-4 sm:my-8 flex items-center justify-center w-[220px] h-[260px] sm:w-[280px] sm:h-[330px] shrink-0 transition-all duration-500">
-                    
+                <div id="cup-wrapper"
+                    class="relative my-4 sm:my-8 flex items-center justify-center w-[220px] h-[260px] sm:w-[280px] sm:h-[330px] shrink-0 transition-all duration-500">
+
                     <!-- Double-walled glass reflection highlight (top rim lip glow) -->
-                    <div id="cup-highlight" class="absolute top-1 sm:top-2 w-[150px] sm:w-[194px] h-[10px] sm:h-[14px] bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-full z-30 blur-[1px]"></div>
+                    <div id="cup-highlight"
+                        class="absolute top-1 sm:top-2 w-[150px] sm:w-[194px] h-[10px] sm:h-[14px] bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-full z-30 blur-[1px]">
+                    </div>
 
                     <!-- Cup Handle -->
                     <div id="cup-handle"
                         class="absolute left-[8px] sm:left-[1px] top-[60px] sm:top-[70px] w-[46px] sm:w-[62px] h-[90px] sm:h-[130px] border-[5px] sm:border-[7px] border-white/90 rounded-l-[35px] border-r-0 shadow-[-4px_5px_15px_rgba(0,0,0,0.04)] bg-white/5 backdrop-blur-[1px] transition-all duration-500 z-0">
                     </div>
 
-                    <!-- Glass Coffee Cup: Double walled container -->
+                    <!-- Glass Coffee Cup / Ceramic Mug / Disposable Cup body -->
                     <div id="cup-body"
                         class="relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-[5px] sm:border-[7px] border-white rounded-b-[45px] sm:rounded-b-[65px] overflow-hidden flex flex-col-reverse justify-start bg-gradient-to-tr from-white/10 to-white/20 backdrop-blur-[4px] shadow-[0_20px_45px_rgba(0,0,0,0.07),inset_0_-8px_20px_rgba(255,255,255,0.6),inset_0_8px_15px_rgba(255,255,255,0.3)] border-t-[3px] sm:border-t-[4px] z-10 transition-all duration-500">
 
@@ -203,18 +210,12 @@
                             <span class="whitespace-nowrap drop-shadow-sm">Hot Water 💧</span>
                         </div>
 
-                        <!-- Ice Cubes layer overlays fluid layers -->
+                        <!-- Ice Cubes layer overlays fluid layers (Super wow floating emojis with realistic scale) -->
                         <div id="ice-cubes-container"
-                            class="absolute inset-x-0 bottom-0 top-12 pointer-events-none flex flex-wrap items-center justify-around p-4 opacity-0 transition-opacity duration-500 z-20">
-                            <div
-                                class="w-8 h-8 bg-white/30 border border-white/60 rounded-xl rotate-12 backdrop-blur-[2px] shadow-[0_4px_8px_rgba(255,255,255,0.4)]">
-                            </div>
-                            <div
-                                class="w-7 h-7 bg-white/30 border border-white/60 rounded-xl -rotate-12 backdrop-blur-[2px] shadow-[0_4px_8px_rgba(255,255,255,0.4)] mt-8">
-                            </div>
-                            <div
-                                class="w-8 h-8 bg-white/30 border border-white/60 rounded-xl rotate-45 backdrop-blur-[2px] shadow-[0_4px_8px_rgba(255,255,255,0.4)] -mt-4">
-                            </div>
+                            class="absolute inset-x-0 bottom-0 top-4 pointer-events-none flex items-center justify-around px-2 opacity-0 transition-opacity duration-500 z-45">
+                            <span class="text-4xl sm:text-5xl select-none filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.3)] transform rotate-12 -mt-16 animate-bounce" style="animation-duration: 4s; animation-iteration-count: infinite;">🧊</span>
+                            <span class="text-3xl sm:text-4xl select-none filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.3)] transform -rotate-12 mt-8 animate-bounce" style="animation-duration: 3s; animation-iteration-count: infinite; animation-delay: 0.5s;">🧊</span>
+                            <span class="text-4xl sm:text-5xl select-none filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.3)] transform rotate-45 -mt-6 animate-bounce" style="animation-duration: 5s; animation-iteration-count: infinite; animation-delay: 1s;">🧊</span>
                         </div>
 
                         <!-- Syrups indicator lines inside the cup -->
@@ -228,12 +229,16 @@
 
                 <!-- Real-time Stats Badge -->
                 <div class="flex gap-4 sm:gap-6 mt-1 sm:mt-2 text-center z-10 shrink-0">
-                    <div class="bg-white/80 border border-gray-150 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-sm">
-                        <span class="block text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase">Approx. Volume</span>
+                    <div
+                        class="bg-white/80 border border-gray-150 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-sm">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase">Approx.
+                            Volume</span>
                         <span id="stat-volume" class="text-xs sm:text-base font-black text-dark">250 ml</span>
                     </div>
-                    <div class="bg-white/80 border border-gray-150 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-sm">
-                        <span class="block text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase">Est. Calories</span>
+                    <div
+                        class="bg-white/80 border border-gray-150 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl shadow-sm">
+                        <span class="block text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase">Est.
+                            Calories</span>
                         <span id="stat-calories" class="text-xs sm:text-base font-black text-brand-accent">0 kcal</span>
                     </div>
                 </div>
@@ -246,22 +251,28 @@
 
                 <div class="space-y-6">
                     <!-- Active Custom Recipe Banner -->
-                    <div id="active-recipe-banner" class="hidden bg-brand/10 border border-brand/20 px-4 py-3 rounded-2xl flex items-center justify-between transition-all duration-500 mb-4 text-left">
+                    <div id="active-recipe-banner"
+                        class="hidden bg-brand/10 border border-brand/20 px-4 py-3 rounded-2xl flex items-center justify-between transition-all duration-500 mb-4 text-left">
                         <div class="flex items-center gap-2">
                             <i data-lucide="sparkles" class="w-4 h-4 text-brand-accent animate-pulse"></i>
                             <div>
-                                <span id="active-recipe-banner-label" class="text-[9px] font-bold text-brand-accent uppercase tracking-wider block leading-none mb-0.5">Custom Drink Loaded</span>
+                                <span id="active-recipe-banner-label"
+                                    class="text-[9px] font-bold text-brand-accent uppercase tracking-wider block leading-none mb-0.5">Custom
+                                    Drink Loaded</span>
                                 <span id="active-recipe-name" class="text-sm font-black text-dark">Default</span>
                             </div>
                         </div>
-                        <button onclick="clearActiveRecipe()" class="text-gray-400 hover:text-red-500 transition-colors p-1 bg-white rounded-lg shadow-sm border border-gray-150 flex items-center justify-center">
+                        <button onclick="clearActiveRecipe()"
+                            class="text-gray-400 hover:text-red-500 transition-colors p-1 bg-white rounded-lg shadow-sm border border-gray-150 flex items-center justify-center">
                             <i data-lucide="x" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
 
                     <!-- Step 1: Base Selection -->
                     <div>
-                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-2 text-left">Step 1: Select Drink Base</span>
+                        <span
+                            class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-2 text-left">Step
+                            1: Select Drink Base</span>
                         <div class="bg-gray-100 p-1 rounded-2xl flex gap-1 border border-gray-200/50">
                             <button onclick="setBase('espresso')" id="btn-base-espresso"
                                 class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-2 rounded-xl font-bold text-xs sm:text-sm transition-all bg-white shadow-sm text-dark">
@@ -283,7 +294,9 @@
 
                     <!-- Step 2: Espresso Shot & Liquid Quantities -->
                     <div class="space-y-5 bg-gray-50 rounded-2xl p-4 sm:p-5 border border-gray-150/70 shadow-inner">
-                        <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-1 text-left">Step 2: Espresso Shot & Quantities</span>
+                        <span
+                            class="text-xs font-bold text-brand-accent uppercase tracking-wider block mb-1 text-left">Step
+                            2: Espresso Shot & Quantities</span>
 
                         <!-- Espresso Shot Type -->
                         <div class="space-y-2">
@@ -309,19 +322,29 @@
                         <!-- Milk Ratio Slider -->
                         <div id="slider-container-milk" class="space-y-1.5 border-t border-gray-200/50 pt-3">
                             <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
-                                <span id="label-milk-slider" class="font-bold flex items-center gap-1"><i data-lucide="milk" class="w-3.5 h-3.5 text-amber-600"></i> Add Fresh Milk</span>
-                                <span id="val-milk-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0 ml</span>
+                                <span id="label-milk-slider" class="font-bold flex items-center gap-1"><i
+                                        data-lucide="milk" class="w-3.5 h-3.5 text-amber-600"></i> Add Fresh Milk</span>
+                                <span id="val-milk-slider"
+                                    class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0
+                                    ml</span>
                             </div>
-                            <input type="range" id="input-milk-slider" min="0" max="250" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-700">
+                            <input type="range" id="input-milk-slider" min="0" max="250" value="0"
+                                oninput="updateRatios()"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-700">
                         </div>
 
                         <!-- Water Ratio Slider -->
                         <div id="slider-container-water" class="space-y-1.5 border-t border-gray-200/50 pt-3">
                             <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
-                                <span id="label-water-slider" class="font-bold flex items-center gap-1"><i data-lucide="droplet" class="w-3.5 h-3.5 text-sky-500"></i> Add Hot Water</span>
-                                <span id="val-water-slider" class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0 ml</span>
+                                <span id="label-water-slider" class="font-bold flex items-center gap-1"><i
+                                        data-lucide="droplet" class="w-3.5 h-3.5 text-sky-500"></i> Add Hot Water</span>
+                                <span id="val-water-slider"
+                                    class="font-extrabold text-dark bg-white border border-gray-200/80 px-2 py-0.5 rounded-lg shadow-sm">0
+                                    ml</span>
                             </div>
-                            <input type="range" id="input-water-slider" min="0" max="250" value="0" oninput="updateRatios()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
+                            <input type="range" id="input-water-slider" min="0" max="250" value="0"
+                                oninput="updateRatios()"
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
                         </div>
                     </div>
 
@@ -334,9 +357,11 @@
                             <!-- Cold Foam Toggle -->
                             <div
                                 class="bg-gray-50 border border-gray-150 rounded-2xl p-3 flex flex-col justify-between">
-                                <label class="text-xs font-bold text-gray-600 mb-1.5 block flex items-center gap-1.5">🧊 Cold Foam</label>
+                                <label class="text-xs font-bold text-gray-600 mb-1.5 block flex items-center gap-1.5">🧊
+                                    Cold Foam</label>
                                 <div class="flex items-center justify-between">
-                                    <span id="lbl-price-foam" class="text-[10px] font-semibold text-gray-400">+0 SYP</span>
+                                    <span id="lbl-price-foam" class="text-[10px] font-semibold text-gray-400">+0
+                                        SYP</span>
                                     <input type="checkbox" id="check-cold-foam" onchange="calculateSpecs()"
                                         class="w-4 h-4 text-brand bg-white border-gray-300 rounded focus:ring-brand accent-brand">
                                 </div>
@@ -345,9 +370,11 @@
                             <!-- Whipped Cream Toggle -->
                             <div
                                 class="bg-gray-50 border border-gray-150 rounded-2xl p-3 flex flex-col justify-between">
-                                <label class="text-xs font-bold text-gray-600 mb-1.5 block flex items-center gap-1.5">✨ Whipped Cream</label>
+                                <label class="text-xs font-bold text-gray-600 mb-1.5 block flex items-center gap-1.5">✨
+                                    Whipped Cream</label>
                                 <div class="flex items-center justify-between">
-                                    <span id="lbl-price-whipped" class="text-[10px] font-semibold text-gray-400">+1,500 SYP</span>
+                                    <span id="lbl-price-whipped" class="text-[10px] font-semibold text-gray-400">+1,500
+                                        SYP</span>
                                     <input type="checkbox" id="check-whipped-cream" onchange="calculateSpecs()"
                                         class="w-4 h-4 text-brand bg-white border-gray-300 rounded focus:ring-brand accent-brand">
                                 </div>
@@ -375,7 +402,8 @@
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center text-xs font-bold text-gray-600">
                                     <span>Flavor Pumps (Syrups)</span>
-                                    <span id="lbl-price-syrup" class="text-[10px] text-brand-accent font-semibold">+800 SYP / pump</span>
+                                    <span id="lbl-price-syrup" class="text-[10px] text-brand-accent font-semibold">+800
+                                        SYP / pump</span>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
                                     <div
@@ -430,12 +458,14 @@
 
                 <!-- Saved Drinks List Section -->
                 <div class="border-t border-gray-150 pt-6 space-y-3">
-                    <button onclick="toggleSavedDrinksList()" class="w-full flex items-center justify-between py-2 text-dark font-bold text-sm border-b border-gray-100 hover:text-brand-accent transition-colors">
+                    <button onclick="toggleSavedDrinksList()"
+                        class="w-full flex items-center justify-between py-2 text-dark font-bold text-sm border-b border-gray-100 hover:text-brand-accent transition-colors">
                         <span class="flex items-center gap-2">
                             <i data-lucide="list-music" class="w-4 h-4 text-brand-accent"></i>
                             <span>Saved Drinks (<span id="saved-drinks-count">0</span>)</span>
                         </span>
-                        <i id="saved-drinks-chevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300"></i>
+                        <i id="saved-drinks-chevron" data-lucide="chevron-down"
+                            class="w-4 h-4 transition-transform duration-300"></i>
                     </button>
                     <div id="saved-drinks-container" class="hidden max-h-48 overflow-y-auto space-y-2 pr-1">
                         <!-- Dynamic list of saved drinks -->
@@ -792,7 +822,7 @@
                     const existing = await db.collection('custom_recipes')
                         .where('name', '==', drinkName)
                         .get();
-                    
+
                     let exists = false;
                     existing.forEach(doc => {
                         if (doc.id !== editingRecipeId) exists = true;
@@ -835,7 +865,7 @@
                     // Keep track of the generated id locally if we want to update it later
                     window.editingRecipeId = docRef.id;
                     editingRecipeName = drinkName;
-                    
+
                     // Update URL with recipeId
                     const url = new URL(window.location);
                     url.searchParams.set('recipeId', docRef.id);
@@ -848,13 +878,13 @@
                 let localRecipes = [];
                 try {
                     localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
-                } catch(e) {
+                } catch (e) {
                     localRecipes = [];
                 }
-                
+
                 // Remove existing recipe with same id or name if updating
                 localRecipes = localRecipes.filter(r => r.id !== window.editingRecipeId && r.name !== drinkName);
-                
+
                 // Add new/updated recipe to the local storage list
                 localRecipes.unshift({
                     id: window.editingRecipeId,
@@ -863,7 +893,7 @@
                     volume: volume,
                     estimatedPrice: finalPrice
                 });
-                
+
                 localStorage.setItem('groove_custom_recipes', JSON.stringify(localRecipes));
                 // Also save the most recent loaded recipe to 'groove_custom_recipe' for legacy restore support
                 localStorage.setItem('groove_custom_recipe', JSON.stringify({ id: window.editingRecipeId, name: drinkName, ...recipe }));
@@ -913,7 +943,7 @@
 
                 // Trigger states
                 setBase(currentBase);
-                
+
                 if (recipe.name) {
                     document.getElementById('active-recipe-name').innerText = recipe.name;
                     document.getElementById('active-recipe-banner').classList.remove('hidden');
@@ -1042,29 +1072,29 @@
         function renderLocalSavedDrinks() {
             const listEl = document.getElementById('saved-drinks-list');
             const countEl = document.getElementById('saved-drinks-count');
-            
+
             if (!listEl) return;
             listEl.innerHTML = '';
-            
+
             let localRecipes = [];
             try {
                 localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
-            } catch(e) {
+            } catch (e) {
                 localRecipes = [];
             }
-            
+
             if (localRecipes.length === 0) {
                 listEl.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">No saved drinks found in local storage.</p>';
                 if (countEl) countEl.innerText = '0';
                 return;
             }
-            
+
             localRecipes.forEach((item) => {
                 const id = item.id || '';
                 const name = item.name || 'Unnamed Drink';
                 const estPrice = item.estimatedPrice || '0 SYP';
                 const volume = item.volume || '0 ml';
-                
+
                 const drinkCard = document.createElement('div');
                 drinkCard.className = "flex items-center justify-between p-3 bg-gray-50 border border-gray-150 rounded-xl hover:bg-gray-100/70 transition-all text-left group";
                 drinkCard.innerHTML = `
@@ -1083,7 +1113,7 @@
                 `;
                 listEl.appendChild(drinkCard);
             });
-            
+
             if (countEl) countEl.innerText = localRecipes.length;
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
@@ -1092,16 +1122,16 @@
             let localRecipes = [];
             try {
                 localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
-            } catch(e) {
+            } catch (e) {
                 localRecipes = [];
             }
-            
+
             const match = localRecipes.find(r => r.id === id);
             if (!match) {
                 alert("Recipe not found in local storage!");
                 return;
             }
-            
+
             // Set variables
             const recipe = match.recipe || {};
             currentBase = recipe.currentBase || 'espresso';
@@ -1111,7 +1141,7 @@
             syrups = recipe.syrups || { caramel: 0, chocolate: 0, vanilla: 0, hazelnut: 0 };
             editingRecipeName = match.name || '';
             window.editingRecipeId = id;
-            
+
             // Sync URL parameter silently (without reloading page)
             const url = new URL(window.location);
             if (id) {
@@ -1127,7 +1157,7 @@
             document.getElementById('check-cold-foam').checked = !!recipe.coldFoam;
             document.getElementById('check-whipped-cream').checked = !!recipe.whippedCream;
             document.getElementById('check-ice').checked = !!recipe.ice;
-            
+
             Object.keys(syrups).forEach(flavor => {
                 const count = syrups[flavor] || 0;
                 const qtyEl = document.getElementById(`qty-syrup-${flavor}`);
@@ -1148,7 +1178,7 @@
                 if (bannerName) bannerName.innerText = editingRecipeName;
                 if (bannerLabel) bannerLabel.innerText = 'Editing Custom Recipe';
             }
-            
+
             alert(`Your custom recipe "${editingRecipeName}" has been loaded successfully!`);
         }
 
@@ -1161,19 +1191,19 @@
                 if (id) {
                     await db.collection('custom_recipes').doc(id).delete().catch(e => console.log("Firebase sync delete skipped/failed:", e));
                 }
-                
+
                 // Delete from localStorage list
                 let localRecipes = [];
                 try {
                     localRecipes = JSON.parse(localStorage.getItem('groove_custom_recipes') || '[]');
-                } catch(e) {
+                } catch (e) {
                     localRecipes = [];
                 }
                 localRecipes = localRecipes.filter(r => r.id !== id);
                 localStorage.setItem('groove_custom_recipes', JSON.stringify(localRecipes));
-                
+
                 alert(`"${name}" was deleted successfully.`);
-                
+
                 // If we were editing this recipe, clear active state and reset URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentEditId = urlParams.get('recipeId');
@@ -1185,7 +1215,7 @@
                     editingRecipeName = '';
                     document.getElementById('active-recipe-banner').classList.add('hidden');
                 }
-                
+
                 renderLocalSavedDrinks();
             } catch (e) {
                 console.error("Error deleting local recipe:", e);
@@ -1194,7 +1224,7 @@
         }
 
         // --- Cup Style Switcher ---
-        let currentCupStyle = 'glass';
+        let currentCupStyle = 'disposable';
         function setCupStyle(style) {
             currentCupStyle = style;
             const btnGlass = document.getElementById('btn-style-glass');
@@ -1204,44 +1234,55 @@
             const cupHandle = document.getElementById('cup-handle');
             const cupInnerLine = document.getElementById('cup-inner-line');
 
-            if (style === 'glass') {
-                // Glass active styling
+            if (style === 'disposable') {
+                // Disposable Cup active styling (Modern branded paper cup with sleeve, tapered design, no handle)
                 btnGlass.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-amber-900 text-white shadow-sm flex items-center gap-1";
                 btnCeramic.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all text-gray-500 hover:text-dark hover:bg-gray-100/60 flex items-center gap-1";
+
+                // Styled with NO borders (borderless) and no drop shadow filter
+                cupBody.className = "relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-0 rounded-b-[8px] overflow-hidden flex flex-col-reverse justify-start bg-gradient-to-b from-[#faf6ee] to-[#d6c7b1] shadow-[0_15px_35px_rgba(0,0,0,0.1),inset_0_-10px_20px_rgba(0,0,0,0.05)] z-10 transition-all duration-500";
                 
-                // Cup style reset
-                cupBody.className = "relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-[5px] sm:border-[7px] border-white rounded-b-[45px] sm:rounded-b-[65px] overflow-hidden flex flex-col-reverse justify-start bg-gradient-to-tr from-white/10 to-white/20 backdrop-blur-[4px] shadow-[0_20px_45px_rgba(0,0,0,0.07),inset_0_-8px_20px_rgba(255,255,255,0.6),inset_0_8px_15px_rgba(255,255,255,0.3)] border-t-[3px] sm:border-t-[4px] z-10 transition-all duration-500";
-                cupHighlight.className = "absolute top-1 sm:top-2 w-[150px] sm:w-[194px] h-[10px] sm:h-[14px] bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-full z-30 blur-[1px]";
-                cupHandle.className = "absolute left-[8px] sm:left-[1px] top-[60px] sm:top-[70px] w-[46px] sm:w-[62px] h-[90px] sm:h-[130px] border-[5px] sm:border-[7px] border-white/90 rounded-l-[35px] border-r-0 shadow-[-4px_5px_15px_rgba(0,0,0,0.04)] bg-white/5 backdrop-blur-[1px] transition-all duration-500 z-0";
-                if (cupInnerLine) cupInnerLine.style.opacity = '1';
+                // Set the clip-path for tapered cup.
+                cupBody.style.clipPath = "polygon(0% 0%, 100% 0%, 82% 100%, 18% 100%)";
+                
+                // Clear filter styling
+                cupBody.style.filter = "";
+                cupHighlight.className = "hidden"; // No reflection highlight on paper/disposable rim
+                cupHandle.className = "hidden"; // Disposable cups don't have handles
+                if (cupInnerLine) cupInnerLine.style.opacity = '0';
             } else {
                 // Ceramic premium mug styling
                 btnCeramic.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all bg-brand-accent text-white shadow-sm flex items-center gap-1";
                 btnGlass.className = "px-3 py-1.5 rounded-lg text-xs font-black transition-all text-gray-500 hover:text-dark hover:bg-gray-100/60 flex items-center gap-1";
-                
+
                 // Cup style ceramic: thick modern matte sage green ceramic
-                cupBody.className = "relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-[10px] sm:border-[14px] border-[#6b826e] rounded-b-[60px] sm:rounded-b-[85px] overflow-hidden flex flex-col-reverse justify-start bg-[#FAF6EB] shadow-[0_25px_50px_rgba(0,0,0,0.15),inset_0_20px_40px_rgba(0,0,0,0.1),inset_0_-15px_30px_rgba(0,0,0,0.05)] border-t-[2px] sm:border-t-[3px] z-10 transition-all duration-500";
+                cupBody.className = "relative w-[160px] sm:w-[210px] h-[210px] sm:h-[280px] border-[10px] sm:border-[14px] border-[#7b937e] rounded-b-[60px] sm:rounded-b-[85px] overflow-hidden flex flex-col-reverse justify-start bg-[#FAF6EB] shadow-[0_25px_50px_rgba(0,0,0,0.12),inset_0_20px_40px_rgba(0,0,0,0.08),inset_0_-15px_30px_rgba(0,0,0,0.03)] border-t-[2px] sm:border-t-[3px] z-10 transition-all duration-500";
+                cupBody.style.clipPath = ""; // Reset clipPath for Ceramic Mug
+                cupBody.style.filter = ""; // Reset style filter for Ceramic Mug
                 cupHighlight.className = "hidden"; // No reflection highlight on ceramic rim
-                
+
                 // Bold solid ceramic handle
-                cupHandle.className = "absolute left-[-16px] sm:left-[-30px] top-[50px] sm:top-[60px] w-[60px] sm:w-[80px] h-[110px] sm:h-[150px] border-[14px] sm:border-[20px] border-[#6b826e] rounded-l-[45px] border-r-0 shadow-[-6px_8px_20px_rgba(0,0,0,0.12)] transition-all duration-500 z-0";
+                cupHandle.className = "absolute left-[-16px] sm:left-[-30px] top-[50px] sm:top-[60px] w-[60px] sm:w-[80px] h-[110px] sm:h-[150px] border-[14px] sm:border-[20px] border-[#7b937e] rounded-l-[45px] border-r-0 shadow-[-6px_8px_20px_rgba(0,0,0,0.1)] transition-all duration-500 z-0";
                 if (cupInnerLine) cupInnerLine.style.opacity = '0';
             }
         }
 
         // Initialize state
         setBase('espresso');
+        setCupStyle('disposable');
         lucide.createIcons();
 
         // Load editing recipe if query parameter exists
         loadEditingRecipe();
-        
+
         // Initial render of local saved drinks
         renderLocalSavedDrinks();
     </script>
     <!-- Name Recipe Modal -->
-    <div id="recipe-modal" class="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-100 transform scale-95 transition-transform duration-300">
+    <div id="recipe-modal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-100 transform scale-95 transition-transform duration-300">
             <div class="flex items-center gap-3 mb-4 text-brand">
                 <div class="p-2.5 bg-brand-light rounded-xl">
                     <i data-lucide="award" class="w-6 h-6 text-brand-accent animate-bounce"></i>
@@ -1251,18 +1292,23 @@
                     <p class="text-[10px] sm:text-xs text-gray-400">Save it to order by name at the shop!</p>
                 </div>
             </div>
-            
+
             <div class="space-y-4">
                 <div class="text-left">
-                    <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Custom Drink Name</label>
-                    <input type="text" id="input-recipe-name" class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold" placeholder="e.g. Joyful Mocha, Alex Special" maxlength="40">
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Custom Drink
+                        Name</label>
+                    <input type="text" id="input-recipe-name"
+                        class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                        placeholder="e.g. Joyful Mocha, Alex Special" maxlength="40">
                 </div>
-                
+
                 <div class="flex gap-2.5 pt-2">
-                    <button onclick="closeRecipeModal()" class="flex-1 bg-gray-50 text-gray-500 hover:bg-gray-100 font-bold py-3 rounded-xl transition-all text-xs sm:text-sm border border-gray-200">
+                    <button onclick="closeRecipeModal()"
+                        class="flex-1 bg-gray-50 text-gray-500 hover:bg-gray-100 font-bold py-3 rounded-xl transition-all text-xs sm:text-sm border border-gray-200">
                         Cancel
                     </button>
-                    <button onclick="submitRecipeToFirebase()" class="flex-1 bg-brand text-white hover:bg-brand-accent font-bold py-3 rounded-xl transition-all text-xs sm:text-sm shadow-md shadow-brand/10">
+                    <button onclick="submitRecipeToFirebase()"
+                        class="flex-1 bg-brand text-white hover:bg-brand-accent font-bold py-3 rounded-xl transition-all text-xs sm:text-sm shadow-md shadow-brand/10">
                         Save Recipe
                     </button>
                 </div>
