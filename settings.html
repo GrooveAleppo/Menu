@@ -363,6 +363,7 @@
     <script>
         let menuData = [];
         let carouselData = [];
+        let savedCategoryOrder = [];
 
         // --- Auth Handlers ---
 
@@ -429,8 +430,8 @@
             // Fetch Category Order
             db.collection('settings').doc('categories').onSnapshot((doc) => {
                 if (doc.exists) {
-                    const list = doc.data().list || [];
-                    renderCategorySortable(list);
+                    savedCategoryOrder = doc.data().list || [];
+                    renderCategorySortable(savedCategoryOrder);
                 }
             });
 
@@ -442,6 +443,7 @@
                 });
                 renderTable();
                 lucide.createIcons();
+                syncCategoriesFromMenu();
             });
         }
 
@@ -489,6 +491,28 @@
                     }
                 });
                 container.dataset.sortableInitialized = 'true';
+            }
+        }
+
+        function syncCategoriesFromMenu() {
+            const activeCategories = [...new Set(menuData.map(item => item.category))].filter(Boolean);
+
+            const merged = [];
+            const seen = new Set();
+            for (const cat of savedCategoryOrder) {
+                if (activeCategories.includes(cat)) {
+                    merged.push(cat);
+                    seen.add(cat);
+                }
+            }
+            for (const cat of activeCategories) {
+                if (!seen.has(cat)) {
+                    merged.push(cat);
+                }
+            }
+
+            if (JSON.stringify(merged) !== JSON.stringify(savedCategoryOrder)) {
+                db.collection('settings').doc('categories').set({ list: merged });
             }
         }
 
