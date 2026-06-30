@@ -12,6 +12,9 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Shared Admin Navigation -->
+    <script src="./shared-nav.js"></script>
+
     <!-- SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
@@ -103,10 +106,10 @@
     </style>
 </head>
 
-<body class="font-sans text-dark antialiased min-h-screen p-4 sm:p-6 md:p-8 flex flex-col">
-
+<body class="min-h-screen flex flex-col">
     <!-- Auth Overlay -->
-    <div id="authOverlay" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div id="authOverlay" class="fixed inset-x-0 bottom-0 z-[150] flex items-center justify-center p-4"
+        style="top:52px;background:rgba(247,249,247,0.98);backdrop-filter:blur(10px)">
         <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-md w-full border border-gray-100 text-center">
             <img src="./assets/logo.png" class="h-12 mx-auto mb-6 object-contain">
             <h2 class="text-2xl font-bold mb-2">Login Dashboard</h2>
@@ -132,47 +135,9 @@
         </div>
     </div>
 
-    <div
-        class="max-w-7xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+    <div>
 
-        <!-- Header -->
-        <header
-            class="bg-surface px-6 sm:px-8 py-6 border-b border-gray-200 flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-4 text-center sm:text-left">
-                <img id="headerLogo" src="./assets/logo.png" alt="Groove Logo" class="h-12 object-contain font-sans">
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-dark text-left">Menu Management Portal</h1>
-                    <p class="text-xs sm:text-sm text-gray-500 text-left">Configure carousel media, menu items, and
-                        categories in real-time.</p>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap items-center justify-center lg:justify-end gap-2.5 w-full lg:w-auto">
-                <button onclick="downloadTemplate()"
-                    class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-dark font-semibold rounded-xl transition-colors text-xs sm:text-sm">
-                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-brand"></i>
-                    <span class="whitespace-nowrap">CSV Template</span>
-                </button>
-                <button onclick="exportToCSV()"
-                    class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-dark font-semibold rounded-xl transition-colors text-xs sm:text-sm">
-                    <i data-lucide="download" class="w-4 h-4 text-brand"></i>
-                    <span class="whitespace-nowrap">Export CSV</span>
-                </button>
-                <button onclick="document.getElementById('csvFileInput').click()"
-                    class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-brand text-white font-bold rounded-xl hover:bg-brand-accent transition-colors text-xs sm:text-sm shadow-sm">
-                    <i data-lucide="upload" class="w-4 h-4"></i>
-                    <span class="whitespace-nowrap">Import CSV</span>
-                </button>
-                <input type="file" id="csvFileInput" class="hidden" accept=".csv" onchange="handleImport(event)">
-                <button onclick="handleLogout()"
-                    class="p-2.5 bg-gray-50 rounded-xl text-gray-400 hover:text-red-500 transition-colors"
-                    title="Logout">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                </button>
-            </div>
-        </header>
-
-        <div class="flex-1 p-4 sm:p-6 lg:p-8 space-y-10 overflow-x-hidden">
+        <div class="flex-1 p-4 sm:p-6 lg:p-8 space-y-10 overflow-x-auto">
 
             <!-- Carousel Section -->
             <section class="bg-gray-50 rounded-3xl p-4 sm:p-6 border border-gray-100 shadow-sm">
@@ -280,15 +245,34 @@
 
             <!-- Menu Table Section -->
             <section>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
                     <div class="flex items-center gap-2">
                         <i data-lucide="coffee" class="w-5 h-5 text-brand"></i>
                         <h2 class="text-lg font-bold text-dark">Menu Offerings</h2>
                     </div>
-                    <button onclick="addRow()"
-                        class="w-full sm:w-auto bg-white border-2 border-brand text-brand hover:bg-brand hover:text-white font-bold px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Create New Item
-                    </button>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="downloadTemplate()"
+                            class="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-dark font-semibold rounded-xl transition-colors text-xs">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-brand"></i>
+                            <span>CSV Template</span>
+                        </button>
+                        <button onclick="exportToCSV()"
+                            class="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-dark font-semibold rounded-xl transition-colors text-xs">
+                            <i data-lucide="download" class="w-3.5 h-3.5 text-brand"></i>
+                            <span>Export CSV</span>
+                        </button>
+                        <button onclick="document.getElementById('csvFileInput').click()"
+                            class="flex items-center gap-1.5 px-3 py-2 bg-surface border border-gray-200 hover:bg-gray-100 text-dark font-semibold rounded-xl transition-colors text-xs">
+                            <i data-lucide="upload" class="w-3.5 h-3.5 text-brand"></i>
+                            <span>Import CSV</span>
+                        </button>
+                        <input type="file" id="csvFileInput" class="hidden" accept=".csv"
+                            onchange="handleImport(event)">
+                        <button onclick="addRow()"
+                            class="flex items-center gap-1.5 px-4 py-2 bg-brand border-2 border-brand text-white hover:bg-brand-accent font-bold rounded-xl transition-all shadow-sm text-xs">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Create New Item
+                        </button>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
@@ -318,6 +302,27 @@
                         </table>
                     </div>
                 </div>
+            </section>
+
+            <!-- Gift Cards Management Navigation Card -->
+            <section
+                class="bg-gradient-to-tr from-brand-accent to-brand rounded-3xl p-6 text-white shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 opacity-10 translate-x-4 translate-y-4 pointer-events-none">
+                    <i data-lucide="gift" class="w-48 h-48"></i>
+                </div>
+                <div class="text-left relative z-10 space-y-1.5">
+                    <h2 class="text-lg font-bold flex items-center gap-1.5 leading-tight">
+                        <i data-lucide="gift" class="w-5 h-5 text-white animate-pulse"></i> Visual Gift Card Console
+                    </h2>
+                    <p class="text-xs text-white/80 max-w-xl">
+                        Access the new visual vouchers management dashboard to view, generate, link, and delete customer
+                        credit cards in a beautiful grid of visual cards.
+                    </p>
+                </div>
+                <a href="./giftcards.html"
+                    class="bg-white text-brand-accent hover:bg-white/95 font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0 z-10">
+                    <span>Open Visual Manager</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
             </section>
 
             <!-- Logo Section -->
@@ -912,7 +917,11 @@
             reader.readAsText(file);
         }
 
+        // --- End ---
+
     </script>
 </body>
+
+</html>
 
 </html>

@@ -20,6 +20,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <!-- Google Fonts: Inter (Sans Serif) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -202,6 +203,17 @@
                 </a>
             </section>
 
+            <!-- My Custom Creations shelf -->
+            <section id="myCreationsSection" class="mb-10 px-6 hidden animate-item" style="animation-delay: 100ms">
+                <div class="mb-5">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-brand-accent">Created By You</span>
+                    <h2 class="text-3xl font-bold tracking-tight mt-1">My Saved Drinks</h2>
+                </div>
+                <div id="myCreationsContainer" class="flex overflow-x-auto hide-scrollbar gap-4 pb-4 -mx-6 px-6">
+                    <!-- Custom creations will be dynamically injected here -->
+                </div>
+            </section>
+
             <!-- 2. Main Menu Section -->
             <section id="mainMenuSection" class="mb-10">
                 <div class="px-6 mb-5">
@@ -270,6 +282,38 @@
                         </svg>
                     </button>
                 </div>
+
+                <!-- Google Sign-in or User Profile section -->
+                <div id="sidebarUserSection" class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-col gap-3">
+                    <button id="googleSignInBtn" onclick="signInWithGoogle()" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-250 py-2.5 px-4 rounded-2xl shadow-sm hover:bg-gray-50 active:scale-95 transition-all text-sm font-semibold">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24">
+                            <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.555 0-6.437-2.882-6.437-6.437 0-3.555 2.882-6.437 6.437-6.437 1.488 0 2.85.5 3.947 1.341l3.057-3.057C19.167 2.22 15.937 1 12.24 1 5.48 1 0 6.48 0 13.24s5.48 12.24 12.24 12.24c6.76 0 11.76-4.76 11.76-11.76 0-.8-.1-1.57-.26-2.435H12.24z"/>
+                        </svg>
+                        Sign in with Google
+                    </button>
+                    <div id="sidebarUserInfo" class="hidden flex flex-col gap-2.5 w-full text-left">
+                        <div class="flex items-center gap-3">
+                            <img id="userAvatar" src="" class="w-10 h-10 rounded-full border border-gray-200 object-cover shadow-sm">
+                            <div class="flex-1 min-w-0 text-left">
+                                <span id="userName" class="block font-black text-sm text-dark truncate">User Name</span>
+                                <span id="userBalance" class="block text-[10px] text-brand-accent font-black leading-tight">Balance: 0 SYP</span>
+                                <span id="userPoints" class="block text-[10px] text-amber-600 font-bold leading-tight flex items-center gap-0.5 mt-0.5">Points: 0 ⭐</span>
+                            </div>
+                            <button onclick="signOutGoogle()" class="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100 transition-colors shrink-0" title="Sign Out">
+                                <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 mt-1">
+                            <button onclick="openProfileModal(true)" class="flex-1 bg-white border border-gray-200 text-dark font-bold py-1.5 px-2.5 rounded-xl text-[10px] text-center hover:bg-gray-50 flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95">
+                                <i data-lucide="edit-3" class="w-3 h-3 text-gray-500"></i> Edit Profile
+                            </button>
+                            <button onclick="openWalletRewardsPage()" class="flex-1 bg-brand text-white font-bold py-1.5 px-2.5 rounded-xl text-[10px] text-center hover:bg-brand-accent flex items-center justify-center gap-1 shadow-sm transition-all active:scale-95">
+                                <i data-lucide="wallet" class="w-3 h-3"></i> My Rewards
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex-1 overflow-y-auto py-6 flex flex-col gap-2 px-4">
                     <button onclick="navigateTo('home')"
                         class="w-full text-left px-4 py-3 font-bold text-lg rounded-2xl hover:bg-gray-100 flex items-center gap-3 transition-colors">
@@ -329,6 +373,141 @@
             </div>
         </div>
 
+        <!-- Wallet & Loyalty Rewards Overlay -->
+        <div id="wallet-rewards-page"
+            class="fixed inset-0 bg-surface z-[60] flex flex-col slide-up max-w-6xl mx-auto shadow-2xl">
+            <div class="flex justify-between items-center px-6 pt-10 pb-6 bg-surface shrink-0">
+                <div class="text-left">
+                    <h2 class="text-3xl font-black tracking-tight text-dark flex items-center gap-2">
+                        <i data-lucide="wallet" class="w-8 h-8 text-brand"></i> Wallet & Rewards
+                    </h2>
+                    <p class="text-xs text-gray-400">View balances, claim rewards, and browse deals.</p>
+                </div>
+                <button onclick="closeWalletRewardsPage()"
+                    class="p-2.5 bg-gray-100 rounded-full text-dark hover:bg-gray-200 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-8 font-sans">
+                <!-- 1. Balances Card (Vibrant Gradient Card) -->
+                <div class="bg-gradient-to-tr from-brand-accent to-brand rounded-3xl p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden">
+                    <div class="absolute right-0 bottom-0 opacity-10 translate-x-4 translate-y-4">
+                        <i data-lucide="award" class="w-48 h-48"></i>
+                    </div>
+                    <div class="text-left relative z-10">
+                        <span class="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full">Groove Club Member</span>
+                        <h3 id="rewards-user-name" class="text-2xl font-black mt-2">Groove Friend</h3>
+                        <p id="rewards-user-email" class="text-xs opacity-75">friend@groove.com</p>
+                    </div>
+                    <div class="flex gap-8 relative z-10">
+                        <div class="text-left">
+                            <span class="text-[9px] font-bold uppercase tracking-wider opacity-75">Account Balance</span>
+                            <div id="rewards-wallet-balance" class="text-2xl font-black mt-0.5">0 SYP</div>
+                        </div>
+                        <div class="text-left">
+                            <span class="text-[9px] font-bold uppercase tracking-wider opacity-75">Loyalty Points</span>
+                            <div id="rewards-loyalty-points" class="text-2xl font-black mt-0.5 flex items-center gap-1">
+                                0 <i data-lucide="star" class="w-5 h-5 fill-amber-300 text-amber-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Active Promotions -->
+                <div>
+                    <div class="mb-4 text-left">
+                        <h3 class="text-lg font-black text-dark">Special Promotions</h3>
+                        <p class="text-[10px] text-gray-400">Show this page or code at the cashier to redeem active campaigns.</p>
+                    </div>
+                    <div id="rewards-promotions-container" class="flex overflow-x-auto hide-scrollbar gap-4 pb-2">
+                        <!-- Promos will be injected here -->
+                    </div>
+                </div>
+
+                <!-- 3. Gift Card Wallet History Ledger -->
+                <div>
+                    <div class="mb-4 text-left">
+                        <h3 class="text-lg font-black text-dark">Claimed Gift Cards</h3>
+                        <p class="text-[10px] text-gray-400">List of gift cards credited to your account.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-soft">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="bg-gray-50 text-gray-400 font-bold uppercase border-b border-gray-150">
+                                    <tr>
+                                        <th class="px-4 py-3">Code</th>
+                                        <th class="px-4 py-3">Credit Amount</th>
+                                        <th class="px-4 py-3">Points Earned</th>
+                                        <th class="px-4 py-3">Date Claimed</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="claimedGiftCardsTableBody" class="divide-y divide-gray-100 text-gray-500 font-medium">
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">No claimed cards found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Profile Onboarding & Edit Modal -->
+    <div id="profile-modal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-[80] flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-100 transform scale-95 transition-transform duration-300">
+            <div class="flex items-center gap-3 mb-4 text-brand">
+                <div class="p-2.5 bg-brand-light rounded-xl">
+                    <i data-lucide="user" class="w-6 h-6 text-brand-accent animate-bounce"></i>
+                </div>
+                <div class="text-left">
+                    <h3 id="profile-modal-title" class="font-black text-dark text-base sm:text-lg">Set Up Your Profile</h3>
+                    <p class="text-[10px] sm:text-xs text-gray-400">Complete your profile to unlock 100 loyalty points!</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Full Name</label>
+                    <input type="text" id="profile-name"
+                        class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                        placeholder="Your Name">
+                </div>
+                <div class="text-left">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Phone Number</label>
+                    <input type="text" id="profile-phone"
+                        class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                        placeholder="e.g. +963 988 628 045">
+                </div>
+                <div class="text-left">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Birthday</label>
+                    <input type="date" id="profile-birthdate"
+                        class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold">
+                </div>
+                <div class="text-left">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Favorite Drink</label>
+                    <input type="text" id="profile-favorite"
+                        class="w-full text-sm bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                        placeholder="e.g. Spanish Latte, Cappuccino">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button id="btn-close-profile-modal" onclick="closeProfileModal()"
+                    class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-dark rounded-xl font-bold text-xs transition-colors">
+                    Later
+                </button>
+                <button onclick="saveUserProfile()"
+                    class="flex-1 py-3 bg-brand hover:bg-brand-accent text-white rounded-xl font-bold text-xs transition-all shadow-sm active:scale-95">
+                    Save Details
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -359,8 +538,43 @@
             return `src="${url}" onerror="this.onerror=null; this.src='./logo.png';"`;
         }
 
+        async function initializeMockPromotions() {
+            try {
+                const snap = await db.collection('promotions').limit(1).get();
+                if (snap.empty) {
+                    const mockPromos = [
+                        {
+                            title: "Grand Azizieh Launch Offer",
+                            description: "Get 15% off your first custom cup order! Order via WhatsApp using code WELCOME15.",
+                            code: "WELCOME15",
+                            discount: "15% OFF",
+                            image: "https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&q=80&w=600",
+                            isActive: true,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        },
+                        {
+                            title: "Loyalty Points Boost",
+                            description: "Redeem any gift card to earn points! Use points to claim free espresso toppings.",
+                            code: "REDEEMPOINTS",
+                            discount: "POINTS BONUS",
+                            image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&q=80&w=600",
+                            isActive: true,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }
+                    ];
+                    for (const promo of mockPromos) {
+                        await db.collection('promotions').add(promo);
+                    }
+                    console.log("Mock promotions initialized.");
+                }
+            } catch(e) {
+                console.error("Error setting up mock promotions:", e);
+            }
+        }
+
         // --- Fetch Data from Firebase ---
         async function fetchData() {
+            initializeMockPromotions();
             try {
                 // 1. Fetch App Settings (Logo, Carousel)
                 db.collection('settings').doc('app').onSnapshot((doc) => {
@@ -668,9 +882,388 @@
             }
         }
 
+        // --- Auth & Profile State ---
+        let currentUser = null;
+        let userBalanceListener = null;
+
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    console.log("Logged in with Google:", result.user);
+                })
+                .catch((error) => {
+                    console.error("Auth error:", error);
+                    alert("Error signing in: " + error.message);
+                });
+        }
+
+        function signOutGoogle() {
+            if (confirm("Are you sure you want to sign out?")) {
+                if (userBalanceListener) userBalanceListener();
+                firebase.auth().signOut().then(() => {
+                    document.getElementById('myCreationsSection').classList.add('hidden');
+                });
+            }
+        }
+
+        function listenToAuthChanges() {
+            firebase.auth().onAuthStateChanged((user) => {
+                currentUser = user;
+                const signInBtn = document.getElementById('googleSignInBtn');
+                const userInfo = document.getElementById('sidebarUserInfo');
+                if (user) {
+                    if (signInBtn) signInBtn.classList.add('hidden');
+                    if (userInfo) userInfo.classList.remove('hidden');
+                    document.getElementById('userAvatar').src = user.photoURL || './logo.png';
+                    document.getElementById('userName').innerText = user.displayName || 'Groove Friend';
+
+                    if (userBalanceListener) userBalanceListener();
+                    userBalanceListener = db.collection('users').doc(user.uid).onSnapshot((doc) => {
+                        let balance = 0;
+                        let points = 0;
+                        if (doc.exists) {
+                            const data = doc.data();
+                            balance = data.balance || 0;
+                            points = data.points || 0;
+
+                            // Fill editing form inputs with existing data
+                            document.getElementById('profile-name').value = data.displayName || user.displayName || '';
+                            document.getElementById('profile-phone').value = data.phone || '';
+                            document.getElementById('profile-birthdate').value = data.birthdate || '';
+                            document.getElementById('profile-favorite').value = data.favoriteDrink || '';
+
+                            // Trigger onboarding modal if profile details (phone / birthdate) are missing
+                            if (!data.phone || !data.birthdate) {
+                                setTimeout(() => {
+                                    openProfileModal(false); // Force onboarding (cannot close)
+                                }, 1500);
+                            }
+                        } else {
+                            db.collection('users').doc(user.uid).set({
+                                displayName: user.displayName,
+                                email: user.email,
+                                balance: 0,
+                                points: 0,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            }, { merge: true });
+
+                            setTimeout(() => {
+                                openProfileModal(false);
+                            }, 1500);
+                        }
+                        document.getElementById('userBalance').innerText = `Balance: ${balance.toLocaleString()} SYP`;
+                        document.getElementById('userPoints').innerText = `Points: ${points.toLocaleString()} ⭐`;
+                    });
+
+                    fetchUserCreations(user.uid);
+                } else {
+                    if (signInBtn) signInBtn.classList.remove('hidden');
+                    if (userInfo) userInfo.classList.add('hidden');
+                    if (userBalanceListener) {
+                        userBalanceListener();
+                        userBalanceListener = null;
+                    }
+                    document.getElementById('myCreationsSection').classList.add('hidden');
+                }
+            });
+        }
+
+        // --- Profile Management ---
+        function openProfileModal(allowClose = true) {
+            const modal = document.getElementById('profile-modal');
+            const closeBtn = document.getElementById('btn-close-profile-modal');
+            if (allowClose) {
+                closeBtn.classList.remove('hidden');
+            } else {
+                closeBtn.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeProfileModal() {
+            const modal = document.getElementById('profile-modal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        async function saveUserProfile() {
+            if (!currentUser) return;
+            const name = document.getElementById('profile-name').value.trim();
+            const phone = document.getElementById('profile-phone').value.trim();
+            const birthdate = document.getElementById('profile-birthdate').value;
+            const favorite = document.getElementById('profile-favorite').value.trim();
+
+            if (!name || !phone || !birthdate) {
+                alert("Please fill in your name, phone number, and birthdate.");
+                return;
+            }
+
+            try {
+                const userRef = db.collection('users').doc(currentUser.uid);
+                
+                await db.runTransaction(async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    let currentPoints = 0;
+                    let isFirstTime = true;
+
+                    if (userDoc.exists) {
+                        const data = userDoc.data();
+                        currentPoints = data.points || 0;
+                        if (data.phone && data.birthdate) {
+                            isFirstTime = false;
+                        }
+                    }
+
+                    let rewardPoints = 0;
+                    if (isFirstTime) {
+                        rewardPoints = 100; // 100 welcome loyalty points!
+                    }
+
+                    transaction.set(userRef, {
+                        displayName: name,
+                        phone: phone,
+                        birthdate: birthdate,
+                        favoriteDrink: favorite,
+                        points: currentPoints + rewardPoints,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    return { isFirstTime, rewardPoints };
+                }).then((res) => {
+                    if (res.isFirstTime) {
+                        alert(`Profile saved successfully! You earned ${res.rewardPoints} welcome points! 🎉`);
+                    } else {
+                        alert("Profile details updated successfully!");
+                    }
+                    closeProfileModal();
+                });
+
+            } catch (err) {
+                console.error("Error saving profile details:", err);
+                alert("Failed to save profile. Please try again.");
+            }
+        }
+
+        // --- Wallet & Loyalty Rewards Page ---
+        let giftCardHistoryListener = null;
+        let promotionsListener = null;
+
+        function openWalletRewardsPage() {
+            if (!currentUser) {
+                alert("Please sign in first to view rewards.");
+                return;
+            }
+            toggleSidebar(false);
+
+            const page = document.getElementById('wallet-rewards-page');
+            page.classList.remove('hidden');
+            setTimeout(() => {
+                page.classList.remove('translate-y-full');
+            }, 10);
+
+            // Bind Header user details
+            document.getElementById('rewards-user-name').innerText = currentUser.displayName || 'Groove Friend';
+            document.getElementById('rewards-user-email').innerText = currentUser.email || 'friend@groove.com';
+
+            // Real-time listener for current balance & points in this page
+            db.collection('users').doc(currentUser.uid).get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('rewards-wallet-balance').innerText = `${(data.balance || 0).toLocaleString()} SYP`;
+                    document.getElementById('rewards-loyalty-points').innerHTML = `${(data.points || 0).toLocaleString()} <i data-lucide="star" class="w-5 h-5 fill-amber-300 text-amber-300 inline"></i>`;
+                    lucide.createIcons();
+                }
+            });
+
+            // Bind Claimed Gift Cards
+            if (giftCardHistoryListener) giftCardHistoryListener();
+            giftCardHistoryListener = db.collection('gift_cards')
+                .where('redeemedBy', '==', currentUser.uid)
+                .onSnapshot((snap) => {
+                    const tbody = document.getElementById('claimedGiftCardsTableBody');
+                    if (snap.empty) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-gray-400 italic">No claimed cards found.</td></tr>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    snap.forEach(doc => {
+                        const card = doc.data();
+                        const claimDate = card.redeemedAt ? new Date(card.redeemedAt.seconds * 1000).toLocaleDateString() : '-';
+                        const pointsAwarded = Math.floor((card.amount || 0) / 100); // 10 points per 1,000 SYP
+                        html += `
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-4 py-3 font-mono font-bold text-dark text-left">${card.code}</td>
+                                <td class="px-4 py-3 font-bold text-brand-accent text-left">${(card.amount || 0).toLocaleString()} SYP</td>
+                                <td class="px-4 py-3 text-amber-600 font-bold text-left">+${pointsAwarded} ⭐</td>
+                                <td class="px-4 py-3 text-gray-400 font-semibold text-left">${claimDate}</td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                });
+
+            // Bind Active Promotions
+            if (promotionsListener) promotionsListener();
+            promotionsListener = db.collection('promotions')
+                .where('isActive', '==', true)
+                .onSnapshot((snap) => {
+                    const container = document.getElementById('rewards-promotions-container');
+                    if (snap.empty) {
+                        // Render fallback promotions
+                        container.innerHTML = `
+                            <div class="w-72 shrink-0 bg-white border border-gray-150 rounded-3xl p-4 shadow-soft text-left flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[8px] font-extrabold uppercase bg-brand-light text-brand-accent px-2 py-0.5 rounded-full">New Promotion</span>
+                                    <h4 class="font-bold text-sm text-dark mt-2">Azizieh Welcome Package</h4>
+                                    <p class="text-[10px] text-gray-400 mt-1">Get 10% off your next customization using the code WELCOME10.</p>
+                                </div>
+                                <div class="mt-4 border-t border-gray-100 pt-3 flex justify-between items-center">
+                                    <span class="text-xs font-black text-brand-accent">10% OFF</span>
+                                    <span class="text-[9px] font-mono bg-gray-100 px-2 py-1 rounded-md text-gray-600 font-bold">WELCOME10</span>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = '';
+                    snap.forEach(doc => {
+                        const promo = doc.data();
+                        const promoImg = promo.image || 'https://images.unsplash.com/photo-1507133750040-4a8f57021571?auto=format&fit=crop&q=80&w=600';
+                        html += `
+                            <div class="w-80 shrink-0 bg-white border border-gray-150 rounded-3xl overflow-hidden shadow-soft text-left flex flex-col">
+                                <img src="${promoImg}" class="h-28 w-full object-cover">
+                                <div class="p-4 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[8px] font-extrabold uppercase bg-brand-light text-brand-accent px-2.5 py-1 rounded-full">${promo.discount || 'PROMOTION'}</span>
+                                        <h4 class="font-bold text-sm text-dark mt-2 leading-tight">${promo.title}</h4>
+                                        <p class="text-[10px] text-gray-400 mt-1 leading-normal">${promo.description}</p>
+                                    </div>
+                                    <div class="mt-4 border-t border-gray-100 pt-3 flex justify-between items-center">
+                                        <span class="text-xs font-black text-brand-accent">${promo.discount}</span>
+                                        <span class="text-[9px] font-mono bg-gray-100 px-2.5 py-1 rounded-lg text-gray-600 font-bold select-all">${promo.code}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                });
+        }
+
+        function closeWalletRewardsPage() {
+            const page = document.getElementById('wallet-rewards-page');
+            page.classList.add('translate-y-full');
+            setTimeout(() => {
+                page.classList.add('hidden');
+            }, 400);
+
+            if (giftCardHistoryListener) {
+                giftCardHistoryListener();
+                giftCardHistoryListener = null;
+            }
+            if (promotionsListener) {
+                promotionsListener();
+                promotionsListener = null;
+            }
+        }
+
+        async function fetchUserCreations(userId) {
+            try {
+                db.collection('custom_recipes')
+                    .where('userId', '==', userId)
+                    .onSnapshot((querySnapshot) => {
+                        const creations = [];
+                        querySnapshot.forEach((doc) => {
+                            creations.push({ id: doc.id, ...doc.data() });
+                        });
+                        renderCreationsShelf(creations);
+                    });
+            } catch (err) {
+                console.error("Error fetching custom creations:", err);
+            }
+        }
+
+        function renderCreationsShelf(creations) {
+            const shelf = document.getElementById('myCreationsSection');
+            const container = document.getElementById('myCreationsContainer');
+            if (creations.length === 0) {
+                shelf.classList.add('hidden');
+                return;
+            }
+            shelf.classList.remove('hidden');
+            container.innerHTML = creations.map((item) => {
+                const baseName = (item.recipe && item.recipe.currentBase) || 'espresso';
+                return `
+                    <div class="w-56 shrink-0 flex flex-col bg-white rounded-3xl p-4 shadow-soft hover:shadow-md border border-gray-100 transition-all text-left">
+                        <div class="w-full aspect-square rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center relative mb-3">
+                            <span class="text-5xl select-none">☕</span>
+                            <span class="absolute top-2 right-2 text-[8px] bg-brand-light text-brand-accent px-2.5 py-1 rounded-full font-black uppercase tracking-wider">${baseName}</span>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-base leading-tight text-dark mb-1 line-clamp-1">${item.name}</h3>
+                                <p class="text-[10px] text-gray-400 font-semibold mb-2">${item.volume || '250ml'} • ${item.estimatedPrice || '0 SYP'}</p>
+                            </div>
+                            <div class="flex gap-1.5 mt-2">
+                                <a href="./builder.html?recipeId=${item.id}" class="flex-1 bg-brand-light hover:bg-brand/15 text-brand-accent font-black py-2 rounded-xl text-center text-xs transition-colors flex items-center justify-center gap-1">
+                                    <i data-lucide="edit-2" class="w-3 h-3"></i> Edit
+                                </a>
+                                <button onclick="orderViaWhatsAppDirect('${item.name.replace(/'/g, "\\'")}', '${baseName}', '${item.volume}', '${item.estimatedPrice}', ${JSON.stringify(item.recipe || {}).replace(/"/g, '&quot;')})" class="flex-1 bg-brand text-white font-black py-2 rounded-xl text-xs hover:bg-brand-accent transition-colors flex items-center justify-center gap-1 shadow-sm">
+                                    <i data-lucide="phone" class="w-3 h-3"></i> Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function orderViaWhatsAppDirect(name, base, volume, price, recipe) {
+            const phone = "963988628045";
+            let additions = [];
+            const espressoVol = (recipe.espressoType === 'single' ? 30 : recipe.espressoType === 'decaf' ? 30 : 60);
+            const shotLabel = recipe.espressoType ? (recipe.espressoType.charAt(0).toUpperCase() + recipe.espressoType.slice(1)) : 'Double';
+
+            additions.push(`Espresso: ${shotLabel} Shot (${espressoVol}ml)`);
+            if (recipe.milkVolume > 0) additions.push(`Fresh Milk (${recipe.milkVolume}ml)`);
+            if (recipe.waterVolume > 0) additions.push(`Hot Water (${recipe.waterVolume}ml)`);
+            if (recipe.coldFoam) additions.push("Cold Foam 🧊");
+            if (recipe.whippedCream) additions.push("Whipped Cream ✨");
+            if (recipe.ice) additions.push("Ice Cubes 🧊");
+
+            if (recipe.syrups) {
+                Object.keys(recipe.syrups).forEach(flavor => {
+                    if (recipe.syrups[flavor] > 0) {
+                        const flName = flavor.charAt(0).toUpperCase() + flavor.slice(1);
+                        additions.push(`${flName} Syrup (Pumps: ${recipe.syrups[flavor]})`);
+                    }
+                });
+            }
+
+            const additionsText = additions.length > 0 ? additions.map(a => `   - ${a}`).join('\n') : '   - None';
+            const baseText = `Base Category: ${base.toUpperCase()}`;
+            const message = `Hello Groove! ☕\nI want to order my custom visual coffee recipe "${name}" that I created on your website:\n\n*${baseText}*\n*Ratios & Ingredients:*\n${additionsText}\n\n*Total Volume:* ${volume}\n*Estimated Price:* ${price}\n\nPlease prepare it for me. Thank you! ❤️`;
+
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
         // Initialize App
         window.onload = () => {
             fetchData();
+            listenToAuthChanges();
 
             // Register Service Worker for PWA
             if ('serviceWorker' in navigator) {

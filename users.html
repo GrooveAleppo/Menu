@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groove — Customer Accounts</title>
+    <meta name="description"
+        content="Groove Coffee Shop admin panel for managing customer accounts, loyalty points, and wallet balances.">
+    <link rel="shortcut icon" href="./assets/Favicon.png" type="image/png">
+    <script src="./tailwindcss.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./shared-nav.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap"
+        rel="stylesheet">
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUtaq22wuKtAZHtcYnta_sXHNJWkEoAiQ",
+            authDomain: "groove-menu.firebaseapp.com",
+            projectId: "groove-menu",
+            storageBucket: "groove-menu.firebasestorage.app",
+            messagingSenderId: "622362545565",
+            appId: "1:622362545565:web:7fc736c19970fd558c7374",
+            measurementId: "G-D35FC0ZMDB"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { DEFAULT: '#7b937e', light: '#eef2ef', accent: '#5f7561' },
+                        dark: '#0f1411',
+                        surface: '#f7f9f7',
+                        'gray-150': '#e8ede9'
+                    },
+                    boxShadow: {
+                        soft: '0 4px 20px -2px rgba(123,147,126,0.12)',
+                        hard: '0 12px 40px -8px rgba(0,0,0,0.20)',
+                        card: '0 2px 12px -1px rgba(95,117,97,0.10)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-row:hover .row-actions {
+            opacity: 1;
+        }
+
+        .row-actions {
+            opacity: 0;
+            transition: opacity .18s;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .stat-card {
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px -4px rgba(95, 117, 97, 0.18);
+        }
+
+        .chip-tier-gold {
+            background: linear-gradient(135deg, #d4af37, #f5e07a, #c9982a);
+        }
+
+        .chip-tier-silver {
+            background: linear-gradient(135deg, #9ca3af, #e5e7eb, #9ca3af);
+        }
+
+        .chip-tier-bronze {
+            background: linear-gradient(135deg, #a16207, #d97706, #92400e);
+        }
+
+        /* Detail drawer */
+        #user-drawer {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+        }
+
+        #user-drawer.open {
+            transform: translateX(0);
+        }
+
+        #drawer-overlay {
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-dark antialiased min-h-screen font-sans">
+
+    <!-- Auth Lock Overlay -->
+    <div id="auth-lock" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-hard text-center space-y-5 slide-in">
+            <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="lock" class="w-8 h-8 text-amber-500"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-dark">Admin Access Only</h2>
+                <p class="text-sm text-gray-500 mt-1">Sign in to manage customer accounts.</p>
+            </div>
+            <a href="./settings.html"
+                class="block w-full bg-brand text-white font-bold py-3 rounded-2xl text-sm hover:bg-brand-accent transition-all">
+                Go to Login Page
+            </a>
+        </div>
+    </div>
+
+    <!-- Drawer Overlay -->
+    <div id="drawer-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40 hidden opacity-0"
+        onclick="closeDrawer()"></div>
+
+    <!-- User Detail Drawer -->
+    <div id="user-drawer"
+        class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-hard z-50 flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
+            <h3 class="font-black text-dark text-base flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-4.5 h-4.5 text-brand"></i>
+                Edit Account
+            </h3>
+            <button onclick="closeDrawer()" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+            <!-- Avatar + name -->
+            <div class="flex items-center gap-4">
+                <div id="drawer-avatar"
+                    class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white shrink-0 bg-brand">
+                </div>
+                <div>
+                    <div id="drawer-name" class="font-black text-dark text-lg leading-tight"></div>
+                    <div id="drawer-email" class="text-xs text-gray-400 font-semibold mt-0.5"></div>
+                    <div id="drawer-tier-badge"
+                        class="inline-flex items-center gap-1 mt-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wide">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editable Fields -->
+            <div class="space-y-3">
+                <div class="bg-surface border border-gray-200 rounded-xl p-3.5 flex flex-col gap-0.5">
+                    <label class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Display Name</label>
+                    <input id="edit-name" type="text"
+                        class="text-sm font-bold outline-none bg-transparent placeholder-gray-300"
+                        placeholder="Full name">
+                </div>
+                <div class="bg-surface border border-gray-200 rounded-xl p-3.5 flex flex-col gap-0.5">
+                    <label class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Phone Number</label>
+                    <input id="edit-phone" type="tel"
+                        class="text-sm font-bold outline-none bg-transparent placeholder-gray-300"
+                        placeholder="+963 9xx xxx xxxx">
+                </div>
+                <div class="bg-surface border border-gray-200 rounded-xl p-3.5 flex flex-col gap-0.5">
+                    <label class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Favorite Drink</label>
+                    <input id="edit-drink" type="text"
+                        class="text-sm font-bold outline-none bg-transparent placeholder-gray-300"
+                        placeholder="Caramel Latte, etc.">
+                </div>
+            </div>
+
+            <!-- Balance & Points controls -->
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Balance -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-card space-y-2">
+                    <div class="text-[8px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1">
+                        <i data-lucide="wallet" class="w-3 h-3"></i> Wallet (SYP)
+                    </div>
+                    <div id="drawer-balance-display" class="text-xl font-black text-dark">0</div>
+                    <div class="flex gap-1 pt-1">
+                        <input id="adj-balance" type="number"
+                            class="flex-1 min-w-0 text-xs bg-surface border border-gray-200 rounded-lg px-2 py-1.5 outline-none font-bold"
+                            placeholder="±amount">
+                        <button onclick="adjustField('balance')"
+                            class="bg-brand text-white text-xs font-black px-2.5 rounded-lg shrink-0 hover:bg-brand-accent transition-colors">+/−</button>
+                    </div>
+                </div>
+                <!-- Points -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-card space-y-2">
+                    <div class="text-[8px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1">
+                        <i data-lucide="star" class="w-3 h-3 text-amber-400"></i> Points (⭐)
+                    </div>
+                    <div id="drawer-points-display" class="text-xl font-black text-dark">0</div>
+                    <div class="flex gap-1 pt-1">
+                        <input id="adj-points" type="number"
+                            class="flex-1 min-w-0 text-xs bg-surface border border-gray-200 rounded-lg px-2 py-1.5 outline-none font-bold"
+                            placeholder="±pts">
+                        <button onclick="adjustField('points')"
+                            class="bg-amber-400 text-white text-xs font-black px-2.5 rounded-lg shrink-0 hover:bg-amber-500 transition-colors">+/−</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent activity -->
+            <div>
+                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <i data-lucide="clock-3" class="w-3 h-3"></i> Recent Orders
+                </h4>
+                <div id="drawer-orders" class="space-y-1.5 text-xs text-gray-500 italic">Loading…</div>
+            </div>
+        </div>
+
+        <div class="shrink-0 p-5 border-t border-gray-100 grid grid-cols-2 gap-3">
+            <button onclick="deleteUser()"
+                class="bg-red-50 text-red-500 font-black py-3 rounded-2xl text-sm hover:bg-red-100 transition-all flex items-center justify-center gap-1.5">
+                <i data-lucide="trash-2" class="w-4 h-4"></i> Delete
+            </button>
+            <button onclick="saveUser()"
+                class="bg-brand text-white font-black py-3 rounded-2xl text-sm hover:bg-brand-accent transition-all flex items-center justify-center gap-1.5">
+                <i data-lucide="save" class="w-4 h-4"></i> Save Changes
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="min-h-screen flex flex-col">
+
+
+        <main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6">
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="stat-card bg-white border border-gray-150 rounded-2xl p-4 shadow-card text-left">
+                    <div
+                        class="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <i data-lucide="users" class="w-3 h-3"></i> Total Members</div>
+                    <div id="s-total" class="text-2xl font-black text-dark">—</div>
+                </div>
+                <div class="stat-card bg-white border border-gray-150 rounded-2xl p-4 shadow-card text-left">
+                    <div
+                        class="text-[9px] font-black text-amber-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <i data-lucide="star" class="w-3 h-3"></i> Total Points</div>
+                    <div id="s-points" class="text-2xl font-black text-dark">—</div>
+                </div>
+                <div class="stat-card bg-white border border-gray-150 rounded-2xl p-4 shadow-card text-left">
+                    <div
+                        class="text-[9px] font-black text-brand-accent uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <i data-lucide="wallet" class="w-3 h-3"></i> Total Balances</div>
+                    <div id="s-balance" class="text-2xl font-black text-dark">—</div>
+                </div>
+                <div class="stat-card bg-white border border-gray-150 rounded-2xl p-4 shadow-card text-left">
+                    <div
+                        class="text-[9px] font-black text-purple-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <i data-lucide="award" class="w-3 h-3"></i> Gold Members</div>
+                    <div id="s-gold" class="text-2xl font-black text-dark">—</div>
+                </div>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div
+                class="bg-white border border-gray-150 rounded-2xl p-3 sm:p-4 shadow-card flex flex-wrap gap-3 items-center justify-between">
+                <div
+                    class="flex items-center gap-2 bg-surface border border-gray-200 rounded-xl px-3.5 py-2.5 flex-1 min-w-[180px] max-w-sm">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 shrink-0"></i>
+                    <input id="search-input" type="text" oninput="renderUsers()"
+                        class="text-xs font-semibold outline-none bg-transparent w-full placeholder-gray-300"
+                        placeholder="Search name, email, or phone…">
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="sort-select" onchange="renderUsers()"
+                        class="text-xs bg-surface border border-gray-200 rounded-xl px-3 py-2.5 font-bold outline-none">
+                        <option value="name">Sort: Name</option>
+                        <option value="balance">Sort: Balance ↓</option>
+                        <option value="points">Sort: Points ↓</option>
+                        <option value="newest">Sort: Newest</option>
+                    </select>
+                    <select id="filter-tier" onchange="renderUsers()"
+                        class="text-xs bg-surface border border-gray-200 rounded-xl px-3 py-2.5 font-bold outline-none">
+                        <option value="">All Tiers</option>
+                        <option value="Gold">🥇 Gold</option>
+                        <option value="Silver">🥈 Silver</option>
+                        <option value="Bronze">🥉 Bronze</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- User Cards Grid -->
+            <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
+                    <i data-lucide="loader" class="w-8 h-8 animate-spin"></i>
+                    <span class="text-xs font-bold">Fetching customer data…</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-dark text-white text-xs font-bold py-2.5 px-5 rounded-2xl shadow-hard opacity-0 pointer-events-none transition-all duration-300 z-50">
+    </div>
+
+    <script>
+        let allUsers = [];
+        let activeUID = null;
+        let activeUserData = null;
+
+        // ─── Auth ───────────────────────────────────────────────────────────────
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('auth-lock').classList.add('hidden');
+                loadUsers();
+            }
+            lucide.createIcons();
+        });
+
+        // ─── Load users ─────────────────────────────────────────────────────────
+        async function loadUsers() {
+            try {
+                const snap = await db.collection('users').get();
+                allUsers = [];
+                let totalPts = 0, totalBal = 0, goldCount = 0;
+
+                snap.forEach(doc => {
+                    const u = { uid: doc.id, ...doc.data() };
+                    allUsers.push(u);
+                    totalPts += u.points || 0;
+                    totalBal += u.balance || 0;
+                    if (getTier(u.points || 0) === 'Gold') goldCount++;
+                });
+
+                document.getElementById('s-total').innerText = allUsers.length;
+                document.getElementById('s-points').innerText = totalPts.toLocaleString();
+                document.getElementById('s-balance').innerText = (totalBal / 1000).toFixed(0) + 'K SYP';
+                document.getElementById('s-gold').innerText = goldCount;
+
+                const badge = document.getElementById('user-count-badge');
+                badge.innerText = `${allUsers.length} users`;
+                badge.classList.remove('hidden');
+
+                renderUsers();
+            } catch (e) {
+                console.error('Load users error:', e);
+                showToast('Failed to load users: ' + e.message);
+            }
+        }
+
+        // ─── Tier logic ─────────────────────────────────────────────────────────
+        function getTier(points) {
+            if (points >= 1000) return 'Gold';
+            if (points >= 300) return 'Silver';
+            return 'Bronze';
+        }
+        function getTierColor(tier) {
+            return tier === 'Gold' ? 'bg-amber-100 text-amber-700' :
+                tier === 'Silver' ? 'bg-gray-100 text-gray-600' :
+                    'bg-orange-100 text-orange-700';
+        }
+        function getTierIcon(tier) {
+            return tier === 'Gold' ? '🥇' : tier === 'Silver' ? '🥈' : '🥉';
+        }
+
+        // ─── Avatar initials ─────────────────────────────────────────────────────
+        function avatarBg(name) {
+            const colors = ['#7b937e', '#5f7561', '#8fa37f', '#6b8f71', '#4a7a50', '#3d6b46', '#9ab49c', '#8aad8c'];
+            let hash = 0;
+            for (let c of (name || '?')) hash = c.charCodeAt(0) + (hash << 5) - hash;
+            return colors[Math.abs(hash) % colors.length];
+        }
+        function initials(name) {
+            return (name || '?').split(' ').map(w => w[0] || '').slice(0, 2).join('').toUpperCase();
+        }
+
+        // ─── Render grid ─────────────────────────────────────────────────────────
+        function renderUsers() {
+            const q = document.getElementById('search-input').value.toLowerCase();
+            const sort = document.getElementById('sort-select').value;
+            const tierFilter = document.getElementById('filter-tier').value;
+
+            let list = allUsers.filter(u => {
+                const match =
+                    (u.displayName || '').toLowerCase().includes(q) ||
+                    (u.email || '').toLowerCase().includes(q) ||
+                    (u.phone || '').toLowerCase().includes(q);
+                const tier = tierFilter ? getTier(u.points || 0) === tierFilter : true;
+                return match && tier;
+            });
+
+            list = list.sort((a, b) => {
+                if (sort === 'balance') return (b.balance || 0) - (a.balance || 0);
+                if (sort === 'points') return (b.points || 0) - (a.points || 0);
+                if (sort === 'newest') return ((b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                return (a.displayName || '').localeCompare(b.displayName || '');
+            });
+
+            const grid = document.getElementById('users-grid');
+            if (!list.length) {
+                grid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
+                        <i data-lucide="user-x" class="w-8 h-8"></i>
+                        <span class="text-xs font-bold">No customers match your filters.</span>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = list.map(u => {
+                const tier = getTier(u.points || 0);
+                const bal = (u.balance || 0).toLocaleString();
+                const pts = (u.points || 0).toLocaleString();
+                const bg = avatarBg(u.displayName);
+                const ini = initials(u.displayName);
+                const tierCol = getTierColor(tier);
+                const tierIco = getTierIcon(tier);
+
+                return `
+                <div class="user-row bg-white border border-gray-150 rounded-2xl shadow-card hover:shadow-soft hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col"
+                     onclick="openDrawer('${u.uid}')">
+                    <!-- Card top accent line -->
+                    <div class="h-1 w-full ${tier === 'Gold' ? 'bg-gradient-to-r from-amber-400 to-yellow-300' : tier === 'Silver' ? 'bg-gradient-to-r from-gray-300 to-gray-400' : 'bg-gradient-to-r from-orange-400 to-amber-600'}"></div>
+
+                    <div class="p-4 flex flex-col gap-3 flex-1">
+                        <!-- Header -->
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl flex items-center justify-center text-base font-black text-white shrink-0"
+                                 style="background:${bg}">${ini}</div>
+                            <div class="min-w-0 flex-1">
+                                <div class="font-black text-sm text-dark truncate">${u.displayName || 'Unnamed User'}</div>
+                                <div class="text-[10px] text-gray-400 font-semibold truncate">${u.email || 'No email'}</div>
+                            </div>
+                            <span class="shrink-0 ${tierCol} text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide">${tierIco} ${tier}</span>
+                        </div>
+
+                        <!-- Stats row -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-brand-light rounded-xl p-2.5 text-center">
+                                <div class="text-[8px] font-black text-brand-accent uppercase tracking-wide mb-0.5">Balance</div>
+                                <div class="text-sm font-black text-dark leading-tight">${bal}</div>
+                                <div class="text-[8px] text-gray-400 font-semibold">SYP</div>
+                            </div>
+                            <div class="bg-amber-50 rounded-xl p-2.5 text-center">
+                                <div class="text-[8px] font-black text-amber-600 uppercase tracking-wide mb-0.5">Points</div>
+                                <div class="text-sm font-black text-dark leading-tight">${pts}</div>
+                                <div class="text-[8px] text-gray-400 font-semibold">⭐ pts</div>
+                            </div>
+                        </div>
+
+                        <!-- Extra details -->
+                        <div class="space-y-1 text-[10px]">
+                            ${u.phone ? `<div class="flex items-center gap-1.5 text-gray-500"><i data-lucide="phone" class="w-3 h-3 shrink-0"></i>${u.phone}</div>` : ''}
+                            ${u.favoriteDrink ? `<div class="flex items-center gap-1.5 text-gray-500"><i data-lucide="coffee" class="w-3 h-3 shrink-0"></i>${u.favoriteDrink}</div>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="row-actions border-t border-gray-100 px-4 py-2.5 flex justify-between items-center bg-surface/60">
+                        <span class="text-[9px] text-gray-400 font-semibold">Click to edit</span>
+                        <span class="text-[9px] font-black text-brand-accent flex items-center gap-1">
+                            <i data-lucide="edit-3" class="w-3 h-3"></i> Manage
+                        </span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // ─── Drawer ──────────────────────────────────────────────────────────────
+        async function openDrawer(uid) {
+            const user = allUsers.find(u => u.uid === uid);
+            if (!user) return;
+
+            activeUID = uid;
+            activeUserData = { ...user };
+
+            const bg = avatarBg(user.displayName);
+            const tier = getTier(user.points || 0);
+
+            document.getElementById('drawer-avatar').style.background = bg;
+            document.getElementById('drawer-avatar').innerText = initials(user.displayName);
+            document.getElementById('drawer-name').innerText = user.displayName || 'Unnamed';
+            document.getElementById('drawer-email').innerText = user.email || '—';
+
+            const badge = document.getElementById('drawer-tier-badge');
+            badge.innerText = `${getTierIcon(tier)} ${tier} Member`;
+            badge.className = `inline-flex items-center gap-1 mt-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wide ${getTierColor(tier)}`;
+
+            document.getElementById('edit-name').value = user.displayName || '';
+            document.getElementById('edit-phone').value = user.phone || '';
+            document.getElementById('edit-drink').value = user.favoriteDrink || '';
+            document.getElementById('drawer-balance-display').innerText = (user.balance || 0).toLocaleString() + ' SYP';
+            document.getElementById('drawer-points-display').innerText = (user.points || 0).toLocaleString() + ' pts';
+            document.getElementById('adj-balance').value = '';
+            document.getElementById('adj-points').value = '';
+
+            // Load recent orders
+            loadOrders(uid);
+
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('user-drawer');
+            overlay.classList.remove('hidden');
+            setTimeout(() => { overlay.style.opacity = '1'; drawer.classList.add('open'); }, 10);
+            lucide.createIcons();
+        }
+
+        async function loadOrders(uid) {
+            const box = document.getElementById('drawer-orders');
+            box.innerHTML = '<span class="text-gray-300">Loading orders…</span>';
+            try {
+                const snap = await db.collection('orders').where('userId', '==', uid).orderBy('timestamp', 'desc').limit(5).get();
+                if (snap.empty) { box.innerHTML = '<span class="text-gray-300 italic">No orders found.</span>'; return; }
+                box.innerHTML = snap.docs.map(doc => {
+                    const o = doc.data();
+                    const date = o.timestamp ? new Date(o.timestamp.seconds * 1000).toLocaleDateString('en-GB') : '—';
+                    const total = (o.total || 0).toLocaleString();
+                    return `<div class="flex justify-between items-center py-1.5 border-b border-gray-100">
+                        <span class="font-semibold text-dark">${date}</span>
+                        <span class="font-black text-brand-accent">${total} SYP</span>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                box.innerHTML = `<span class="text-gray-300 italic">Could not load orders.</span>`;
+            }
+        }
+
+        function closeDrawer() {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('user-drawer');
+            overlay.style.opacity = '0';
+            drawer.classList.remove('open');
+            setTimeout(() => overlay.classList.add('hidden'), 320);
+            activeUID = null;
+            activeUserData = null;
+        }
+
+        // ─── Adjust balance / points ─────────────────────────────────────────────
+        async function adjustField(field) {
+            if (!activeUID) return;
+            const inputId = field === 'balance' ? 'adj-balance' : 'adj-points';
+            const delta = parseFloat(document.getElementById(inputId).value);
+            if (isNaN(delta)) { showToast('Enter a valid number.'); return; }
+
+            const user = allUsers.find(u => u.uid === activeUID);
+            const current = user[field] || 0;
+            const newVal = Math.max(0, current + delta);
+
+            try {
+                await db.collection('users').doc(activeUID).set({ [field]: newVal, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                user[field] = newVal;
+                const displayId = field === 'balance' ? 'drawer-balance-display' : 'drawer-points-display';
+                const suffix = field === 'balance' ? ' SYP' : ' pts';
+                document.getElementById(displayId).innerText = newVal.toLocaleString() + suffix;
+                document.getElementById(inputId).value = '';
+                showToast(`${field === 'balance' ? 'Balance' : 'Points'} updated to ${newVal.toLocaleString()}`);
+                loadUsers();
+            } catch (e) { showToast('Error: ' + e.message); }
+        }
+
+        // ─── Save user profile ───────────────────────────────────────────────────
+        async function saveUser() {
+            if (!activeUID) return;
+            const updates = {
+                displayName: document.getElementById('edit-name').value.trim() || activeUserData.displayName,
+                phone: document.getElementById('edit-phone').value.trim(),
+                favoriteDrink: document.getElementById('edit-drink').value.trim(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            try {
+                await db.collection('users').doc(activeUID).set(updates, { merge: true });
+                const user = allUsers.find(u => u.uid === activeUID);
+                Object.assign(user, updates);
+                showToast('Profile saved ✓');
+                closeDrawer();
+                renderUsers();
+            } catch (e) { showToast('Error: ' + e.message); }
+        }
+
+        // ─── Delete user ─────────────────────────────────────────────────────────
+        async function deleteUser() {
+            if (!activeUID) return;
+            const user = allUsers.find(u => u.uid === activeUID);
+            if (!confirm(`Permanently delete account for "${user?.displayName || user?.email}"? This cannot be undone.`)) return;
+            try {
+                await db.collection('users').doc(activeUID).delete();
+                allUsers = allUsers.filter(u => u.uid !== activeUID);
+                closeDrawer();
+                renderUsers();
+                showToast('Account deleted.');
+            } catch (e) { showToast('Error: ' + e.message); }
+        }
+
+        // ─── Toast helper ────────────────────────────────────────────────────────
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = '1';
+            t.style.transform = 'translate(-50%, 0)';
+            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 8px)'; }, 2800);
+        }
+    </script>
+</body>
+
+</html>

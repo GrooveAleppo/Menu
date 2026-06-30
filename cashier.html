@@ -12,12 +12,22 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Shared Admin Navigation -->
+    <script src="./shared-nav.js"></script>
+
     <!-- QR Code Generator -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+
+    <!-- QR Code Reader / Scanner -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <!-- html2canvas for PNG exports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -129,43 +139,32 @@
     </style>
 </head>
 
-<body class="font-sans text-dark antialiased bg-surface min-h-screen flex flex-col p-4 sm:p-6 lg:p-8">
+<body class="font-sans text-dark antialiased bg-surface flex flex-col" style="min-height:100dvh;">
 
-    <div
-        class="max-w-6xl mx-auto w-full flex-1 flex flex-col bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 no-print">
-        <!-- Header -->
-        <header
-            class="bg-surface px-4 py-4 sm:px-8 border-b border-gray-150 flex justify-between items-center shrink-0">
-            <div class="flex items-center gap-3">
-                <a href="./settings.html"
-                    class="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
-                    title="Back to Settings">
-                    <i data-lucide="chevron-left" class="w-5 h-5 text-dark"></i>
-                </a>
-                <div class="text-left">
-                    <h1 class="text-base sm:text-xl font-black text-dark flex items-center gap-1.5 leading-tight">
-                        Groove Cashier Terminal
-                        <span
-                            class="text-[10px] bg-brand/15 text-brand-accent px-2 py-0.5 rounded-full font-bold">Barista
-                            Tool ☕</span>
-                    </h1>
-                    <p class="text-[10px] sm:text-xs text-gray-500">Search and lookup customer visual cup recipes
-                        instantly</p>
-                </div>
-            </div>
-            <img id="mainLogo" src="./assets/logo.png" alt="Groove Logo" class="h-9 object-contain">
-        </header>
-
+    <div>
         <!-- Main Workspace -->
         <div class="flex-1 flex flex-col md:flex-row min-h-[500px]">
             <!-- Left Panel: Search & Recipes List -->
             <div class="flex-1 border-r border-gray-100 p-4 sm:p-6 flex flex-col space-y-4">
-                <!-- Search bar -->
-                <div class="relative">
-                    <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-4 top-3.5"></i>
-                    <input type="text" id="input-search" oninput="filterRecipes()"
-                        class="w-full text-sm bg-gray-50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
-                        placeholder="Search by drink name or keyword...">
+                <!-- Search bar with Scanner + Gift Card shortcut -->
+                <div class="flex gap-2.5">
+                    <div class="relative flex-1">
+                        <i data-lucide="search"
+                            class="w-5 h-5 text-gray-400 absolute left-4 top-3.5 flex items-center justify-center"></i>
+                        <input type="text" id="input-search" oninput="filterRecipes()"
+                            class="w-full text-sm bg-gray-50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 focus:border-brand focus:ring-1 focus:ring-brand outline-none font-bold"
+                            placeholder="Search by name or keyword...">
+                    </div>
+                    <button onclick="openScanner()"
+                        class="bg-brand text-white font-bold px-5 rounded-2xl hover:bg-brand-accent transition-colors flex items-center gap-2 shadow-sm text-sm shrink-0">
+                        <i data-lucide="scan-line" class="w-4.5 h-4.5"></i>
+                        <span class="hidden sm:inline">Scan QR</span>
+                    </button>
+                    <button onclick="toggleGiftCardConsole(true)"
+                        class="bg-brand-light text-brand-accent hover:bg-brand/15 font-black px-4 rounded-2xl text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0 border border-brand/20">
+                        <i data-lucide="gift" class="w-4 h-4 animate-pulse"></i>
+                        <span class="hidden md:inline">Gift Cards</span>
+                    </button>
                 </div>
 
                 <!-- Recipes count & filter -->
@@ -500,6 +499,7 @@
         }
 
         // --- Select Recipe ---
+        // --- Select Recipe ---
         function selectRecipe(id) {
             selectedRecipeId = id;
             renderRecipesList();
@@ -507,6 +507,11 @@
             const recipeObj = allRecipes.find(r => r.id === id);
             if (!recipeObj) return;
 
+            bindRecipeDetails(recipeObj, id);
+        }
+
+        // --- Bind Recipe Details ---
+        function bindRecipeDetails(recipeObj, id) {
             document.getElementById('ticket-empty-state').classList.add('hidden');
             document.getElementById('ticket-details').classList.remove('hidden');
             document.getElementById('ticket-actions').classList.remove('hidden');
@@ -605,7 +610,122 @@
             printSyrups.innerHTML = printSyrupsHtml;
 
             // --- Generate QR Code ---
-            generateReceiptQR(id);
+            if (id) {
+                generateReceiptQR(id);
+            } else {
+                document.getElementById('print-qr').innerHTML = '<span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Offline Ticket</span>';
+            }
+        }
+
+        // --- Camera QR Code Scanner ---
+        let html5QrCode = null;
+
+        function openScanner() {
+            const modal = document.getElementById('scanner-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-95');
+            }, 10);
+
+            html5QrCode = new Html5Qrcode("qr-reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+                .catch(err => {
+                    console.error("Camera start failed:", err);
+                    alert("Failed to start camera: " + err.message);
+                    closeScanner();
+                });
+        }
+
+        function closeScanner() {
+            const modal = document.getElementById('scanner-modal');
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                }).catch(err => console.error("Error stopping scanner:", err));
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`Scan successful: ${decodedText}`);
+            closeScanner();
+
+            // Try to parse offline JSON payload
+            if (decodedText.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(decodedText);
+
+                    // Standard price computation
+                    const baseCupPrice = 6000;
+                    const espressoPricePer40ml = 1500;
+                    const milkBasePricePer50ml = 1000;
+                    const syrupPumpPrice = 800;
+                    const whippedCreamPrice = 1500;
+
+                    let price = baseCupPrice;
+                    if (parsed.e === 'double') price += espressoPricePer40ml;
+                    if (parsed.m > 0) {
+                        let billableMilk = parsed.b === 'milk' ? Math.max(0, parsed.m - 150) : parsed.m;
+                        if (billableMilk > 0) {
+                            price += Math.ceil(billableMilk / 50) * milkBasePricePer50ml;
+                        }
+                    }
+                    if (parsed.wc) price += whippedCreamPrice;
+                    if (parsed.sy) {
+                        const totalPumps = Object.values(parsed.sy).reduce((a, b) => a + b, 0);
+                        price += totalPumps * syrupPumpPrice;
+                    }
+                    price = Math.round(price / 1000) * 1000;
+
+                    const recipeObj = {
+                        name: parsed.n || 'Offline Customized Cup',
+                        volume: (parsed.m + parsed.w + (parsed.e === 'double' ? 60 : 30) + (parsed.cf ? 30 : 0) + (parsed.wc ? 40 : 0)) + ' ml',
+                        estimatedPrice: price.toLocaleString() + ' SYP',
+                        createdAt: { seconds: Math.floor(Date.now() / 1000) },
+                        recipe: {
+                            currentBase: parsed.b,
+                            espressoType: parsed.e,
+                            milkVolume: parsed.m,
+                            waterVolume: parsed.w,
+                            coldFoam: parsed.cf === 1 || parsed.cf === true,
+                            whippedCream: parsed.wc === 1 || parsed.wc === true,
+                            ice: parsed.i === 1 || parsed.i === true,
+                            syrups: parsed.sy || {}
+                        }
+                    };
+
+                    bindRecipeDetails(recipeObj, null);
+                    return;
+                } catch (e) {
+                    console.error("Offline JSON parsing failed:", e);
+                }
+            }
+
+            // Check if URL contains query parameter recipeId
+            if (decodedText.includes('recipeId=')) {
+                try {
+                    const url = new URL(decodedText);
+                    const recipeId = url.searchParams.get('recipeId');
+                    if (recipeId) {
+                        selectRecipe(recipeId);
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse URL:", e);
+                }
+            }
+
+            // Fallback as raw Document ID
+            selectRecipe(decodedText);
         }
 
         function generateReceiptQR(recipeId) {
@@ -659,8 +779,503 @@
             }
         }
 
+        // --- Gift Card Management Console (Cashier Side) ---
+        function toggleGiftCardConsole(isOpen) {
+            const drawer = document.getElementById('giftcard-drawer');
+            const content = document.getElementById('giftcard-drawer-content');
+
+            if (isOpen) {
+                drawer.classList.remove('hidden');
+                setTimeout(() => {
+                    drawer.classList.remove('opacity-0');
+                    content.classList.remove('translate-x-full');
+                }, 10);
+
+                // Listen to auth state
+                firebase.auth().onAuthStateChanged((user) => {
+                    const authStatus = document.getElementById('cashier-auth-status');
+                    if (user) {
+                        authStatus.classList.add('hidden');
+                        fetchUsersDropdown();
+                    } else {
+                        authStatus.classList.remove('hidden');
+                        document.getElementById('cashier-user-select').innerHTML = '<option value="">-- Sign in required to see users --</option>';
+                    }
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                });
+            } else {
+                drawer.classList.add('opacity-0');
+                content.classList.add('translate-x-full');
+                setTimeout(() => {
+                    drawer.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        async function fetchUsersDropdown() {
+            try {
+                const snap = await db.collection('users').get();
+                const select = document.getElementById('cashier-user-select');
+                select.innerHTML = '<option value="">-- Generate as code card instead --</option>';
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    const name = u.displayName || 'Unnamed User';
+                    const email = u.email || 'No email';
+                    const balance = u.balance || 0;
+                    const points = u.points || 0;
+
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.setAttribute('data-email', email);
+                    option.setAttribute('data-name', name);
+                    option.text = `${name} (${email}) — Bal: ${balance.toLocaleString()} SYP | Pts: ${points}`;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error("Failed to load user accounts:", err);
+            }
+        }
+
+        async function cashierGenerateCard() {
+            const valueInput = document.getElementById('cashier-card-value');
+            const value = parseFloat(valueInput.value) || 0;
+            if (value <= 0) {
+                alert("Please enter a valid card value amount.");
+                return;
+            }
+
+            const codeInput = document.getElementById('cashier-card-code');
+            let code = codeInput.value.trim().toUpperCase();
+
+            // Auto-generate code if empty
+            if (!code) {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let seg1 = '';
+                let seg2 = '';
+                for (let i = 0; i < 4; i++) {
+                    seg1 += chars.charAt(Math.floor(Math.random() * chars.length));
+                    seg2 += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                code = `GRV-${seg1}-${seg2}`;
+            }
+
+            try {
+                await db.collection('gift_cards').doc(code).set({
+                    code: code,
+                    amount: value,
+                    status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Display in visual gold card visualizer
+                document.getElementById('export-card-panel').classList.remove('hidden');
+                document.getElementById('visual-card-value').innerText = `${value.toLocaleString()} SYP`;
+                document.getElementById('visual-card-code').innerText = code;
+
+                // Render QR code
+                const qr = qrcode(0, 'M');
+                qr.addData(code);
+                qr.make();
+                document.getElementById('visual-card-qr').innerHTML = qr.createImgTag(2, 4);
+
+                alert(`Gift Card "${code}" generated successfully for ${value.toLocaleString()} SYP!`);
+            } catch (err) {
+                console.error("Failed to create gift card doc:", err);
+                alert("Error generating card: " + err.message);
+            }
+        }
+
+        async function cashierDirectFund() {
+            const select = document.getElementById('cashier-user-select');
+            const userId = select.value;
+            if (!userId) {
+                alert("Please select a customer account to link directly.");
+                return;
+            }
+
+            const valueInput = document.getElementById('cashier-card-value');
+            const amount = parseFloat(valueInput.value) || 0;
+            if (amount <= 0) {
+                alert("Please enter a valid credit amount.");
+                return;
+            }
+
+            const selectedOption = select.options[select.selectedIndex];
+            const userName = selectedOption.getAttribute('data-name');
+            const userEmail = selectedOption.getAttribute('data-email');
+
+            if (!confirm(`Are you sure you want to directly fund ${userName}'s account with ${amount.toLocaleString()} SYP?`)) {
+                return;
+            }
+
+            // Generate dummy code for transaction ledger tracking
+            const chars = '0123456789ABCDEF';
+            let mockCode = 'DIRECT-';
+            for (let i = 0; i < 8; i++) {
+                mockCode += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            try {
+                const userRef = db.collection('users').doc(userId);
+                const giftRef = db.collection('gift_cards').doc(mockCode);
+
+                await db.runTransaction(async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    const currentBalance = (userDoc.exists ? userDoc.data().balance : 0) || 0;
+                    const currentPoints = (userDoc.exists ? userDoc.data().points : 0) || 0;
+                    const pointsEarned = Math.floor(amount / 100);
+
+                    // 1. Create a claimed card document for logging
+                    transaction.set(giftRef, {
+                        code: mockCode,
+                        amount: amount,
+                        status: 'redeemed',
+                        redeemedBy: userId,
+                        redeemedByEmail: userEmail,
+                        redeemedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // 2. Update user document
+                    transaction.set(userRef, {
+                        balance: currentBalance + amount,
+                        points: currentPoints + pointsEarned,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                });
+
+                alert(`Instantly funded ${userName}'s account with ${amount.toLocaleString()} SYP!`);
+                // Refresh list
+                fetchUsersDropdown();
+            } catch (err) {
+                console.error("Direct funding failed:", err);
+                alert("Error during direct fund transaction: " + err.message);
+            }
+        }
+
+        async function cashierCheckCard() {
+            const checkInput = document.getElementById('cashier-check-code');
+            const code = checkInput.value.trim().toUpperCase();
+            if (!code) {
+                alert("Please enter a gift card code to check.");
+                return;
+            }
+
+            try {
+                const doc = await db.collection('gift_cards').doc(code).get();
+                const resultBox = document.getElementById('check-result-box');
+                const claimedSection = document.getElementById('check-res-claimed-section');
+
+                if (!doc.exists) {
+                    alert("This code does not exist in our database.");
+                    resultBox.classList.add('hidden');
+                    return;
+                }
+
+                const card = doc.data();
+                resultBox.classList.remove('hidden');
+
+                // Bind checker values
+                document.getElementById('check-res-val').innerText = `${(card.amount || 0).toLocaleString()} SYP`;
+
+                const statusSpan = document.getElementById('check-res-status');
+                if (card.status === 'active') {
+                    statusSpan.className = "px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-800 uppercase";
+                    statusSpan.innerText = 'Active';
+                    claimedSection.classList.add('hidden');
+                } else {
+                    statusSpan.className = "px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-100 text-red-800 uppercase";
+                    statusSpan.innerText = 'Redeemed';
+                    claimedSection.classList.remove('hidden');
+
+                    const claimDate = card.redeemedAt ? new Date(card.redeemedAt.seconds * 1000).toLocaleString() : 'Date missing';
+                    document.getElementById('check-res-by').innerText = card.redeemedByEmail || card.redeemedBy || 'Unknown User';
+                    document.getElementById('check-res-date').innerText = claimDate;
+                }
+
+            } catch (err) {
+                console.error("Check card failed:", err);
+                alert("Failed to check card: " + err.message);
+            }
+        }
+
+        function downloadGiftCardVisual() {
+            const card = document.getElementById('visual-giftcard');
+            const code = document.getElementById('visual-card-code').innerText;
+
+            if (typeof html2canvas === 'undefined') {
+                alert("Image rendering library not loaded. Downloading TXT receipt instead.");
+                downloadGiftCardVisualTxt();
+                return;
+            }
+
+            // Export card to PNG
+            html2canvas(card, {
+                useCORS: true,
+                scale: 3, // Higher resolution for crisp printing/sharing
+                backgroundColor: null
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `groove_giftcard_${code}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                console.error("html2canvas export failed:", err);
+                alert("Failed to export as image. Downloading TXT receipt fallback.");
+                downloadGiftCardVisualTxt();
+            });
+        }
+
+        function downloadGiftCardVisualTxt() {
+            const code = document.getElementById('visual-card-code').innerText;
+            const value = document.getElementById('visual-card-value').innerText;
+
+            const textContent = `
+========================================
+       GROOVE COFFEE SHOP GIFT CARD
+========================================
+Value: ${value}
+Activation Code: ${code}
+
+Redemption Instructions:
+1. Log in to your Groove Customer account.
+2. Open the builder customization menu.
+3. Click "Redeem" inside your profile card.
+4. Enter code "${code}" and click claim.
+========================================
+            `;
+
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `groove_giftcard_${code}.txt`;
+            link.click();
+        }
+
         lucide.createIcons();
     </script>
+    <!-- Gift Card Management Side Drawer -->
+    <div id="giftcard-drawer"
+        class="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-[50] flex justify-end hidden opacity-0 transition-opacity duration-300">
+        <div id="giftcard-drawer-content"
+            class="bg-surface w-full max-w-lg h-full shadow-2xl p-6 overflow-y-auto flex flex-col space-y-6 transform translate-x-full transition-transform duration-300 text-left border-l border-gray-150">
+            <!-- Header -->
+            <div class="flex justify-between items-center pb-4 border-b border-gray-200 shrink-0">
+                <div class="flex items-center gap-2 text-brand">
+                    <i data-lucide="gift" class="w-6 h-6 text-brand-accent"></i>
+                    <div>
+                        <h3 class="font-black text-dark text-lg">Gift Card Console</h3>
+                        <p class="text-[10px] text-gray-400">Generate, link, and check store credit codes.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="./giftcards.html"
+                        class="p-2 bg-brand-light text-brand-accent hover:bg-brand/20 rounded-xl text-[10px] font-black transition-colors flex items-center gap-1 shrink-0"
+                        title="Open Visual Dashboard">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Dashboard
+                    </a>
+                    <button onclick="toggleGiftCardConsole(false)"
+                        class="p-1.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5 text-dark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Warning Banner when not logged in -->
+            <div id="cashier-auth-status"
+                class="bg-amber-50 text-amber-800 text-xs font-bold p-3.5 rounded-2xl border border-amber-200 text-center flex items-center justify-center gap-2 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="w-5 h-5 shrink-0">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" x2="12" y1="8" y2="12" />
+                    <line x1="12" x2="12.01" y1="16" y2="16" />
+                </svg>
+                <span>You must sign in on the <a href="./settings.html"
+                        class="underline hover:text-amber-950 font-black">Settings Page</a> first to manage gift cards
+                    or see customer accounts.</span>
+            </div>
+
+            <!-- 1. Generator & Selector Form -->
+            <div class="bg-white rounded-3xl p-5 border border-gray-150 shadow-soft space-y-4">
+                <h4 class="font-bold text-sm text-dark flex items-center gap-1.5">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-brand"></i> Generate & Issue Credit
+                </h4>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div
+                        class="text-left bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 shadow-inner flex flex-col justify-center">
+                        <span class="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Amount (SYP)</span>
+                        <input type="number" id="cashier-card-value"
+                            class="w-full text-xs font-bold outline-none border-none p-0 bg-transparent" value="10000">
+                    </div>
+                    <div
+                        class="text-left bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 shadow-inner flex flex-col justify-center">
+                        <span class="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Custom Code
+                            (Optional)</span>
+                        <input type="text" id="cashier-card-code"
+                            class="w-full text-xs font-bold outline-none border-none p-0 bg-transparent uppercase"
+                            placeholder="AUTO-GEN">
+                    </div>
+                </div>
+
+                <!-- Searchable User Select Dropdown -->
+                <div class="text-left flex flex-col">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider">Option A:
+                        Direct Link to Customer Account</label>
+                    <select id="cashier-user-select"
+                        class="w-full text-xs bg-gray-50 border border-gray-200 rounded-xl px-3 py-3 font-bold outline-none focus:border-brand">
+                        <option value="">-- Generate as code card instead --</option>
+                    </select>
+                    <p class="text-[9px] text-gray-400 mt-1">If selected, the value will be added directly to their
+                        account, bypassing code redemption.</p>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="cashierGenerateCard()"
+                        class="flex-1 bg-brand text-white font-bold py-3 rounded-xl text-xs hover:bg-brand-accent transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Generate Card
+                    </button>
+                    <button onclick="cashierDirectFund()"
+                        class="flex-1 bg-brand-accent text-white font-bold py-3 rounded-xl text-xs hover:bg-brand-accent/90 transition-all active:scale-95 shadow-sm flex items-center justify-center gap-1.5">
+                        <i data-lucide="send" class="w-4 h-4"></i> Direct Fund
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. Status Checker Form -->
+            <div class="bg-white rounded-3xl p-5 border border-gray-150 shadow-soft space-y-4">
+                <h4 class="font-bold text-sm text-dark flex items-center gap-1.5">
+                    <i data-lucide="search" class="w-4 h-4 text-brand"></i> Check Card Status
+                </h4>
+
+                <div class="flex gap-2 text-left">
+                    <div
+                        class="flex-1 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 shadow-inner flex flex-col justify-center">
+                        <span class="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Enter Code</span>
+                        <input type="text" id="cashier-check-code"
+                            class="w-full text-xs font-bold outline-none border-none p-0 bg-transparent uppercase"
+                            placeholder="GRV-XXXX-YYYY">
+                    </div>
+                    <button onclick="cashierCheckCard()"
+                        class="bg-brand text-white font-bold px-4 rounded-xl text-xs hover:bg-brand-accent transition-all flex items-center justify-center shrink-0">
+                        Check Code
+                    </button>
+                </div>
+
+                <!-- Check result panel -->
+                <div id="check-result-box"
+                    class="hidden border border-gray-150 rounded-xl p-3 bg-gray-50 space-y-2 text-xs text-left">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold">Value:</span>
+                        <span id="check-res-val" class="font-black text-brand-accent">0 SYP</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold">Status:</span>
+                        <span id="check-res-status"
+                            class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">Active</span>
+                    </div>
+                    <div id="check-res-claimed-section" class="hidden space-y-1">
+                        <div class="h-px bg-gray-200 my-1.5"></div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold">Claimed By:</span>
+                            <span id="check-res-by" class="font-bold text-dark truncate">user@email.com</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 font-bold">Claimed Date:</span>
+                            <span id="check-res-date" class="text-gray-500 font-semibold">12/03/2026</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Export Card Visualizer (Gold Theme Gift Card Template) -->
+            <div id="export-card-panel"
+                class="hidden bg-white rounded-3xl p-5 border border-gray-150 shadow-soft space-y-4">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-bold text-sm text-dark flex items-center gap-1.5">
+                        <i data-lucide="image" class="w-4 h-4 text-brand"></i> Export Gift Card Image
+                    </h4>
+                    <button onclick="downloadGiftCardVisual()"
+                        class="text-brand font-black text-xs hover:underline flex items-center gap-1">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Code Card
+                    </button>
+                </div>
+
+                <!-- Brand Color (Sage Green) Visual Card Design -->
+                <div id="visual-giftcard"
+                    class="w-full aspect-[1.8/1] rounded-2xl bg-gradient-to-tr from-[#7b937e] via-[#92a895] to-[#7b937e] border border-white/20 p-5 text-white flex flex-col justify-between relative overflow-hidden shadow-soft select-none">
+                    <div
+                        class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_60%)] pointer-events-none">
+                    </div>
+                    <div class="absolute right-[-10px] bottom-[-10px] opacity-10 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                            class="w-36 h-36 text-white">
+                            <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+                            <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+                            <line x1="6" x2="6" y1="2" y2="4" />
+                            <line x1="10" x2="10" y1="2" y2="4" />
+                            <line x1="14" x2="14" y1="2" y2="4" />
+                        </svg>
+                    </div>
+
+                    <div class="flex justify-between items-start z-10">
+                        <div class="flex items-center gap-2">
+                            <img src="./assets/logo.png" class="h-6 object-contain invert brightness-200">
+                            <span class="text-[9px] uppercase tracking-widest font-black text-white/90">Groove Coffee
+                                Shop</span>
+                        </div>
+                        <div class="text-right flex flex-col">
+                            <span class="text-[8px] font-bold uppercase tracking-wider text-white/70 leading-none">Gift
+                                Card Value</span>
+                            <span id="visual-card-value" class="text-lg font-black text-white mt-1">10,000 SYP</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-end z-10">
+                        <div class="text-left flex flex-col">
+                            <span
+                                class="text-[8px] font-bold uppercase tracking-wider text-white/70 leading-none">Activation
+                                Code</span>
+                            <span id="visual-card-code"
+                                class="text-sm font-mono font-bold tracking-widest text-white mt-1">GRV-XXXX-YYYY</span>
+                        </div>
+                        <div id="visual-card-qr"
+                            class="bg-white p-1 rounded-md shrink-0 w-12 h-12 flex items-center justify-center shadow-inner">
+                            <!-- QR image will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webcam QR Scanner Modal -->
+    <div id="scanner-modal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 transform scale-95 transition-transform duration-300 flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2 text-brand">
+                    <i data-lucide="camera" class="w-5 h-5 text-brand-accent"></i>
+                    <h3 class="font-black text-dark text-base sm:text-lg">Scan Recipe QR</h3>
+                </div>
+                <button onclick="closeScanner()"
+                    class="p-1.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4 text-dark"></i>
+                </button>
+            </div>
+
+            <div
+                class="bg-black rounded-2xl overflow-hidden aspect-square w-full max-w-sm mx-auto relative border border-gray-200 shadow-inner">
+                <div id="qr-reader" class="w-full h-full"></div>
+            </div>
+
+            <p class="text-[10px] text-gray-400 mt-3 text-center">Place the customer's recipe QR code inside the camera
+                view.</p>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groove — Gift Card Manager</title>
+    <meta name="description" content="Groove Coffee Shop gift card issuance, tracking, and export console.">
+    <link rel="shortcut icon" href="./assets/Favicon.png" type="image/png">
+    <script src="./tailwindcss.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUtaq22wuKtAZHtcYnta_sXHNJWkEoAiQ",
+            authDomain: "groove-menu.firebaseapp.com",
+            projectId: "groove-menu",
+            storageBucket: "groove-menu.firebasestorage.app",
+            messagingSenderId: "622362545565",
+            appId: "1:622362545565:web:7fc736c19970fd558c7374",
+            measurementId: "G-D35FC0ZMDB"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: { DEFAULT: '#7b937e', light: '#eef2ef', accent: '#5f7561' },
+                        dark: '#0f1411', surface: '#f7f9f7', 'gray-150': '#e8ede9'
+                    },
+                    boxShadow: {
+                        soft: '0 4px 20px -2px rgba(123,147,126,0.12)',
+                        hard: '0 12px 40px -8px rgba(0,0,0,0.20)',
+                        card: '0 2px 12px -1px rgba(95,117,97,0.10)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* ── Physical credit-card proportions 85.6 × 53.98 mm ── */
+        .gc-card {
+            width: 100%;
+            aspect-ratio: 85.6 / 53.98;
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            box-shadow: 0 10px 32px -6px rgba(0, 0, 0, 0.32),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+
+        .gc-active {
+            background: linear-gradient(140deg, #3d5e41 0%, #7b937e 50%, #92a895 75%, #5f7561 100%);
+        }
+
+        .gc-redeemed {
+            background: linear-gradient(140deg, #4b5563 0%, #9ca3af 55%, #d1d5db 80%, #6b7280 100%);
+        }
+
+        /* Holographic shine */
+        .gc-shine {
+            position: absolute;
+            top: 0;
+            left: -60%;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.13) 50%, transparent 80%);
+            pointer-events: none;
+        }
+
+        /* Decorative circles */
+        .gc-c1 {
+            position: absolute;
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            top: -55px;
+            right: -55px;
+            pointer-events: none;
+        }
+
+        .gc-c2 {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            bottom: -35px;
+            left: -25px;
+            pointer-events: none;
+        }
+
+        /* REDEEMED stamp overlay */
+        .gc-stamp {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.20);
+        }
+
+        .gc-stamp-inner {
+            border: 2.5px solid rgba(255, 255, 255, 0.38);
+            color: rgba(255, 255, 255, 0.42);
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: 0.22em;
+            padding: 3px 16px;
+            border-radius: 6px;
+            transform: rotate(-14deg);
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Gold EMV chip */
+        .gc-chip {
+            width: 34px;
+            height: 26px;
+            background: linear-gradient(135deg, #c9982a, #f5e07a, #d4af37);
+            border-radius: 5px;
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+        }
+
+        .gc-chip::before {
+            content: '';
+            position: absolute;
+            inset: 5px 4px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 3px;
+        }
+
+        .gc-chip::after {
+            content: '';
+            position: absolute;
+            width: 1px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Progress bar for bulk */
+        #bulk-bar-track {
+            background: #e8ede9;
+            border-radius: 99px;
+            height: 6px;
+            overflow: hidden;
+        }
+
+        #bulk-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7b937e, #5f7561);
+            border-radius: 99px;
+            transition: width .15s;
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-dark antialiased font-sans flex flex-col min-h-screen">
+
+    <!-- Shared Nav injected here by shared-nav.js -->
+    <script src="./shared-nav.js"></script>
+
+    <!-- Auth Lock -->
+    <div id="auth-lock" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-hard text-center space-y-5">
+            <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="lock" class="w-8 h-8 text-amber-500"></i>
+            </div>
+            <h3 class="text-xl font-black text-dark">Access Restricted</h3>
+            <p class="text-sm text-gray-500">Sign in as administrator to access the Gift Card Manager.</p>
+            <a href="./settings.html"
+                class="block w-full bg-brand text-white font-bold py-3 rounded-2xl text-sm hover:bg-brand-accent transition-all">
+                Go to Login
+            </a>
+        </div>
+    </div>
+
+    <!-- Page Shell -->
+    <div class="flex-1 flex flex-col max-w-7xl mx-auto w-full">
+
+        <!-- Body -->
+        <div class="flex-1 flex flex-col lg:flex-row min-h-0">
+
+            <!-- ═══ LEFT PANEL ═══ -->
+            <div
+                class="w-full lg:w-72 xl:w-80 shrink-0 border-r border-gray-100 flex flex-col overflow-y-auto bg-surface/60">
+
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-150 bg-white shrink-0">
+                    <button id="tab-single" onclick="switchTab('single')"
+                        class="flex-1 py-3 text-xs font-black text-brand-accent border-b-2 border-brand transition-colors">
+                        Single Card
+                    </button>
+                    <button id="tab-bulk" onclick="switchTab('bulk')"
+                        class="flex-1 py-3 text-xs font-black text-gray-400 border-b-2 border-transparent hover:text-dark transition-colors">
+                        Bulk Generate
+                    </button>
+                </div>
+
+                <!-- ─ Single Card Panel ─ -->
+                <div id="panel-single" class="p-4 space-y-4">
+                    <div class="bg-white rounded-2xl p-4 border border-gray-150 shadow-card space-y-3">
+                        <h3 class="font-black text-sm text-dark flex items-center gap-1.5">
+                            <i data-lucide="plus-circle" class="w-4 h-4 text-brand"></i> Issue Gift Card
+                        </h3>
+                        <div class="space-y-2.5">
+                            <div class="bg-surface border border-gray-200 rounded-xl px-3 py-2.5 flex flex-col">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Amount
+                                    (SYP)</span>
+                                <input id="card-value" type="number" min="500" value="10000"
+                                    class="text-sm font-bold outline-none bg-transparent">
+                            </div>
+                            <div class="bg-surface border border-gray-200 rounded-xl px-3 py-2.5 flex flex-col">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Custom
+                                    Code (optional)</span>
+                                <input id="card-code" type="text" placeholder="Auto-generated" maxlength="20"
+                                    class="text-sm font-bold outline-none bg-transparent uppercase placeholder-gray-300">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Link to
+                                    Account</span>
+                                <select id="user-select"
+                                    class="text-xs bg-surface border border-gray-200 rounded-xl px-3 py-3 font-bold outline-none focus:border-brand">
+                                    <option value="">— Print / share code —</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button onclick="generateSingle()"
+                                class="bg-brand text-white font-black py-2.5 rounded-xl text-xs hover:bg-brand-accent transition-all active:scale-95 flex items-center justify-center gap-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Generate
+                            </button>
+                            <button onclick="directFund()"
+                                class="bg-brand-accent text-white font-black py-2.5 rounded-xl text-xs hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-1">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i> Fund User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─ Bulk Panel ─ -->
+                <div id="panel-bulk" class="p-4 space-y-4 hidden">
+                    <div class="bg-white rounded-2xl p-4 border border-gray-150 shadow-card space-y-3">
+                        <h3 class="font-black text-sm text-dark flex items-center gap-1.5">
+                            <i data-lucide="layers" class="w-4 h-4 text-brand"></i> Bulk Generate
+                        </h3>
+                        <p class="text-[10px] text-gray-400">Create multiple cards in a single batch. All codes are
+                            auto-generated.</p>
+                        <div class="space-y-2.5">
+                            <div class="bg-surface border border-gray-200 rounded-xl px-3 py-2.5 flex flex-col">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Number
+                                    of Cards</span>
+                                <input id="bulk-count" type="number" min="1" max="50" value="5"
+                                    class="text-sm font-bold outline-none bg-transparent">
+                                <span class="text-[8px] text-gray-300 mt-0.5">Max 50 per batch</span>
+                            </div>
+                            <div class="bg-surface border border-gray-200 rounded-xl px-3 py-2.5 flex flex-col">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Value
+                                    Each (SYP)</span>
+                                <input id="bulk-amount" type="number" min="500" value="10000"
+                                    class="text-sm font-bold outline-none bg-transparent">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-wider">Code Prefix
+                                    (optional)</span>
+                                <input id="bulk-prefix" type="text" placeholder="e.g. PROMO" maxlength="8"
+                                    class="text-xs bg-surface border border-gray-200 rounded-xl px-3 py-2.5 font-bold outline-none uppercase placeholder-gray-300">
+                            </div>
+                        </div>
+
+                        <!-- Progress -->
+                        <div id="bulk-progress" class="hidden space-y-1.5">
+                            <div class="flex justify-between text-[9px] text-gray-400 font-bold">
+                                <span>Generating…</span>
+                                <span id="bulk-count-label">0 / 0</span>
+                            </div>
+                            <div id="bulk-bar-track">
+                                <div id="bulk-bar-fill" style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <button onclick="bulkGenerate()"
+                            class="w-full bg-brand text-white font-black py-3 rounded-xl text-xs hover:bg-brand-accent transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                            <i data-lucide="zap" class="w-4 h-4"></i> Generate Batch
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ═══ RIGHT PANEL — Gallery ═══ -->
+            <div class="flex-1 p-4 sm:p-5 flex flex-col gap-4 min-h-0">
+                <!-- Search bar -->
+                <div class="flex items-center flex-start gap-3 shrink-0">
+                    <div
+                        class="flex-1 max-w-xs flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 shadow-sm">
+                        <i data-lucide="search" class="w-4 h-4 text-gray-400 shrink-0"></i>
+                        <input id="search-input" type="text" oninput="renderGrid()"
+                            class="text-xs font-semibold outline-none bg-transparent w-full placeholder-gray-300"
+                            placeholder="Search code or email…">
+                    </div>
+                    <div id="stat-pills" class="hidden sm:flex items-center gap-2 text-[10px]">
+                        <span
+                            class="bg-green-50 border border-green-100 text-green-700 font-black px-3 py-1 rounded-full">
+                            <span id="stat-active">0</span> Active
+                        </span>
+                        <span
+                            class="bg-gray-100 border border-gray-200 text-gray-500 font-black px-3 py-1 rounded-full">
+                            <span id="stat-redeemed">0</span> Redeemed
+                        </span>
+                    </div>
+                    <div class="text-[10px] text-gray-400 font-bold shrink-0">
+                        <span id="gallery-count">—</span> cards
+                    </div>
+                </div>
+
+                <!-- Grid -->
+                <div id="gallery" class="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-5 pr-0.5 pb-2">
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-300 gap-2">
+                        <i data-lucide="loader" class="w-7 h-7 animate-spin"></i>
+                        <span class="text-xs font-bold">Connecting…</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"
+        class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-dark text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow-hard opacity-0 pointer-events-none transition-all duration-300 z-[250]">
+    </div>
+
+    <script>
+        /* ── State ─────────────────────────────────────────────────────── */
+        let allCards = [];
+
+        /* ── Auth ──────────────────────────────────────────────────────── */
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('auth-lock').classList.add('hidden');
+                loadUsers();
+                listenCards();
+            }
+            lucide.createIcons();
+        });
+
+        /* ── Tab switching ─────────────────────────────────────────────── */
+        function switchTab(tab) {
+            const isSingle = tab === 'single';
+            document.getElementById('panel-single').classList.toggle('hidden', !isSingle);
+            document.getElementById('panel-bulk').classList.toggle('hidden', isSingle);
+
+            document.getElementById('tab-single').className =
+                `flex-1 py-3 text-xs font-black border-b-2 transition-colors ${isSingle ? 'text-brand-accent border-brand' : 'text-gray-400 border-transparent hover:text-dark'}`;
+            document.getElementById('tab-bulk').className =
+                `flex-1 py-3 text-xs font-black border-b-2 transition-colors ${!isSingle ? 'text-brand-accent border-brand' : 'text-gray-400 border-transparent hover:text-dark'}`;
+        }
+
+        /* ── Users dropdown ─────────────────────────────────────────────── */
+        async function loadUsers() {
+            try {
+                const snap = await db.collection('users').get();
+                const sel = document.getElementById('user-select');
+                sel.innerHTML = '<option value="">— Print / share code —</option>';
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    opt.dataset.name = u.displayName || 'User';
+                    opt.dataset.email = u.email || '';
+                    opt.text = `${u.displayName || 'Unnamed'} — ${(u.balance || 0).toLocaleString()} SYP`;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        /* ── Real-time listener ─────────────────────────────────────────── */
+        function listenCards() {
+            db.collection('gift_cards').orderBy('createdAt', 'desc').onSnapshot(snap => {
+                allCards = [];
+                let active = 0, redeemed = 0;
+                snap.forEach(doc => {
+                    const c = { id: doc.id, ...doc.data() };
+                    allCards.push(c);
+                    c.status === 'active' ? active++ : redeemed++;
+                });
+                document.getElementById('stat-active').innerText = active;
+                document.getElementById('stat-redeemed').innerText = redeemed;
+                renderGrid();
+            }, err => console.error('Snapshot error:', err));
+        }
+
+        /* ── Render gallery ─────────────────────────────────────────────── */
+        function renderGrid() {
+            const q = (document.getElementById('search-input').value || '').toLowerCase();
+            const filtered = allCards.filter(c =>
+                c.code.toLowerCase().includes(q) ||
+                (c.redeemedByEmail || '').toLowerCase().includes(q)
+            );
+
+            document.getElementById('gallery-count').innerText = filtered.length;
+
+            const gallery = document.getElementById('gallery');
+            if (!filtered.length) {
+                gallery.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-300 gap-2">
+                        <i data-lucide="inbox" class="w-7 h-7"></i>
+                        <span class="text-xs font-bold">No cards found.</span>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            gallery.innerHTML = filtered.map(c => buildCardCell(c)).join('');
+            filtered.forEach(c => injectQR(c.code));
+            lucide.createIcons();
+        }
+
+        /* ── Card cell template ─────────────────────────────────────────── */
+        function buildCardCell(c) {
+            const isActive = c.status === 'active';
+            const amountFmt = (c.amount || 0).toLocaleString();
+            const code = c.code;
+            const claimDate = c.redeemedAt
+                ? new Date(c.redeemedAt.seconds * 1000).toLocaleDateString('en-GB') : '—';
+            const claimEmail = c.redeemedByEmail || '—';
+
+            return `
+            <div class="flex flex-col gap-2.5">
+
+                <!-- ★ Isolated capture wrapper — html2canvas targets this exact div -->
+                <div id="gc-wrap-${code}" style="
+                    width:100%;
+                    background:#f7f9f7;
+                    padding:14px;
+                    border-radius:18px;
+                    box-sizing:border-box;
+                    font-family:'Outfit',sans-serif;
+                ">
+                    <div id="gc-${code}" class="gc-card ${isActive ? 'gc-active' : 'gc-redeemed'}">
+                        <div class="gc-shine"></div>
+                        <div class="gc-c1"></div>
+                        <div class="gc-c2"></div>
+                        ${!isActive ? '<div class="gc-stamp"><div class="gc-stamp-inner">Redeemed</div></div>' : ''}
+
+                        <!-- Card Content -->
+                        <div style="position:relative;z-index:5;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:13px 15px;box-sizing:border-box;">
+
+                            <!-- TOP: "Gift Voucher" label (left) + Value (right) -->
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                                <div style="font-size:7.5px;font-weight:800;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.14em;">Gift Voucher</div>
+                                <!-- Value top-right -->
+                                <div style="text-align:right;">
+                                    <div style="font-size:7px;font-weight:700;color:rgba(255,255,255,0.58);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:2px;">Value</div>
+                                    <div style="font-size:22px;font-weight:900;color:white;line-height:1;letter-spacing:-0.02em;text-shadow:0 2px 8px rgba(0,0,0,0.22);">${amountFmt}</div>
+                                    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.68);margin-top:1px;">SYP</div>
+                                </div>
+                            </div>
+
+                            <!-- CENTER: Logo -->
+                            <div style="display:flex;justify-content:center;align-items:center;">
+                                <img src="./assets/logo.png"
+                                     style="height:52px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.90;"
+                                     alt="Groove">
+                            </div>
+
+                            <!-- BOTTOM: Gift Code (left) + QR (right) -->
+                            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                                <!-- Gift Code bottom-left -->
+                                <div>
+                                    <div style="font-size:7px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:3px;">Gift Code</div>
+                                    <div style="font-family:monospace;font-size:11px;font-weight:800;color:white;letter-spacing:0.16em;text-shadow:0 1px 4px rgba(0,0,0,0.3);">${code}</div>
+                                </div>
+                                <!-- QR bottom-right (bigger) -->
+                                <div id="gc-qr-${code}" style="
+                                    width:58px;height:58px;
+                                    background:white;border-radius:8px;
+                                    display:flex;align-items:center;justify-content:center;
+                                    padding:3px;box-sizing:border-box;
+                                    box-shadow:0 2px 10px rgba(0,0,0,0.32);
+                                    overflow:hidden;flex-shrink:0;
+                                "></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="bg-white border border-gray-150 rounded-xl px-3 py-2 space-y-1 text-[10px] shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold">Status</span>
+                        <span class="font-black uppercase ${isActive ? 'text-green-600' : 'text-gray-400'}">${c.status}</span>
+                    </div>
+                    ${!isActive ? `
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold">Claimant</span>
+                        <span class="font-bold text-dark truncate max-w-[160px]">${claimEmail}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400 font-bold">Date</span>
+                        <span class="font-bold text-gray-500">${claimDate}</span>
+                    </div>` : `<div class="text-center text-gray-300 italic">Awaiting redemption</div>`}
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2">
+                    <button onclick="downloadPNG('${code}')"
+                        class="flex-1 bg-brand-light text-brand-accent hover:bg-brand/20 font-black py-2 rounded-xl text-[10px] flex items-center justify-center gap-1 transition-all active:scale-95">
+                        <i data-lucide="image" class="w-3.5 h-3.5"></i> PNG
+                    </button>
+                    <button onclick="downloadTXT('${code}', ${c.amount || 0})"
+                        class="flex-1 bg-gray-100 text-gray-600 hover:bg-gray-200 font-black py-2 rounded-xl text-[10px] flex items-center justify-center gap-1 transition-all active:scale-95">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> TXT
+                    </button>
+                    <button onclick="deleteCard('${code}')"
+                        class="bg-red-50 text-red-500 hover:bg-red-100 font-black px-3.5 py-2 rounded-xl text-[10px] transition-all active:scale-95">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        /* ── TXT voucher download ──────────────────────────────── */
+        function downloadTXT(code, amount) {
+            const line = '═'.repeat(44);
+            const thin = '─'.repeat(44);
+            const pad = (str, width) => str + ' '.repeat(Math.max(0, width - str.length));
+            const now = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+            const amtFmt = Number(amount).toLocaleString() + ' SYP';
+
+            const content = [
+                line,
+                '  ☕  GROOVE COFFEE SHOP — GIFT VOUCHER  ☕',
+                line,
+                '',
+                '  Dear valued customer,',
+                '',
+                '  You have received a Groove Gift Voucher!',
+                '  Enjoy your favorite coffee and treats with',
+                '  this exclusive gift card.',
+                '',
+                thin,
+                `  ${pad('Gift Code:', 20)} ${code}`,
+                `  ${pad('Voucher Value:', 20)} ${amtFmt}`,
+                `  ${pad('Issue Date:', 20)} ${now}`,
+                thin,
+                '',
+                '  HOW TO REDEEM',
+                thin,
+                '  1. Log in to your Groove Customer account.',
+                '  2. Open the builder customization menu.',
+                '  3. Click "Redeem" inside your profile card.',
+                '  4. Enter code "GRV-VB5F-T85A" and click claim.',
+                thin,
+                '  OR',
+                thin,
+                '  1. Visit Groove Coffee Shop or open the app.',
+                '  2. At checkout, tell the cashier you have a',
+                '     Gift Voucher.',
+                '  3. Provide your Gift Code shown above.',
+                '  4. The cashier will apply the balance to',
+                '     your order.',
+                '',
+                '  Alternatively, scan the QR on your card image',
+                '  to redeem digitally via the Groove loyalty app.',
+                '',
+                thin,
+                '  Terms & Conditions',
+                '  • Non-refundable and non-transferable.',
+                '  • Valid until redeemed. No expiry date.',
+                '  • Cannot be exchanged for cash.',
+                '  • One code per transaction.',
+                thin,
+                '',
+                '  Thank you for choosing Groove Coffee Shop.',
+                '  We look forward to serving you! 🌿',
+                '',
+                line,
+                `  Groove  |  Issued ${now}`,
+                line,
+            ].join('\n');
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `groove_gift_${code}.txt`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('TXT voucher downloaded ✓');
+        }
+
+        /* ── QR injection — robust SVG rendering ──────────────────────── */
+        function injectQR(code) {
+            if (!code || typeof qrcode === 'undefined') return;
+            const box = document.getElementById(`gc-qr-${code}`);
+            if (!box) return;
+            try {
+                /* type 0 = auto-select smallest valid type; M = medium ECC */
+                const qr = qrcode(0, 'M');
+                qr.addData(code);
+                qr.make();
+                /* createSvgTag(cellSize, margin, alt) — no broken img src */
+                const svg = qr.createSvgTag(2, 0);
+                box.innerHTML = svg;
+                const svgEl = box.querySelector('svg');
+                if (svgEl) {
+                    Object.assign(svgEl.style, {
+                        width: '100%', height: '100%',
+                        display: 'block', borderRadius: '4px'
+                    });
+                }
+            } catch (e) {
+                console.warn('QR failed for', code, e);
+                /* Fallback: tiny QR-like grid pattern so it still looks correct */
+                box.innerHTML = `<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"
+                    style="width:100%;height:100%;border-radius:4px;">
+                    <rect width="10" height="10" fill="white"/>
+                    <rect x="1" y="1" width="3" height="3" fill="#222"/>
+                    <rect x="6" y="1" width="3" height="3" fill="#222"/>
+                    <rect x="1" y="6" width="3" height="3" fill="#222"/>
+                    <rect x="4" y="4" width="1" height="1" fill="#222"/>
+                    <rect x="6" y="6" width="1" height="1" fill="#222"/>
+                    <rect x="7" y="7" width="2" height="2" fill="#222"/>
+                </svg>`;
+            }
+        }
+
+        /* ── PNG export (isolated wrapper) ──────────────────────────────── */
+        function downloadPNG(code) {
+            const wrapper = document.getElementById(`gc-wrap-${code}`);
+            if (!wrapper) return;
+            showToast('Exporting image…');
+            html2canvas(wrapper, {
+                scale: 3,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#f7f9f7',
+                logging: false
+            }).then(canvas => {
+                const a = document.createElement('a');
+                a.download = `groove_gift_${code}.png`;
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+                showToast('PNG downloaded ✓');
+            }).catch(err => {
+                console.error(err);
+                showToast('Export failed — try again.');
+            });
+        }
+
+        /* ── Single card generation ─────────────────────────────────────── */
+        async function generateSingle() {
+            const val = parseFloat(document.getElementById('card-value').value) || 0;
+            if (val <= 0) { showToast('Enter a valid amount.'); return; }
+
+            let code = document.getElementById('card-code').value.trim().toUpperCase();
+            if (!code) code = makeCode('GRV');
+
+            try {
+                await db.collection('gift_cards').doc(code).set({
+                    code, amount: val, status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('card-code').value = '';
+                showToast(`Card "${code}" created ✓`);
+            } catch (e) { showToast('Error: ' + e.message); }
+        }
+
+        /* ── Direct fund ────────────────────────────────────────────────── */
+        async function directFund() {
+            const sel = document.getElementById('user-select');
+            const uid = sel.value;
+            if (!uid) { showToast('Select a user account first.'); return; }
+            const amount = parseFloat(document.getElementById('card-value').value) || 0;
+            if (amount <= 0) { showToast('Enter a valid amount.'); return; }
+
+            const opt = sel.options[sel.selectedIndex];
+            const name = opt.dataset.name;
+            const email = opt.dataset.email;
+            if (!confirm(`Fund ${name} with ${amount.toLocaleString()} SYP directly?`)) return;
+
+            const code = 'DIRECT-' + Array.from({ length: 8 }, () =>
+                '0123456789ABCDEF'[Math.random() * 16 | 0]).join('');
+
+            try {
+                await db.runTransaction(async t => {
+                    const uRef = db.collection('users').doc(uid);
+                    const gRef = db.collection('gift_cards').doc(code);
+                    const udoc = await t.get(uRef);
+                    const bal = udoc.exists ? (udoc.data().balance || 0) : 0;
+                    const pts = udoc.exists ? (udoc.data().points || 0) : 0;
+                    const now = firebase.firestore.FieldValue.serverTimestamp();
+                    t.set(gRef, {
+                        code, amount, status: 'redeemed',
+                        redeemedBy: uid, redeemedByEmail: email, redeemedAt: now, createdAt: now
+                    });
+                    t.set(uRef, { balance: bal + amount, points: pts + Math.floor(amount / 100), updatedAt: now }, { merge: true });
+                });
+                sel.value = '';
+                showToast(`${name}'s wallet funded ✓`);
+                loadUsers();
+            } catch (e) { showToast('Error: ' + e.message); }
+        }
+
+        /* ── Bulk generation ────────────────────────────────────────────── */
+        async function bulkGenerate() {
+            const count = Math.min(50, Math.max(1, parseInt(document.getElementById('bulk-count').value) || 5));
+            const amount = parseFloat(document.getElementById('bulk-amount').value) || 10000;
+            const prefix = document.getElementById('bulk-prefix').value.trim().toUpperCase() || 'GRV';
+
+            if (amount <= 0) { showToast('Enter a valid amount.'); return; }
+            if (!confirm(`Generate ${count} × ${amount.toLocaleString()} SYP cards?`)) return;
+
+            const prog = document.getElementById('bulk-progress');
+            const fill = document.getElementById('bulk-bar-fill');
+            const label = document.getElementById('bulk-count-label');
+            prog.classList.remove('hidden');
+
+            const BATCH_SIZE = 25; // Firestore batch limit safety
+            let created = 0;
+            const codes = [];
+
+            /* Build unique codes */
+            while (codes.length < count) {
+                const c = makeCode(prefix);
+                if (!codes.includes(c)) codes.push(c);
+            }
+
+            /* Write in Firestore batches */
+            for (let i = 0; i < codes.length; i += BATCH_SIZE) {
+                const batch = db.batch();
+                const slice = codes.slice(i, i + BATCH_SIZE);
+                slice.forEach(code => {
+                    batch.set(db.collection('gift_cards').doc(code), {
+                        code, amount, status: 'active',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                await batch.commit();
+                created += slice.length;
+                const pct = Math.round((created / count) * 100);
+                fill.style.width = pct + '%';
+                label.innerText = `${created} / ${count}`;
+            }
+
+            prog.classList.add('hidden');
+            fill.style.width = '0%';
+            showToast(`✓ ${count} cards generated!`);
+        }
+
+        /* ── Delete ─────────────────────────────────────────────────────── */
+        async function deleteCard(code) {
+            if (!confirm(`Delete "${code}"?`)) return;
+            try {
+                await db.collection('gift_cards').doc(code).delete();
+                showToast('Card deleted.');
+            } catch (e) { showToast('Error: ' + e.message); }
+        }
+
+        /* ── Helpers ────────────────────────────────────────────────────── */
+        function makeCode(prefix) {
+            const ch = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            const seg = () => Array.from({ length: 4 }, () => ch[Math.random() * ch.length | 0]).join('');
+            return `${prefix}-${seg()}-${seg()}`;
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = '1';
+            t.style.transform = 'translate(-50%, 0)';
+            clearTimeout(t._tid);
+            t._tid = setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translate(-50%, 8px)';
+            }, 2800);
+        }
+    </script>
+</body>
+
+</html>
